@@ -3,7 +3,6 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BARS } from '@/lib/constants';
 import { 
   Bus, 
   MapPin, 
@@ -13,7 +12,8 @@ import {
   Send, 
   Car,
   Phone,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
@@ -25,61 +25,78 @@ import {
 } from "@/components/ui/select";
 
 export default function Admin() {
-  const { isAdmin, appConfig, setAppConfig, t } = useBaratona();
+  const { isAdmin, appConfig, updateAppConfig, bars, t } = useBaratona();
   const [broadcastInput, setBroadcastInput] = useState('');
   const [transitOrigin, setTransitOrigin] = useState<string>('');
   const [transitDest, setTransitDest] = useState<string>('');
+  const [updating, setUpdating] = useState(false);
   
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
   
-  const handleToggleStatus = () => {
+  if (!appConfig) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+  
+  const handleToggleStatus = async () => {
+    setUpdating(true);
+    
     if (appConfig.status === 'at_bar') {
       // Going to transit - need to select origin and destination
       if (!transitOrigin || !transitDest) {
         alert('Selecione origem e destino!');
+        setUpdating(false);
         return;
       }
-      setAppConfig({
-        ...appConfig,
+      await updateAppConfig({
         status: 'in_transit',
-        originBarId: parseInt(transitOrigin),
-        destinationBarId: parseInt(transitDest),
+        origin_bar_id: parseInt(transitOrigin),
+        destination_bar_id: parseInt(transitDest),
       });
     } else {
       // Arriving at bar
-      setAppConfig({
-        ...appConfig,
+      await updateAppConfig({
         status: 'at_bar',
-        currentBarId: appConfig.destinationBarId || appConfig.currentBarId,
-        originBarId: undefined,
-        destinationBarId: undefined,
+        current_bar_id: appConfig.destination_bar_id || appConfig.current_bar_id,
+        origin_bar_id: null,
+        destination_bar_id: null,
       });
     }
+    
+    setUpdating(false);
+    setTransitOrigin('');
+    setTransitDest('');
   };
   
-  const handleDelayChange = (delta: number) => {
-    setAppConfig({
-      ...appConfig,
-      globalDelayMinutes: Math.max(0, appConfig.globalDelayMinutes + delta),
+  const handleDelayChange = async (delta: number) => {
+    setUpdating(true);
+    await updateAppConfig({
+      global_delay_minutes: Math.max(0, (appConfig.global_delay_minutes || 0) + delta),
     });
+    setUpdating(false);
   };
   
-  const handleBroadcast = () => {
+  const handleBroadcast = async () => {
     if (!broadcastInput.trim()) return;
-    setAppConfig({
-      ...appConfig,
-      broadcastMsg: broadcastInput.trim(),
+    setUpdating(true);
+    await updateAppConfig({
+      broadcast_msg: broadcastInput.trim(),
     });
     setBroadcastInput('');
+    setUpdating(false);
   };
   
-  const clearBroadcast = () => {
-    setAppConfig({
-      ...appConfig,
-      broadcastMsg: undefined,
+  const clearBroadcast = async () => {
+    setUpdating(true);
+    await updateAppConfig({
+      broadcast_msg: null,
     });
+    setUpdating(false);
   };
   
   const handleCallUber = () => {
@@ -120,7 +137,7 @@ export default function Admin() {
                         <SelectValue placeholder="Selecionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        {BARS.map(bar => (
+                        {bars.map(bar => (
                           <SelectItem key={bar.id} value={bar.id.toString()}>
                             {bar.name}
                           </SelectItem>
@@ -135,7 +152,7 @@ export default function Admin() {
                         <SelectValue placeholder="Selecionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        {BARS.map(bar => (
+                        {bars.map(bar => (
                           <SelectItem key={bar.id} value={bar.id.toString()}>
                             {bar.name}
                           </SelectItem>
@@ -149,13 +166,16 @@ export default function Admin() {
             
             <Button
               onClick={handleToggleStatus}
+              disabled={updating}
               className={`w-full h-14 font-display font-bold text-lg ${
                 appConfig.status === 'at_bar'
                   ? 'bg-gradient-to-r from-secondary to-secondary/80 text-secondary-foreground'
                   : 'bg-gradient-to-r from-baratona-green to-baratona-green/80 text-primary-foreground'
               }`}
             >
-              {appConfig.status === 'at_bar' ? (
+              {updating ? (
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              ) : appConfig.status === 'at_bar' ? (
                 <>
                   <Bus className="w-5 h-5 mr-2" />
                   Iniciar Deslocamento
@@ -182,6 +202,7 @@ export default function Admin() {
               variant="outline"
               size="icon"
               onClick={() => handleDelayChange(-5)}
+              disabled={updating}
               className="h-12 w-12"
             >
               <Minus className="w-5 h-5" />
@@ -189,7 +210,7 @@ export default function Admin() {
             
             <div className="text-center">
               <span className="font-display text-3xl font-bold text-foreground">
-                {appConfig.globalDelayMinutes > 0 ? '+' : ''}{appConfig.globalDelayMinutes}
+                {(appConfig.global_delay_minutes || 0) > 0 ? '+' : ''}{appConfig.global_delay_minutes || 0}
               </span>
               <p className="text-xs text-muted-foreground">{t.minutes}</p>
             </div>
@@ -198,6 +219,7 @@ export default function Admin() {
               variant="outline"
               size="icon"
               onClick={() => handleDelayChange(5)}
+              disabled={updating}
               className="h-12 w-12"
             >
               <Plus className="w-5 h-5" />
@@ -219,15 +241,15 @@ export default function Admin() {
               placeholder="Mensagem para todos..."
               className="bg-input"
             />
-            <Button onClick={handleBroadcast}>
+            <Button onClick={handleBroadcast} disabled={updating}>
               <Send className="w-4 h-4" />
             </Button>
           </div>
           
-          {appConfig.broadcastMsg && (
+          {appConfig.broadcast_msg && (
             <div className="mt-3 flex items-center justify-between bg-destructive/10 p-2 rounded">
-              <span className="text-sm text-destructive">{appConfig.broadcastMsg}</span>
-              <Button variant="ghost" size="sm" onClick={clearBroadcast}>
+              <span className="text-sm text-destructive">{appConfig.broadcast_msg}</span>
+              <Button variant="ghost" size="sm" onClick={clearBroadcast} disabled={updating}>
                 Limpar
               </Button>
             </div>

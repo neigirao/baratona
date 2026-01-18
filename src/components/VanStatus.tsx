@@ -1,16 +1,23 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { BARS } from '@/lib/constants';
-import { Bus, MapPin, Clock } from 'lucide-react';
+import { Bus, MapPin, Clock, Loader2 } from 'lucide-react';
 
 export function VanStatus() {
-  const { appConfig, getCurrentBar, getNextBar, getProjectedTime, t } = useBaratona();
+  const { appConfig, appConfigLoading, bars, getCurrentBar, getNextBar, getProjectedTime, t } = useBaratona();
+  
+  if (appConfigLoading || !appConfig) {
+    return (
+      <div className="bg-card rounded-2xl p-4 border border-border flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      </div>
+    );
+  }
   
   const currentBar = getCurrentBar();
   const nextBar = getNextBar();
   
   if (appConfig.status === 'in_transit') {
-    const originBar = BARS.find(b => b.id === appConfig.originBarId);
-    const destBar = BARS.find(b => b.id === appConfig.destinationBarId);
+    const originBar = bars.find(b => b.id === appConfig.origin_bar_id);
+    const destBar = bars.find(b => b.id === appConfig.destination_bar_id);
     
     return (
       <div className="bg-secondary/10 border border-secondary/50 rounded-2xl p-4 animate-fade-in">
@@ -34,7 +41,7 @@ export function VanStatus() {
         {destBar && (
           <div className="flex items-center justify-center gap-2 mt-3 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" />
-            <span>{t.arrivalProjection}: {getProjectedTime(destBar.scheduledTime)}</span>
+            <span>{t.arrivalProjection}: {getProjectedTime(destBar.scheduled_time)}</span>
           </div>
         )}
       </div>
@@ -65,7 +72,7 @@ export function VanStatus() {
         <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-border text-xs text-muted-foreground">
           <span>{t.nextBar}:</span>
           <span className="text-primary font-medium">{nextBar.name}</span>
-          <span>({getProjectedTime(nextBar.scheduledTime)})</span>
+          <span>({getProjectedTime(nextBar.scheduled_time)})</span>
         </div>
       )}
     </div>

@@ -9,10 +9,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       {/* Broadcast Banner */}
-      {appConfig.broadcastMsg && (
+      {appConfig?.broadcast_msg && (
         <div className="w-full bg-destructive/20 border-b border-destructive/50 px-4 py-2">
           <p className="text-center text-sm font-medium text-destructive animate-pulse">
-            📢 {appConfig.broadcastMsg}
+            📢 {appConfig.broadcast_msg}
           </p>
         </div>
       )}
@@ -50,7 +50,7 @@ export function Header() {
           {currentUser && (
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground hidden sm:block">
-                {currentUser}
+                {currentUser.name}
               </span>
               <Button
                 variant="ghost"

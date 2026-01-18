@@ -1,25 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { BARS, PARTICIPANTS, Language, TRANSLATIONS, AppConfig, TranslationStrings } from '@/lib/constants';
+import { Language, TRANSLATIONS, TranslationStrings } from '@/lib/constants';
+import { useParticipants, useBars, useAppConfig, useVotes, useConsumption } from '@/hooks/useSupabaseData';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Consumption {
-  participantName: string;
-  drinks: number;
-  food: number;
-}
-
-interface Vote {
-  participantName: string;
-  barId: number;
-  drinkScore: number;
-  foodScore: number;
-  vibeScore: number;
-  serviceScore: number;
-}
+type Participant = Database['public']['Tables']['participants']['Row'];
+type Bar = Database['public']['Tables']['bars']['Row'];
+type AppConfigRow = Database['public']['Tables']['app_config']['Row'];
 
 interface BaratonaContextType {
   // User
-  currentUser: string | null;
-  setCurrentUser: (name: string | null) => void;
+  currentUser: Participant | null;
+  setCurrentUser: (participant: Participant | null) => void;
   isAdmin: boolean;
   
   // Language
@@ -27,180 +18,126 @@ interface BaratonaContextType {
   setLanguage: (lang: Language) => void;
   t: TranslationStrings;
   
-  // App Config
-  appConfig: AppConfig;
-  setAppConfig: (config: AppConfig) => void;
+  // Data from Supabase
+  participants: Participant[];
+  participantsLoading: boolean;
+  
+  bars: Bar[];
+  barsLoading: boolean;
+  
+  appConfig: AppConfigRow | null;
+  appConfigLoading: boolean;
+  updateAppConfig: (updates: Partial<Omit<AppConfigRow, 'id' | 'updated_at'>>) => Promise<boolean>;
   
   // Consumption
-  consumptions: Consumption[];
-  addDrink: (participantName: string) => void;
-  removeDrink: (participantName: string) => void;
-  addFood: (participantName: string) => void;
-  removeFood: (participantName: string) => void;
-  
-  // Votes
-  votes: Vote[];
-  submitVote: (vote: Vote) => void;
-  getBarVotes: (barId: number) => Vote[];
-  
-  // Computed
+  addDrink: (participantId: string) => Promise<boolean>;
+  removeDrink: (participantId: string) => Promise<boolean>;
+  addFood: (participantId: string) => Promise<boolean>;
+  removeFood: (participantId: string) => Promise<boolean>;
+  getParticipantConsumption: (participantId: string) => { drinks: number; food: number };
   totalDrinks: number;
   totalFood: number;
+  
+  // Votes
+  submitVote: (participantId: string, barId: number, scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }) => Promise<boolean>;
+  getBarVotes: (barId: number) => Array<Database['public']['Tables']['votes']['Row']>;
+  getUserVoteForBar: (participantId: string, barId: number) => Database['public']['Tables']['votes']['Row'] | undefined;
+  
+  // Computed
   getProjectedTime: (scheduledTime: string) => string;
-  getCurrentBar: () => typeof BARS[number] | undefined;
-  getNextBar: () => typeof BARS[number] | undefined;
+  getCurrentBar: () => Bar | undefined;
+  getNextBar: () => Bar | undefined;
 }
 
 const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
 
-// Haptic feedback helper
-const triggerHaptic = () => {
-  if ('vibrate' in navigator) {
-    navigator.vibrate(50);
-  }
-};
-
 export function BaratonaProvider({ children }: { children: ReactNode }) {
-  // User state
-  const [currentUser, setCurrentUserState] = useState<string | null>(() => {
-    return localStorage.getItem('baratona_user');
-  });
-  
+  // User state from localStorage
+  const [currentUser, setCurrentUserState] = useState<Participant | null>(null);
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem('baratona_lang') as Language) || 'pt';
   });
   
-  // App config (mock - will be from Supabase)
-  const [appConfig, setAppConfig] = useState<AppConfig>({
-    status: 'at_bar',
-    currentBarId: 1,
-    globalDelayMinutes: 0,
-    broadcastMsg: undefined,
-  });
-  
-  // Consumption state (mock - will be from Supabase)
-  const [consumptions, setConsumptions] = useState<Consumption[]>(() => {
-    const saved = localStorage.getItem('baratona_consumptions');
-    if (saved) return JSON.parse(saved);
-    return PARTICIPANTS.map(name => ({ participantName: name, drinks: 0, food: 0 }));
-  });
-  
-  // Votes state (mock - will be from Supabase)
-  const [votes, setVotes] = useState<Vote[]>(() => {
-    const saved = localStorage.getItem('baratona_votes');
-    if (saved) return JSON.parse(saved);
-    return [];
-  });
-  
-  // Persist to localStorage
+  // Supabase data hooks
+  const { participants, loading: participantsLoading } = useParticipants();
+  const { bars, loading: barsLoading } = useBars();
+  const { appConfig, loading: appConfigLoading, updateConfig } = useAppConfig();
+  const { votes, submitVote: submitVoteToDb, getBarVotes } = useVotes();
+  const { 
+    addDrink, 
+    removeDrink, 
+    addFood, 
+    removeFood, 
+    getParticipantConsumption,
+    totalDrinks,
+    totalFood,
+  } = useConsumption();
+
+  // Restore user from localStorage
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('baratona_user', currentUser);
-    } else {
-      localStorage.removeItem('baratona_user');
+    const savedUserName = localStorage.getItem('baratona_user');
+    if (savedUserName && participants.length > 0) {
+      const foundUser = participants.find(p => p.name === savedUserName);
+      if (foundUser) {
+        setCurrentUserState(foundUser);
+      }
     }
-  }, [currentUser]);
+  }, [participants]);
   
+  // Persist language to localStorage
   useEffect(() => {
     localStorage.setItem('baratona_lang', language);
   }, [language]);
   
-  useEffect(() => {
-    localStorage.setItem('baratona_consumptions', JSON.stringify(consumptions));
-  }, [consumptions]);
-  
-  useEffect(() => {
-    localStorage.setItem('baratona_votes', JSON.stringify(votes));
-  }, [votes]);
-  
-  const setCurrentUser = (name: string | null) => {
-    setCurrentUserState(name);
+  const setCurrentUser = (participant: Participant | null) => {
+    setCurrentUserState(participant);
+    if (participant) {
+      localStorage.setItem('baratona_user', participant.name);
+    } else {
+      localStorage.removeItem('baratona_user');
+    }
   };
   
-  const isAdmin = currentUser === 'Nei';
-  
+  const isAdmin = currentUser?.is_admin || false;
   const t = TRANSLATIONS[language];
   
-  // Consumption functions with haptic feedback
-  const addDrink = (participantName: string) => {
-    triggerHaptic();
-    setConsumptions(prev => 
-      prev.map(c => 
-        c.participantName === participantName 
-          ? { ...c, drinks: c.drinks + 1 }
-          : c
-      )
-    );
+  const submitVote = async (
+    participantId: string, 
+    barId: number, 
+    scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
+  ) => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+    return submitVoteToDb(participantId, barId, scores);
   };
-  
-  const removeDrink = (participantName: string) => {
-    triggerHaptic();
-    setConsumptions(prev => 
-      prev.map(c => 
-        c.participantName === participantName && c.drinks > 0
-          ? { ...c, drinks: c.drinks - 1 }
-          : c
-      )
-    );
+
+  const getUserVoteForBar = (participantId: string, barId: number) => {
+    return votes.find(v => v.participant_id === participantId && v.bar_id === barId);
   };
-  
-  const addFood = (participantName: string) => {
-    triggerHaptic();
-    setConsumptions(prev => 
-      prev.map(c => 
-        c.participantName === participantName 
-          ? { ...c, food: c.food + 1 }
-          : c
-      )
-    );
-  };
-  
-  const removeFood = (participantName: string) => {
-    triggerHaptic();
-    setConsumptions(prev => 
-      prev.map(c => 
-        c.participantName === participantName && c.food > 0
-          ? { ...c, food: c.food - 1 }
-          : c
-      )
-    );
-  };
-  
-  const submitVote = (vote: Vote) => {
-    triggerHaptic();
-    setVotes(prev => {
-      // Remove existing vote for same user/bar combo
-      const filtered = prev.filter(v => 
-        !(v.participantName === vote.participantName && v.barId === vote.barId)
-      );
-      return [...filtered, vote];
-    });
-  };
-  
-  const getBarVotes = (barId: number) => {
-    return votes.filter(v => v.barId === barId);
-  };
-  
-  // Computed values
-  const totalDrinks = consumptions.reduce((sum, c) => sum + c.drinks, 0);
-  const totalFood = consumptions.reduce((sum, c) => sum + c.food, 0);
   
   const getProjectedTime = (scheduledTime: string): string => {
+    const delay = appConfig?.global_delay_minutes || 0;
+    // scheduledTime is in format "HH:MM:SS"
     const [hours, minutes] = scheduledTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + appConfig.globalDelayMinutes;
+    const totalMinutes = hours * 60 + minutes + delay;
     const newHours = Math.floor(totalMinutes / 60) % 24;
     const newMinutes = totalMinutes % 60;
     return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
   };
   
   const getCurrentBar = () => {
-    return BARS.find(b => b.id === appConfig.currentBarId);
+    if (!appConfig) return undefined;
+    return bars.find(b => b.id === appConfig.current_bar_id);
   };
   
   const getNextBar = () => {
-    const currentIndex = BARS.findIndex(b => b.id === appConfig.currentBarId);
-    if (currentIndex < BARS.length - 1) {
-      return BARS[currentIndex + 1];
+    const current = getCurrentBar();
+    if (!current) return undefined;
+    const currentIndex = bars.findIndex(b => b.id === current.id);
+    if (currentIndex < bars.length - 1) {
+      return bars[currentIndex + 1];
     }
     return undefined;
   };
@@ -213,18 +150,23 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
       language,
       setLanguage,
       t,
+      participants,
+      participantsLoading,
+      bars,
+      barsLoading,
       appConfig,
-      setAppConfig,
-      consumptions,
+      appConfigLoading,
+      updateAppConfig: updateConfig,
       addDrink,
       removeDrink,
       addFood,
       removeFood,
-      votes,
-      submitVote,
-      getBarVotes,
+      getParticipantConsumption,
       totalDrinks,
       totalFood,
+      submitVote,
+      getBarVotes,
+      getUserVoteForBar,
       getProjectedTime,
       getCurrentBar,
       getNextBar,

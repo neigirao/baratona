@@ -1,11 +1,10 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { PARTICIPANTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
-import { User } from 'lucide-react';
+import { User, Loader2 } from 'lucide-react';
 import baratonaBanner from '@/assets/baratona-banner.jpeg';
 
 export function ParticipantSelector() {
-  const { setCurrentUser, t } = useBaratona();
+  const { setCurrentUser, participants, participantsLoading, t } = useBaratona();
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -36,19 +35,28 @@ export function ParticipantSelector() {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
-          {PARTICIPANTS.map((name) => (
-            <Button
-              key={name}
-              variant="outline"
-              onClick={() => setCurrentUser(name)}
-              className="h-12 justify-start gap-2 bg-card hover:bg-primary/10 hover:border-primary/50 transition-all"
-            >
-              <User className="w-4 h-4 text-primary" />
-              <span className="truncate text-sm">{name}</span>
-            </Button>
-          ))}
-        </div>
+        {participantsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
+            {participants.map((participant) => (
+              <Button
+                key={participant.id}
+                variant="outline"
+                onClick={() => setCurrentUser(participant)}
+                className="h-12 justify-start gap-2 bg-card hover:bg-primary/10 hover:border-primary/50 transition-all"
+              >
+                <User className={`w-4 h-4 ${participant.is_admin ? 'text-destructive' : 'text-primary'}`} />
+                <span className="truncate text-sm">{participant.name}</span>
+                {participant.is_admin && (
+                  <span className="ml-auto text-xs text-destructive">👑</span>
+                )}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,14 +1,22 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { BARS } from '@/lib/constants';
-import { MapPin, Clock, CheckCircle, Circle, Star } from 'lucide-react';
+import { MapPin, Clock, CheckCircle, Circle, Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BarItinerary() {
-  const { appConfig, getProjectedTime, getBarVotes } = useBaratona();
+  const { appConfig, bars, barsLoading, getProjectedTime, getBarVotes } = useBaratona();
+  
+  if (barsLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      </div>
+    );
+  }
   
   const getBarStatus = (barId: number) => {
-    if (barId < appConfig.currentBarId) return 'completed';
-    if (barId === appConfig.currentBarId) return 'current';
+    if (!appConfig) return 'upcoming';
+    if (barId < appConfig.current_bar_id!) return 'completed';
+    if (barId === appConfig.current_bar_id) return 'current';
     return 'upcoming';
   };
   
@@ -17,7 +25,7 @@ export function BarItinerary() {
     if (barVotes.length === 0) return null;
     
     const avg = barVotes.reduce((sum, v) => {
-      return sum + (v.drinkScore + v.foodScore + v.vibeScore + v.serviceScore) / 4;
+      return sum + (v.drink_score + v.food_score + v.vibe_score + v.service_score) / 4;
     }, 0) / barVotes.length;
     
     return avg.toFixed(1);
@@ -30,7 +38,7 @@ export function BarItinerary() {
       </h3>
       
       <div className="space-y-2">
-        {BARS.map((bar, index) => {
+        {bars.map((bar) => {
           const status = getBarStatus(bar.id);
           const avgRating = getAverageRating(bar.id);
           
@@ -60,7 +68,7 @@ export function BarItinerary() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-display font-bold text-primary">
-                    #{bar.order}
+                    #{bar.bar_order}
                   </span>
                   <h4 className={cn(
                     "font-semibold truncate",
@@ -80,7 +88,7 @@ export function BarItinerary() {
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span>{getProjectedTime(bar.scheduledTime)}</span>
+                    <span>{getProjectedTime(bar.scheduled_time)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />

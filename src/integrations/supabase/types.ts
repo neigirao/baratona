@@ -14,7 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_config: {
+        Row: {
+          broadcast_msg: string | null
+          current_bar_id: number | null
+          destination_bar_id: number | null
+          global_delay_minutes: number
+          id: number
+          origin_bar_id: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          broadcast_msg?: string | null
+          current_bar_id?: number | null
+          destination_bar_id?: number | null
+          global_delay_minutes?: number
+          id?: number
+          origin_bar_id?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          broadcast_msg?: string | null
+          current_bar_id?: number | null
+          destination_bar_id?: number | null
+          global_delay_minutes?: number
+          id?: number
+          origin_bar_id?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_config_current_bar_id_fkey"
+            columns: ["current_bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_config_destination_bar_id_fkey"
+            columns: ["destination_bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_config_origin_bar_id_fkey"
+            columns: ["origin_bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bars: {
+        Row: {
+          address: string
+          bar_order: number
+          id: number
+          latitude: number | null
+          longitude: number | null
+          name: string
+          scheduled_time: string
+        }
+        Insert: {
+          address: string
+          bar_order: number
+          id: number
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          scheduled_time: string
+        }
+        Update: {
+          address?: string
+          bar_order?: number
+          id?: number
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          scheduled_time?: string
+        }
+        Relationships: []
+      }
+      consumption: {
+        Row: {
+          count: number
+          id: string
+          participant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          id?: string
+          participant_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          id?: string
+          participant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participants: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          bar_id: number
+          created_at: string
+          drink_score: number
+          food_score: number
+          id: string
+          participant_id: string
+          service_score: number
+          vibe_score: number
+        }
+        Insert: {
+          bar_id: number
+          created_at?: string
+          drink_score: number
+          food_score: number
+          id?: string
+          participant_id: string
+          service_score: number
+          vibe_score: number
+        }
+        Update: {
+          bar_id?: number
+          created_at?: string
+          drink_score?: number
+          food_score?: number
+          id?: string
+          participant_id?: string
+          service_score?: number
+          vibe_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

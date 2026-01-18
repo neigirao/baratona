@@ -2,12 +2,11 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { Beer, Utensils, Plus, Minus } from 'lucide-react';
 
 export function ConsumptionCounter() {
-  const { currentUser, consumptions, addDrink, removeDrink, addFood, removeFood, t } = useBaratona();
+  const { currentUser, addDrink, removeDrink, addFood, removeFood, getParticipantConsumption, t } = useBaratona();
   
   if (!currentUser) return null;
   
-  const userConsumption = consumptions.find(c => c.participantName === currentUser);
-  if (!userConsumption) return null;
+  const consumption = getParticipantConsumption(currentUser.id);
   
   return (
     <div className="bg-card rounded-2xl p-4 border border-border animate-slide-up">
@@ -25,19 +24,19 @@ export function ConsumptionCounter() {
           
           <div className="flex items-center gap-3">
             <button
-              onClick={() => removeDrink(currentUser)}
+              onClick={() => removeDrink(currentUser.id)}
               className="counter-btn counter-btn-blue opacity-70 hover:opacity-100"
-              disabled={userConsumption.drinks === 0}
+              disabled={consumption.drinks === 0}
             >
               <Minus className="w-6 h-6 text-primary-foreground" />
             </button>
             
             <span className="font-display text-3xl font-bold text-foreground min-w-[3rem] text-center">
-              {userConsumption.drinks}
+              {consumption.drinks}
             </span>
             
             <button
-              onClick={() => addDrink(currentUser)}
+              onClick={() => addDrink(currentUser.id)}
               className="counter-btn counter-btn-blue"
             >
               <Plus className="w-6 h-6 text-primary-foreground" />
@@ -54,19 +53,19 @@ export function ConsumptionCounter() {
           
           <div className="flex items-center gap-3">
             <button
-              onClick={() => removeFood(currentUser)}
+              onClick={() => removeFood(currentUser.id)}
               className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100"
-              disabled={userConsumption.food === 0}
+              disabled={consumption.food === 0}
             >
               <Minus className="w-6 h-6 text-secondary-foreground" />
             </button>
             
             <span className="font-display text-3xl font-bold text-foreground min-w-[3rem] text-center">
-              {userConsumption.food}
+              {consumption.food}
             </span>
             
             <button
-              onClick={() => addFood(currentUser)}
+              onClick={() => addFood(currentUser.id)}
               className="counter-btn counter-btn-yellow"
             >
               <Plus className="w-6 h-6 text-secondary-foreground" />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Beer, Utensils, Music, Users, Star } from 'lucide-react';
+import { Beer, Utensils, Music, Users, Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StarRatingProps {
@@ -44,33 +44,32 @@ function StarRating({ value, onChange, label, icon }: StarRatingProps) {
 }
 
 export function VoteForm() {
-  const { currentUser, appConfig, submitVote, getBarVotes, t } = useBaratona();
+  const { currentUser, appConfig, submitVote, getUserVoteForBar, t } = useBaratona();
   
   const [drinkScore, setDrinkScore] = useState(0);
   const [foodScore, setFoodScore] = useState(0);
   const [vibeScore, setVibeScore] = useState(0);
   const [serviceScore, setServiceScore] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   
-  if (!currentUser || appConfig.status === 'in_transit') return null;
+  if (!currentUser || !appConfig || appConfig.status === 'in_transit') return null;
   
   // Check if user already voted for current bar
-  const existingVote = getBarVotes(appConfig.currentBarId).find(
-    v => v.participantName === currentUser
-  );
+  const existingVote = getUserVoteForBar(currentUser.id, appConfig.current_bar_id!);
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (drinkScore === 0 || foodScore === 0 || vibeScore === 0 || serviceScore === 0) {
       return;
     }
     
-    submitVote({
-      participantName: currentUser,
-      barId: appConfig.currentBarId,
+    setSubmitting(true);
+    await submitVote(currentUser.id, appConfig.current_bar_id!, {
       drinkScore,
       foodScore,
       vibeScore,
       serviceScore,
     });
+    setSubmitting(false);
     
     // Reset form
     setDrinkScore(0);
@@ -89,19 +88,19 @@ export function VoteForm() {
           <div className="grid grid-cols-4 gap-2 mt-3">
             <div className="text-center">
               <Beer className="w-4 h-4 text-primary mx-auto" />
-              <span className="text-xs font-bold">{existingVote.drinkScore}</span>
+              <span className="text-xs font-bold">{existingVote.drink_score}</span>
             </div>
             <div className="text-center">
               <Utensils className="w-4 h-4 text-secondary mx-auto" />
-              <span className="text-xs font-bold">{existingVote.foodScore}</span>
+              <span className="text-xs font-bold">{existingVote.food_score}</span>
             </div>
             <div className="text-center">
               <Music className="w-4 h-4 text-destructive mx-auto" />
-              <span className="text-xs font-bold">{existingVote.vibeScore}</span>
+              <span className="text-xs font-bold">{existingVote.vibe_score}</span>
             </div>
             <div className="text-center">
               <Users className="w-4 h-4 text-muted-foreground mx-auto" />
-              <span className="text-xs font-bold">{existingVote.serviceScore}</span>
+              <span className="text-xs font-bold">{existingVote.service_score}</span>
             </div>
           </div>
         </div>
@@ -144,9 +143,12 @@ export function VoteForm() {
       
       <Button
         onClick={handleSubmit}
-        disabled={!isComplete}
+        disabled={!isComplete || submitting}
         className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-display font-bold"
       >
+        {submitting ? (
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+        ) : null}
         Enviar Avaliação
       </Button>
     </div>

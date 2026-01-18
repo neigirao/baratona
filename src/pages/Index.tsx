@@ -1,14 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useBaratona } from '@/contexts/BaratonaContext';
+import { ParticipantSelector } from '@/components/ParticipantSelector';
+import { Header } from '@/components/Header';
+import { Baratometro } from '@/components/Baratometro';
+import { VanStatus } from '@/components/VanStatus';
+import { ConsumptionCounter } from '@/components/ConsumptionCounter';
+import { VoteForm } from '@/components/VoteForm';
+import { BarItinerary } from '@/components/BarItinerary';
 
-const Index = () => {
+export default function Index() {
+  const { currentUser } = useBaratona();
+  
+  if (!currentUser) {
+    return <ParticipantSelector />;
+  }
+  
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background pb-6">
+      <Header />
+      
+      <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
+        {/* Baratômetro */}
+        <Baratometro />
+        
+        {/* Van Status */}
+        <VanStatus />
+        
+        {/* Consumption Counter */}
+        <ConsumptionCounter />
+        
+        {/* Vote Form */}
+        <VoteForm />
+        
+        {/* Bar Itinerary */}
+        <BarItinerary />
+      </main>
     </div>
   );
-};
-
-export default Index;
+}

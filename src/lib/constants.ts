@@ -63,6 +63,10 @@ export interface TranslationStrings {
   broadcast: string;
   callUber: string;
   sosNei: string;
+  map: string;
+  completed: string;
+  current: string;
+  upcoming: string;
 }
 
 export const TRANSLATIONS: Record<Language, TranslationStrings> = {
@@ -88,6 +92,10 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
     broadcast: "Comunicado",
     callUber: "Chamar Uber",
     sosNei: "SOS Nei",
+    map: "Mapa",
+    completed: "Concluído",
+    current: "Atual",
+    upcoming: "Próximo",
   },
   en: {
     drink: "Drink",
@@ -111,6 +119,10 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
     broadcast: "Broadcast",
     callUber: "Call Uber",
     sosNei: "SOS Nei",
+    map: "Map",
+    completed: "Completed",
+    current: "Current",
+    upcoming: "Upcoming",
   }
 };
 

@@ -3,6 +3,7 @@ import { ParticipantSelector } from '@/components/ParticipantSelector';
 import { Header } from '@/components/Header';
 import { Baratometro } from '@/components/Baratometro';
 import { VanStatus } from '@/components/VanStatus';
+import { CountdownTimer } from '@/components/CountdownTimer';
 import { BaratonaMap } from '@/components/BaratonaMap';
 import { ConsumptionCounter } from '@/components/ConsumptionCounter';
 import { VoteForm } from '@/components/VoteForm';
@@ -25,6 +26,9 @@ export default function Index() {
         
         {/* Van Status */}
         <VanStatus />
+        
+        {/* Countdown Timer */}
+        <CountdownTimer />
         
         {/* Interactive Map */}
         <BaratonaMap />

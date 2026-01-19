@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Clock, Bus, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,37 +17,36 @@ export function CountdownTimer() {
 
   const nextBar = getNextBar();
 
-  // Calculate time remaining until next bar departure
-  const timeRemaining = useMemo(() => {
-    if (!nextBar) return null;
-
-    const projectedTime = getProjectedTime(nextBar.scheduled_time);
-    const [hours, minutes] = projectedTime.split(':').map(Number);
-
-    // Create target date (today or tomorrow if time has passed)
-    const target = new Date();
-    target.setHours(hours, minutes, 0, 0);
-
-    // If target is before now, assume it's tomorrow (for late night bars like 01:30)
-    if (target < now) {
-      target.setDate(target.getDate() + 1);
-    }
-
-    const diff = target.getTime() - now.getTime();
-
-    if (diff <= 0) return { hours: 0, minutes: 0, seconds: 0, total: 0 };
-
-    const totalSeconds = Math.floor(diff / 1000);
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-
-    return { hours: h, minutes: m, seconds: s, total: totalSeconds };
-  }, [nextBar, getProjectedTime, now]);
-
   // If in transit or no next bar, don't show
-  if (appConfig?.status === 'in_transit' || !nextBar || !timeRemaining) {
+  if (appConfig?.status === 'in_transit' || !nextBar) {
     return null;
+  }
+
+  // Calculate time remaining until next bar departure
+  const projectedTime = getProjectedTime(nextBar.scheduled_time);
+  const [hours, minutes] = projectedTime.split(':').map(Number);
+
+  // Create target date (today or tomorrow if time has passed)
+  const target = new Date();
+  target.setHours(hours, minutes, 0, 0);
+
+  // If target is before now, assume it's tomorrow (for late night bars like 01:30)
+  if (target < now) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  const diff = target.getTime() - now.getTime();
+
+  let timeRemaining = { hours: 0, minutes: 0, seconds: 0, total: 0 };
+  
+  if (diff > 0) {
+    const totalSeconds = Math.floor(diff / 1000);
+    timeRemaining = {
+      hours: Math.floor(totalSeconds / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+      seconds: totalSeconds % 60,
+      total: totalSeconds,
+    };
   }
 
   const isUrgent = timeRemaining.total <= 600; // 10 minutes
@@ -94,7 +93,7 @@ export function CountdownTimer() {
             ? '⚠️ Saindo em breve!'
             : isUrgent
             ? '🏃 Prepare-se para sair'
-            : `Partida às ${getProjectedTime(nextBar.scheduled_time)}`}
+            : `Partida às ${projectedTime}`}
         </span>
       </div>
     </div>

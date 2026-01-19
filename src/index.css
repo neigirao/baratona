@@ -249,11 +249,11 @@
 @keyframes pulse-marker {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 10px hsl(197, 100%, 47%, 0.6);
+    box-shadow: 0 0 10px hsl(197 100% 47% / 0.6);
   }
   50% {
     transform: scale(1.1);
-    box-shadow: 0 0 20px hsl(197, 100%, 47%, 1);
+    box-shadow: 0 0 20px hsl(197 100% 47% / 1);
   }
 }
 
@@ -264,11 +264,11 @@
 @keyframes van-pulse-marker {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 15px hsl(45, 100%, 50%, 0.6);
+    box-shadow: 0 0 15px hsl(45 100% 50% / 0.6);
   }
   50% {
     transform: scale(1.15);
-    box-shadow: 0 0 30px hsl(45, 100%, 50%, 1);
+    box-shadow: 0 0 30px hsl(45 100% 50% / 1);
   }
 }
 

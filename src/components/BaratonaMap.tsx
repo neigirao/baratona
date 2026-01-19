@@ -1,17 +1,32 @@
 import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { MapPin, Clock, Bus } from 'lucide-react';
 
-// Fix Leaflet default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+// Leaflet module interop (CJS/ESM): normalize to the actual Leaflet namespace object
+const Leaflet: any = (L as any).default ?? L;
+
+// Fix Leaflet default marker icons (guarded to avoid crashing if Leaflet shape differs)
+try {
+  delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
+  Leaflet.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  });
+} catch (e) {
+  // eslint-disable-next-line no-console
+  console.warn('Leaflet default icon setup skipped:', e);
+}
+
+const safeDivIcon = (options: L.DivIconOptions) => {
+  if (typeof Leaflet.divIcon !== 'function') {
+    return new Leaflet.Icon.Default();
+  }
+  return Leaflet.divIcon(options);
+};
 
 // Custom icons for bar status
 const createBarIcon = (status: 'completed' | 'current' | 'upcoming') => {
@@ -23,7 +38,7 @@ const createBarIcon = (status: 'completed' | 'current' | 'upcoming') => {
 
   const color = colors[status];
 
-  return L.divIcon({
+  return safeDivIcon({
     className: 'custom-bar-marker',
     html: `
       <div style="
@@ -49,7 +64,7 @@ const createBarIcon = (status: 'completed' | 'current' | 'upcoming') => {
 
 // Van icon with pulse animation
 const createVanIcon = (isTransit: boolean) => {
-  return L.divIcon({
+  return safeDivIcon({
     className: `custom-van-marker ${isTransit ? 'van-pulse-marker' : ''}`,
     html: `
       <div class="${isTransit ? 'van-icon-transit' : 'van-icon-static'}" style="
@@ -61,7 +76,7 @@ const createVanIcon = (isTransit: boolean) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 15px hsl(45, 100%, 50%, 0.6);
+        box-shadow: 0 0 15px hsla(45, 100%, 50%, 0.6);
         font-size: 20px;
       ">
         🚐

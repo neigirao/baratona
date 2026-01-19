@@ -212,3 +212,73 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(197 100% 47%);
 }
+
+/* Leaflet Map Customizations */
+.leaflet-container {
+  background: hsl(0 0% 5%);
+  font-family: 'Inter', sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(0 0% 10%);
+  color: hsl(0 0% 100%);
+  border-radius: 0.75rem;
+  border: 1px solid hsl(0 0% 18%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-popup-tip {
+  background: hsl(0 0% 10%);
+  border: 1px solid hsl(0 0% 18%);
+}
+
+.leaflet-popup-close-button {
+  color: hsl(0 0% 60%) !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: hsl(0 0% 100%) !important;
+}
+
+.custom-bar-marker,
+.custom-van-marker {
+  background: transparent;
+  border: none;
+}
+
+@keyframes pulse-marker {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px hsl(197, 100%, 47%, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px hsl(197, 100%, 47%, 1);
+  }
+}
+
+.van-icon-transit {
+  animation: van-pulse-marker 1.5s ease-in-out infinite;
+}
+
+@keyframes van-pulse-marker {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px hsl(45, 100%, 50%, 0.6);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 30px hsl(45, 100%, 50%, 1);
+  }
+}
+
+/* Fix Leaflet attribution for dark theme */
+.leaflet-control-attribution {
+  background: hsl(0 0% 5% / 0.8) !important;
+  color: hsl(0 0% 60%) !important;
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: hsl(197, 100%, 47%) !important;
+}

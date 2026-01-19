@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Clock, Bus, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function CountdownTimer() {
-  const { appConfig, getNextBar, getProjectedTime, t } = useBaratona();
+  const { appConfig, bars, t } = useBaratona();
   const [now, setNow] = useState(new Date());
 
   // Update "now" every second
@@ -15,15 +15,35 @@ export function CountdownTimer() {
     return () => clearInterval(interval);
   }, []);
 
-  const nextBar = getNextBar();
+  // Compute next bar directly to avoid calling context functions during render
+  const nextBar = useMemo(() => {
+    if (!appConfig || !bars.length) return undefined;
+    const current = bars.find(b => b.id === appConfig.current_bar_id);
+    if (!current) return undefined;
+    const currentIndex = bars.findIndex(b => b.id === current.id);
+    if (currentIndex < bars.length - 1) {
+      return bars[currentIndex + 1];
+    }
+    return undefined;
+  }, [appConfig, bars]);
+
+  // Compute projected time directly
+  const projectedTime = useMemo(() => {
+    if (!nextBar) return null;
+    const delay = appConfig?.global_delay_minutes || 0;
+    const [hours, minutes] = nextBar.scheduled_time.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + delay;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+  }, [nextBar, appConfig?.global_delay_minutes]);
 
   // If in transit or no next bar, don't show
-  if (appConfig?.status === 'in_transit' || !nextBar) {
+  if (appConfig?.status === 'in_transit' || !nextBar || !projectedTime) {
     return null;
   }
 
   // Calculate time remaining until next bar departure
-  const projectedTime = getProjectedTime(nextBar.scheduled_time);
   const [hours, minutes] = projectedTime.split(':').map(Number);
 
   // Create target date (today or tomorrow if time has passed)

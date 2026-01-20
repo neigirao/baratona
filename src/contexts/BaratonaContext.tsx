@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Language, TRANSLATIONS, TranslationStrings } from '@/lib/constants';
 import { useParticipants, useBars, useAppConfig, useVotes, useConsumption } from '@/hooks/useSupabaseData';
 import type { Database } from '@/integrations/supabase/types';
@@ -89,19 +89,19 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('baratona_lang', language);
   }, [language]);
   
-  const setCurrentUser = (participant: Participant | null) => {
+  const setCurrentUser = useCallback((participant: Participant | null) => {
     setCurrentUserState(participant);
     if (participant) {
       localStorage.setItem('baratona_user', participant.name);
     } else {
       localStorage.removeItem('baratona_user');
     }
-  };
+  }, []);
   
   const isAdmin = currentUser?.is_admin || false;
   const t = TRANSLATIONS[language];
   
-  const submitVote = async (
+  const submitVote = useCallback(async (
     participantId: string, 
     barId: number, 
     scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
@@ -111,11 +111,11 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
       navigator.vibrate(50);
     }
     return submitVoteToDb(participantId, barId, scores);
-  };
+  }, [submitVoteToDb]);
 
-  const getUserVoteForBar = (participantId: string, barId: number) => {
+  const getUserVoteForBar = useCallback((participantId: string, barId: number) => {
     return votes.find(v => v.participant_id === participantId && v.bar_id === barId);
-  };
+  }, [votes]);
   
   const getProjectedTime = useCallback((scheduledTime: string): string => {
     const delay = appConfig?.global_delay_minutes || 0;
@@ -143,35 +143,64 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     return undefined;
   }, [appConfig, bars]);
   
+  const value = useMemo<BaratonaContextType>(() => ({
+    currentUser,
+    setCurrentUser,
+    isAdmin,
+    language,
+    setLanguage,
+    t,
+    participants,
+    participantsLoading,
+    bars,
+    barsLoading,
+    appConfig,
+    appConfigLoading,
+    updateAppConfig: updateConfig,
+    addDrink,
+    removeDrink,
+    addFood,
+    removeFood,
+    getParticipantConsumption,
+    totalDrinks,
+    totalFood,
+    submitVote,
+    getBarVotes,
+    getUserVoteForBar,
+    getProjectedTime,
+    getCurrentBar,
+    getNextBar,
+  }), [
+    currentUser,
+    setCurrentUser,
+    isAdmin,
+    language,
+    setLanguage,
+    t,
+    participants,
+    participantsLoading,
+    bars,
+    barsLoading,
+    appConfig,
+    appConfigLoading,
+    updateConfig,
+    addDrink,
+    removeDrink,
+    addFood,
+    removeFood,
+    getParticipantConsumption,
+    totalDrinks,
+    totalFood,
+    submitVote,
+    getBarVotes,
+    getUserVoteForBar,
+    getProjectedTime,
+    getCurrentBar,
+    getNextBar,
+  ]);
+
   return (
-    <BaratonaContext.Provider value={{
-      currentUser,
-      setCurrentUser,
-      isAdmin,
-      language,
-      setLanguage,
-      t,
-      participants,
-      participantsLoading,
-      bars,
-      barsLoading,
-      appConfig,
-      appConfigLoading,
-      updateAppConfig: updateConfig,
-      addDrink,
-      removeDrink,
-      addFood,
-      removeFood,
-      getParticipantConsumption,
-      totalDrinks,
-      totalFood,
-      submitVote,
-      getBarVotes,
-      getUserVoteForBar,
-      getProjectedTime,
-      getCurrentBar,
-      getNextBar,
-    }}>
+    <BaratonaContext.Provider value={value}>
       {children}
     </BaratonaContext.Provider>
   );

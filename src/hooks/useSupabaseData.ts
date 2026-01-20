@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -103,7 +103,7 @@ export function useAppConfig() {
     };
   }, [fetchConfig]);
 
-  const updateConfig = async (updates: Partial<Omit<AppConfig, 'id' | 'updated_at'>>) => {
+  const updateConfig = useCallback(async (updates: Partial<Omit<AppConfig, 'id' | 'updated_at'>>) => {
     const { error } = await supabase
       .from('app_config')
       .update(updates)
@@ -114,7 +114,7 @@ export function useAppConfig() {
       return false;
     }
     return true;
-  };
+  }, []);
 
   return { appConfig, loading, updateConfig, refetch: fetchConfig };
 }
@@ -152,7 +152,7 @@ export function useVotes() {
     };
   }, [fetchVotes]);
 
-  const submitVote = async (
+  const submitVote = useCallback(async (
     participantId: string,
     barId: number,
     scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
@@ -173,9 +173,12 @@ export function useVotes() {
       return false;
     }
     return true;
-  };
+  }, []);
 
-  const getBarVotes = (barId: number) => votes.filter(v => v.bar_id === barId);
+  const getBarVotes = useCallback(
+    (barId: number) => votes.filter(v => v.bar_id === barId),
+    [votes]
+  );
 
   return { votes, loading, submitVote, getBarVotes };
 }
@@ -183,7 +186,12 @@ export function useVotes() {
 export function useConsumption() {
   const [consumption, setConsumption] = useState<Consumption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pendingUpdates, setPendingUpdates] = useState<Map<string, number>>(new Map());
+  
+  // Use ref to access current consumption in callbacks without causing re-renders
+  const consumptionRef = useRef<Consumption[]>(consumption);
+  useEffect(() => {
+    consumptionRef.current = consumption;
+  }, [consumption]);
 
   const fetchConsumption = useCallback(async () => {
     const { data, error } = await supabase
@@ -214,10 +222,10 @@ export function useConsumption() {
     };
   }, [fetchConsumption]);
 
-  // Optimistic update helper
-  const updateCount = async (participantId: string, type: 'drink' | 'food', delta: number) => {
-    // Find current record
-    const current = consumption.find(c => c.participant_id === participantId && c.type === type);
+  // Stable updateCount using ref
+  const updateCount = useCallback(async (participantId: string, type: 'drink' | 'food', delta: number) => {
+    // Use ref to get current consumption
+    const current = consumptionRef.current.find(c => c.participant_id === participantId && c.type === type);
     if (!current) return false;
 
     const newCount = Math.max(0, current.count + delta);
@@ -251,21 +259,36 @@ export function useConsumption() {
     }
     
     return true;
-  };
+  }, [fetchConsumption]);
 
-  const addDrink = (participantId: string) => updateCount(participantId, 'drink', 1);
-  const removeDrink = (participantId: string) => updateCount(participantId, 'drink', -1);
-  const addFood = (participantId: string) => updateCount(participantId, 'food', 1);
-  const removeFood = (participantId: string) => updateCount(participantId, 'food', -1);
+  const addDrink = useCallback(
+    (participantId: string) => updateCount(participantId, 'drink', 1),
+    [updateCount]
+  );
+  
+  const removeDrink = useCallback(
+    (participantId: string) => updateCount(participantId, 'drink', -1),
+    [updateCount]
+  );
+  
+  const addFood = useCallback(
+    (participantId: string) => updateCount(participantId, 'food', 1),
+    [updateCount]
+  );
+  
+  const removeFood = useCallback(
+    (participantId: string) => updateCount(participantId, 'food', -1),
+    [updateCount]
+  );
 
-  const getParticipantConsumption = (participantId: string) => {
+  const getParticipantConsumption = useCallback((participantId: string) => {
     const drinks = consumption.find(c => c.participant_id === participantId && c.type === 'drink');
     const food = consumption.find(c => c.participant_id === participantId && c.type === 'food');
     return {
       drinks: drinks?.count || 0,
       food: food?.count || 0,
     };
-  };
+  }, [consumption]);
 
   const totalDrinks = consumption
     .filter(c => c.type === 'drink')

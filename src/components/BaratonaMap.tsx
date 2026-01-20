@@ -5,41 +5,62 @@ import 'leaflet/dist/leaflet.css';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { MapPin, Clock, Bus } from 'lucide-react';
 
-// Leaflet module interop (CJS/ESM): normalize to the actual Leaflet namespace object
-const Leaflet: any = (L as any).default ?? L;
+// Leaflet module interop (CJS/ESM): normalize to the actual Leaflet namespace object.
+// In some bundling edge-cases, the imported module can look like an Array; guard against that.
+function resolveLeafletNamespace(mod: any) {
+  const candidate = mod?.default ?? mod;
+  if (Array.isArray(candidate)) {
+    return (
+      candidate.find((x: any) => x && (x.Icon || x.divIcon || x.marker)) ?? candidate[0]
+    );
+  }
+  return candidate;
+}
+
+const Leaflet: any = resolveLeafletNamespace(L);
 
 // Fix Leaflet default marker icons (guarded to avoid crashing if Leaflet shape differs)
 try {
-  delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
-  Leaflet.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  });
+  if (Leaflet?.Icon?.Default?.prototype) {
+    delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
+    Leaflet.Icon.Default.mergeOptions({
+      iconRetinaUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+      iconUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+      shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    });
+  }
 } catch (e) {
   // eslint-disable-next-line no-console
-  console.warn('Leaflet default icon setup skipped:', e);
+  console.warn("Leaflet default icon setup skipped:", e);
 }
 
-const safeDivIcon = (options: L.DivIconOptions) => {
-  if (typeof Leaflet.divIcon !== 'function') {
-    return new Leaflet.Icon.Default();
+const safeDivIcon = (options: any) => {
+  try {
+    if (typeof Leaflet?.divIcon === "function") {
+      return Leaflet.divIcon(options);
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("Leaflet divIcon failed:", e);
   }
-  return Leaflet.divIcon(options);
+  return undefined;
 };
 
 // Custom icons for bar status
-const createBarIcon = (status: 'completed' | 'current' | 'upcoming') => {
+const createBarIcon = (status: "completed" | "current" | "upcoming"): any => {
   const colors = {
-    completed: { bg: 'hsl(142, 76%, 36%)', border: 'hsl(142, 76%, 50%)' },
-    current: { bg: 'hsl(197, 100%, 47%)', border: 'hsl(197, 100%, 60%)' },
-    upcoming: { bg: 'hsl(0, 0%, 40%)', border: 'hsl(0, 0%, 60%)' },
+    completed: { bg: "hsl(142, 76%, 36%)", border: "hsl(142, 76%, 50%)" },
+    current: { bg: "hsl(197, 100%, 47%)", border: "hsl(197, 100%, 60%)" },
+    upcoming: { bg: "hsl(0, 0%, 40%)", border: "hsl(0, 0%, 60%)" },
   };
 
-  const color = colors[status];
+  const color = (colors as any)[status];
 
   return safeDivIcon({
-    className: 'custom-bar-marker',
+    className: "custom-bar-marker",
     html: `
       <div style="
         width: 28px;
@@ -51,9 +72,9 @@ const createBarIcon = (status: 'completed' | 'current' | 'upcoming') => {
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        ${status === 'current' ? 'animation: pulse-marker 2s ease-in-out infinite;' : ''}
+        ${status === "current" ? "animation: pulse-marker 2s ease-in-out infinite;" : ""}
       ">
-        <span style="color: white; font-weight: bold; font-size: 12px;">${status === 'current' ? '🍺' : status === 'completed' ? '✓' : '○'}</span>
+        <span style="color: white; font-weight: bold; font-size: 12px;">${status === "current" ? "🍺" : status === "completed" ? "✓" : "○"}</span>
       </div>
     `,
     iconSize: [28, 28],
@@ -63,11 +84,11 @@ const createBarIcon = (status: 'completed' | 'current' | 'upcoming') => {
 };
 
 // Van icon with pulse animation
-const createVanIcon = (isTransit: boolean) => {
+const createVanIcon = (isTransit: boolean): any => {
   return safeDivIcon({
-    className: `custom-van-marker ${isTransit ? 'van-pulse-marker' : ''}`,
+    className: `custom-van-marker ${isTransit ? "van-pulse-marker" : ""}`,
     html: `
-      <div class="${isTransit ? 'van-icon-transit' : 'van-icon-static'}" style="
+      <div class="${isTransit ? "van-icon-transit" : "van-icon-static"}" style="
         width: 40px;
         height: 40px;
         border-radius: 50%;

@@ -2,6 +2,7 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { ParticipantSelector } from '@/components/ParticipantSelector';
 import { Header } from '@/components/Header';
 import { Baratometro } from '@/components/Baratometro';
+import { ConsumptionRanking } from '@/components/ConsumptionRanking';
 import { VanStatus } from '@/components/VanStatus';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { BaratonaMap } from '@/components/BaratonaMap';
@@ -23,6 +24,9 @@ export default function Index() {
       <main className="container max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Baratômetro */}
         <Baratometro />
+        
+        {/* Consumption Ranking */}
+        <ConsumptionRanking />
         
         {/* Van Status */}
         <VanStatus />

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -290,13 +290,15 @@ export function useConsumption() {
     };
   }, [consumption]);
 
-  const totalDrinks = consumption
-    .filter(c => c.type === 'drink')
-    .reduce((sum, c) => sum + c.count, 0);
+  const totalDrinks = useMemo(() => 
+    consumption.filter(c => c.type === 'drink').reduce((sum, c) => sum + c.count, 0),
+    [consumption]
+  );
 
-  const totalFood = consumption
-    .filter(c => c.type === 'food')
-    .reduce((sum, c) => sum + c.count, 0);
+  const totalFood = useMemo(() => 
+    consumption.filter(c => c.type === 'food').reduce((sum, c) => sum + c.count, 0),
+    [consumption]
+  );
 
   return { 
     consumption, 

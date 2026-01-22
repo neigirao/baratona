@@ -4,7 +4,7 @@ import { Beer, Utensils, Plus, Minus, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export function ConsumptionCounter() {
-  const { currentUser, addDrink, removeDrink, addFood, removeFood, getParticipantConsumption, t, language } = useBaratona();
+  const { currentUser, updateConsumption, getParticipantConsumption, t, language } = useBaratona();
   
   // Local pending changes (delta from current database value)
   const [pendingDrinks, setPendingDrinks] = useState(0);
@@ -53,39 +53,33 @@ export function ConsumptionCounter() {
     if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
     
     try {
-      // Apply pending changes to database
       const promises: Promise<boolean>[] = [];
       
-      if (pendingDrinks > 0) {
-        for (let i = 0; i < pendingDrinks; i++) {
-          promises.push(addDrink(currentUser.id));
-        }
-      } else if (pendingDrinks < 0) {
-        for (let i = 0; i < Math.abs(pendingDrinks); i++) {
-          promises.push(removeDrink(currentUser.id));
-        }
+      // Update drinks with single call using the delta
+      if (pendingDrinks !== 0) {
+        promises.push(updateConsumption(currentUser.id, 'drink', pendingDrinks));
       }
       
-      if (pendingFood > 0) {
-        for (let i = 0; i < pendingFood; i++) {
-          promises.push(addFood(currentUser.id));
-        }
-      } else if (pendingFood < 0) {
-        for (let i = 0; i < Math.abs(pendingFood); i++) {
-          promises.push(removeFood(currentUser.id));
-        }
+      // Update food with single call using the delta
+      if (pendingFood !== 0) {
+        promises.push(updateConsumption(currentUser.id, 'food', pendingFood));
       }
       
-      await Promise.all(promises);
+      const results = await Promise.all(promises);
+      const allSucceeded = results.every(r => r);
       
-      // Clear pending changes
-      setPendingDrinks(0);
-      setPendingFood(0);
-      
-      toast({
-        title: language === 'pt' ? 'Salvo!' : 'Saved!',
-        description: language === 'pt' ? 'Consumo atualizado com sucesso' : 'Consumption updated successfully',
-      });
+      if (allSucceeded) {
+        // Clear pending changes
+        setPendingDrinks(0);
+        setPendingFood(0);
+        
+        toast({
+          title: language === 'pt' ? 'Salvo!' : 'Saved!',
+          description: language === 'pt' ? 'Consumo atualizado com sucesso' : 'Consumption updated successfully',
+        });
+      } else {
+        throw new Error('Some updates failed');
+      }
     } catch (error) {
       toast({
         title: language === 'pt' ? 'Erro' : 'Error',

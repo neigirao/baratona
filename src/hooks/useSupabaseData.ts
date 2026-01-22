@@ -340,6 +340,7 @@ export function useConsumption() {
     removeDrink, 
     addFood, 
     removeFood,
+    updateConsumption: updateCount,
     getParticipantConsumption,
     totalDrinks,
     totalFood,

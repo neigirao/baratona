@@ -1,10 +1,28 @@
 import { useMemo } from "react";
 import { useBaratona } from "@/contexts/BaratonaContext";
-import { MapPin, Bus } from "lucide-react";
+import { MapPin, Bus, Route } from "lucide-react";
 
 function getGoogleMapsSearchUrl(query: string) {
   const q = encodeURIComponent(query);
   return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
+function getGoogleMapsRouteUrl(bars: { name: string; address: string; latitude: number | null; longitude: number | null }[]) {
+  if (bars.length < 2) return null;
+  
+  // Use coordinates if available, otherwise use name + address
+  const getLocation = (bar: typeof bars[0]) => {
+    if (bar.latitude != null && bar.longitude != null) {
+      return `${bar.latitude},${bar.longitude}`;
+    }
+    return encodeURIComponent(`${bar.name} ${bar.address}`);
+  };
+  
+  const origin = getLocation(bars[0]);
+  const destination = getLocation(bars[bars.length - 1]);
+  const waypoints = bars.slice(1, -1).map(getLocation).join('|');
+  
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
 }
 
 function getOpenStreetMapEmbedUrl(lat: number, lng: number) {
@@ -101,13 +119,26 @@ export function BaratonaMap() {
         </div>
       )}
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-3">
+        {/* Full Route Button */}
+        {bars.length >= 2 && (
+          <a
+            href={getGoogleMapsRouteUrl(bars) || '#'}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-lg"
+          >
+            <Route className="w-5 h-5" />
+            Ver Rota Completa ({bars.length} bares)
+          </a>
+        )}
+
         {currentBar && (
           <a
             href={getGoogleMapsSearchUrl(`${currentBar.name} ${currentBar.address}`)}
             target="_blank"
             rel="noreferrer"
-            className="block text-sm font-medium text-primary underline underline-offset-4"
+            className="block text-sm font-medium text-primary underline underline-offset-4 text-center"
           >
             Abrir bar atual no Google Maps
           </a>

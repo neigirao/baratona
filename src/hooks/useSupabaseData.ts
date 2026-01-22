@@ -226,7 +226,40 @@ export function useConsumption() {
   const updateCount = useCallback(async (participantId: string, type: 'drink' | 'food', delta: number) => {
     // Use ref to get current consumption
     const current = consumptionRef.current.find(c => c.participant_id === participantId && c.type === type);
-    if (!current) return false;
+    
+    // If no record exists, create one
+    if (!current) {
+      const newCount = Math.max(0, delta);
+      
+      // Optimistic update - add new record
+      const optimisticRecord: Consumption = {
+        id: crypto.randomUUID(),
+        participant_id: participantId,
+        type,
+        count: newCount,
+        updated_at: new Date().toISOString(),
+      };
+      setConsumption(prev => [...prev, optimisticRecord]);
+      
+      // Insert new record
+      const { error } = await supabase
+        .from('consumption')
+        .insert({
+          participant_id: participantId,
+          type,
+          count: newCount,
+        });
+      
+      if (error) {
+        console.error('Error inserting consumption:', error);
+        fetchConsumption();
+        return false;
+      }
+      
+      // Refetch to get the real ID
+      fetchConsumption();
+      return true;
+    }
 
     const newCount = Math.max(0, current.count + delta);
     

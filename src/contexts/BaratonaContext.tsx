@@ -34,6 +34,7 @@ interface BaratonaContextType {
   removeDrink: (participantId: string) => Promise<boolean>;
   addFood: (participantId: string) => Promise<boolean>;
   removeFood: (participantId: string) => Promise<boolean>;
+  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number) => Promise<boolean>;
   getParticipantConsumption: (participantId: string) => { drinks: number; food: number };
   totalDrinks: number;
   totalFood: number;
@@ -68,6 +69,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     removeDrink, 
     addFood, 
     removeFood, 
+    updateConsumption,
     getParticipantConsumption,
     totalDrinks,
     totalFood,
@@ -161,6 +163,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     removeDrink,
     addFood,
     removeFood,
+    updateConsumption,
     getParticipantConsumption,
     totalDrinks,
     totalFood,
@@ -188,6 +191,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     removeDrink,
     addFood,
     removeFood,
+    updateConsumption,
     getParticipantConsumption,
     totalDrinks,
     totalFood,

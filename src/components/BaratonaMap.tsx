@@ -7,23 +7,8 @@ function getGoogleMapsSearchUrl(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
-function getGoogleMapsRouteUrl(bars: { name: string; address: string; latitude: number | null; longitude: number | null }[]) {
-  if (bars.length < 2) return null;
-  
-  // Use coordinates if available, otherwise use name + address
-  const getLocation = (bar: typeof bars[0]) => {
-    if (bar.latitude != null && bar.longitude != null) {
-      return `${bar.latitude},${bar.longitude}`;
-    }
-    return encodeURIComponent(`${bar.name} ${bar.address}`);
-  };
-  
-  const origin = getLocation(bars[0]);
-  const destination = getLocation(bars[bars.length - 1]);
-  const waypoints = bars.slice(1, -1).map(getLocation).join('|');
-  
-  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
-}
+// Fixed route URL with all 9 bars
+const FULL_ROUTE_URL = "https://www.google.com/maps/dir/Pav%C3%A3o+Azul+Bar,+Rua+Hil%C3%A1rio+de+Gouveia,+71+-+Copacabana,+Rio+de+Janeiro+-+RJ,+Brazil/Chanchada+Bar,+Rua+General+Polidoro,+164+b+-+Botafogo,+Rio+de+Janeiro+-+RJ,+Brasil/RioTap+Beer+House,+Travessa+dos+Tamoios,+32+-+LOJA+B+e+C+-+Flamengo,+Rio+de+Janeiro+-+RJ,+Brazil/SURU+%E2%80%A2+bar,+Rua+da+Lapa,+151+-+Lapa,+Rio+de+Janeiro+-+RJ,+Brazil/Bar+da+Frente,+Rua+Bar%C3%A3o+de+Iguatemi,+388+-+Pra%C3%A7a+da+Bandeira,+Rio+de+Janeiro+-+RJ,+Brasil/Bar+Noo+Cacha%C3%A7aria,+Rua+Bar%C3%A3o+de+Iguatemi,+358+-+Pra%C3%A7a+da+Bandeira,+Rio+de+Janeiro+-+RJ,+Brasil/Miudinho,+Rua+Visconde+de+Itamarati,+115+-+Maracan%C3%A3,+Rio+de+Janeiro+-+RJ,+Brasil/Bar%C3%B3dromo+%E2%80%93+Bar+do+Carnaval+e+da+Roda+de+Samba+Enredo+Maracan%C3%A3+%7C+RJ,+Rua+Dona+Zulmira,+41+-+Maracan%C3%A3,+Rio+de+Janeiro+-+RJ,+Brasil/Fregola+Pub,+Rua+Geminiano+G%C3%B3is,+70+-+Freguesia+(Jacarepagu%C3%A1),+Rio+de+Janeiro+-+RJ,+Brasil/data=!4m56!4m55!1m5!1m1!19sChIJfzUpdlrVmwARBa4qxLE4r7k!2m2!1d-43.1846008!2d-22.9676586!1m5!1m1!19sChIJVe6oOPF_mQARejg-i5wgTaE!2m2!1d-43.1856437!2d-22.9560446!1m5!1m1!19sChIJgY7ZZPR_mQARw9cqyKaSXiI!2m2!1d-43.1769384!2d-22.9347311!1m5!1m1!19sChIJje1IWBl_mQARedEn4j27YxA!2m2!1d-43.177538899999995!2d-22.9159273!1m5!1m1!19sChIJcQRwcVV-mQARltslpG9a4dg!2m2!1d-43.215244299999995!2d-22.913421099999997!1m5!1m1!19sChIJ8TLbZVV-mQARu2NqFrJlxm8!2m2!1d-43.215010299999996!2d-22.913286199999998!1m5!1m1!19sChIJMRfRVVh_mQARsU6TmwtgcTY!2m2!1d-43.232317099999996!2d-22.917933299999998!1m5!1m1!19sChIJLXa08g5_mQAR4rQ9cleH0DI!2m2!1d-43.234827599999996!2d-22.9159127!1m5!1m1!19sChIJGfGfuA3ZmwARYtDyxQ0h8T8!2m2!1d-43.3347675!2d-22.9388732!3e0";
 
 function getOpenStreetMapEmbedUrl(lat: number, lng: number) {
   // bbox around the point (roughly a few city blocks)
@@ -121,17 +106,15 @@ export function BaratonaMap() {
 
       <div className="mt-3 space-y-3">
         {/* Full Route Button */}
-        {bars.length >= 2 && (
-          <a
-            href={getGoogleMapsRouteUrl(bars) || '#'}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-lg"
-          >
-            <Route className="w-5 h-5" />
-            Ver Rota Completa ({bars.length} bares)
-          </a>
-        )}
+        <a
+          href={FULL_ROUTE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-lg"
+        >
+          <Route className="w-5 h-5" />
+          Ver Rota Completa (9 bares)
+        </a>
 
         {currentBar && (
           <a

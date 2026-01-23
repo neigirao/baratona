@@ -101,6 +101,7 @@ export type Database = {
       }
       consumption: {
         Row: {
+          bar_id: number | null
           count: number
           id: string
           participant_id: string
@@ -108,6 +109,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bar_id?: number | null
           count?: number
           id?: string
           participant_id: string
@@ -115,6 +117,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bar_id?: number | null
           count?: number
           id?: string
           participant_id?: string
@@ -122,6 +125,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "consumption_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "consumption_participant_id_fkey"
             columns: ["participant_id"]

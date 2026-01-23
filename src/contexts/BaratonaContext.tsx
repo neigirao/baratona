@@ -29,13 +29,14 @@ interface BaratonaContextType {
   appConfigLoading: boolean;
   updateAppConfig: (updates: Partial<Omit<AppConfigRow, 'id' | 'updated_at'>>) => Promise<boolean>;
   
-  // Consumption
-  addDrink: (participantId: string) => Promise<boolean>;
-  removeDrink: (participantId: string) => Promise<boolean>;
-  addFood: (participantId: string) => Promise<boolean>;
-  removeFood: (participantId: string) => Promise<boolean>;
-  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number) => Promise<boolean>;
-  getParticipantConsumption: (participantId: string) => { drinks: number; food: number };
+  // Consumption - now with bar_id support
+  addDrink: (participantId: string, barId?: number | null) => Promise<boolean>;
+  removeDrink: (participantId: string, barId?: number | null) => Promise<boolean>;
+  addFood: (participantId: string, barId?: number | null) => Promise<boolean>;
+  removeFood: (participantId: string, barId?: number | null) => Promise<boolean>;
+  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number, barId?: number | null) => Promise<boolean>;
+  getParticipantConsumption: (participantId: string, barId?: number | null) => { drinks: number; food: number };
+  getTotalParticipantConsumption: (participantId: string) => { drinks: number; food: number };
   totalDrinks: number;
   totalFood: number;
   
@@ -48,6 +49,7 @@ interface BaratonaContextType {
   getProjectedTime: (scheduledTime: string) => string;
   getCurrentBar: () => Bar | undefined;
   getNextBar: () => Bar | undefined;
+  currentBarId: number | null;
 }
 
 const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
@@ -64,6 +66,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   const { bars, loading: barsLoading } = useBars();
   const { appConfig, loading: appConfigLoading, updateConfig } = useAppConfig();
   const { votes, submitVote: submitVoteToDb, getBarVotes } = useVotes();
+  
+  // Get current bar ID from app config
+  const currentBarId = appConfig?.current_bar_id ?? null;
+  
   const { 
     addDrink, 
     removeDrink, 
@@ -71,9 +77,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     removeFood, 
     updateConsumption,
     getParticipantConsumption,
+    getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
-  } = useConsumption();
+  } = useConsumption(currentBarId);
 
   // Restore user from localStorage
   useEffect(() => {
@@ -95,6 +102,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     setCurrentUserState(participant);
     if (participant) {
       localStorage.setItem('baratona_user', participant.name);
+      // Store last used participant for sorting
+      const lastUsed = JSON.parse(localStorage.getItem('baratona_last_used') || '{}');
+      lastUsed[participant.id] = Date.now();
+      localStorage.setItem('baratona_last_used', JSON.stringify(lastUsed));
     } else {
       localStorage.removeItem('baratona_user');
     }
@@ -165,6 +176,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     removeFood,
     updateConsumption,
     getParticipantConsumption,
+    getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
     submitVote,
@@ -173,6 +185,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getProjectedTime,
     getCurrentBar,
     getNextBar,
+    currentBarId,
   }), [
     currentUser,
     setCurrentUser,
@@ -193,6 +206,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     removeFood,
     updateConsumption,
     getParticipantConsumption,
+    getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
     submitVote,
@@ -201,6 +215,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getProjectedTime,
     getCurrentBar,
     getNextBar,
+    currentBarId,
   ]);
 
   return (

@@ -9,6 +9,7 @@ import { BaratonaMap } from '@/components/BaratonaMap';
 import { ConsumptionCounter } from '@/components/ConsumptionCounter';
 import { VoteForm } from '@/components/VoteForm';
 import { BarItinerary } from '@/components/BarItinerary';
+import { EmergencyPanel } from '@/components/EmergencyPanel';
 
 export default function Index() {
   const { currentUser } = useBaratona();
@@ -45,6 +46,9 @@ export default function Index() {
         
         {/* Bar Itinerary */}
         <BarItinerary />
+        
+        {/* Emergency Panel */}
+        <EmergencyPanel />
       </main>
     </div>
   );

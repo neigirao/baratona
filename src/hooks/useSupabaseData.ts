@@ -183,7 +183,7 @@ export function useVotes() {
   return { votes, loading, submitVote, getBarVotes };
 }
 
-export function useConsumption() {
+export function useConsumption(currentBarId?: number | null) {
   const [consumption, setConsumption] = useState<Consumption[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -222,10 +222,21 @@ export function useConsumption() {
     };
   }, [fetchConsumption]);
 
-  // Stable updateCount using ref
-  const updateCount = useCallback(async (participantId: string, type: 'drink' | 'food', delta: number) => {
-    // Use ref to get current consumption
-    const current = consumptionRef.current.find(c => c.participant_id === participantId && c.type === type);
+  // Stable updateCount using ref - now includes bar_id
+  const updateCount = useCallback(async (
+    participantId: string, 
+    type: 'drink' | 'food', 
+    delta: number,
+    barId?: number | null
+  ) => {
+    const effectiveBarId = barId ?? null;
+    
+    // Use ref to get current consumption - match by bar_id if provided
+    const current = consumptionRef.current.find(c => 
+      c.participant_id === participantId && 
+      c.type === type && 
+      c.bar_id === effectiveBarId
+    );
     
     // If no record exists, create one
     if (!current) {
@@ -237,6 +248,7 @@ export function useConsumption() {
         participant_id: participantId,
         type,
         count: newCount,
+        bar_id: effectiveBarId,
         updated_at: new Date().toISOString(),
       };
       setConsumption(prev => [...prev, optimisticRecord]);
@@ -248,6 +260,7 @@ export function useConsumption() {
           participant_id: participantId,
           type,
           count: newCount,
+          bar_id: effectiveBarId,
         });
       
       if (error) {
@@ -266,7 +279,7 @@ export function useConsumption() {
     // Optimistic update
     setConsumption(prev => 
       prev.map(c => 
-        c.participant_id === participantId && c.type === type
+        c.participant_id === participantId && c.type === type && c.bar_id === effectiveBarId
           ? { ...c, count: newCount }
           : c
       )
@@ -277,12 +290,20 @@ export function useConsumption() {
       navigator.vibrate(50);
     }
 
-    // Actual update
-    const { error } = await supabase
+    // Actual update - build query based on whether bar_id is null or not
+    let query = supabase
       .from('consumption')
       .update({ count: newCount })
       .eq('participant_id', participantId)
       .eq('type', type);
+    
+    if (effectiveBarId === null) {
+      query = query.is('bar_id', null);
+    } else {
+      query = query.eq('bar_id', effectiveBarId);
+    }
+    
+    const { error } = await query;
     
     if (error) {
       console.error('Error updating consumption:', error);
@@ -295,32 +316,51 @@ export function useConsumption() {
   }, [fetchConsumption]);
 
   const addDrink = useCallback(
-    (participantId: string) => updateCount(participantId, 'drink', 1),
+    (participantId: string, barId?: number | null) => updateCount(participantId, 'drink', 1, barId),
     [updateCount]
   );
   
   const removeDrink = useCallback(
-    (participantId: string) => updateCount(participantId, 'drink', -1),
+    (participantId: string, barId?: number | null) => updateCount(participantId, 'drink', -1, barId),
     [updateCount]
   );
   
   const addFood = useCallback(
-    (participantId: string) => updateCount(participantId, 'food', 1),
+    (participantId: string, barId?: number | null) => updateCount(participantId, 'food', 1, barId),
     [updateCount]
   );
   
   const removeFood = useCallback(
-    (participantId: string) => updateCount(participantId, 'food', -1),
+    (participantId: string, barId?: number | null) => updateCount(participantId, 'food', -1, barId),
     [updateCount]
   );
 
-  const getParticipantConsumption = useCallback((participantId: string) => {
-    const drinks = consumption.find(c => c.participant_id === participantId && c.type === 'drink');
-    const food = consumption.find(c => c.participant_id === participantId && c.type === 'food');
-    return {
-      drinks: drinks?.count || 0,
-      food: food?.count || 0,
-    };
+  // Get participant consumption - optionally filtered by bar
+  const getParticipantConsumption = useCallback((participantId: string, barId?: number | null) => {
+    const filteredConsumption = barId !== undefined 
+      ? consumption.filter(c => c.participant_id === participantId && c.bar_id === barId)
+      : consumption.filter(c => c.participant_id === participantId);
+    
+    const drinks = filteredConsumption
+      .filter(c => c.type === 'drink')
+      .reduce((sum, c) => sum + c.count, 0);
+    const food = filteredConsumption
+      .filter(c => c.type === 'food')
+      .reduce((sum, c) => sum + c.count, 0);
+    
+    return { drinks, food };
+  }, [consumption]);
+
+  // Get total participant consumption across all bars
+  const getTotalParticipantConsumption = useCallback((participantId: string) => {
+    const participantConsumption = consumption.filter(c => c.participant_id === participantId);
+    const drinks = participantConsumption
+      .filter(c => c.type === 'drink')
+      .reduce((sum, c) => sum + c.count, 0);
+    const food = participantConsumption
+      .filter(c => c.type === 'food')
+      .reduce((sum, c) => sum + c.count, 0);
+    return { drinks, food };
   }, [consumption]);
 
   const totalDrinks = useMemo(() => 
@@ -342,6 +382,7 @@ export function useConsumption() {
     removeFood,
     updateConsumption: updateCount,
     getParticipantConsumption,
+    getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
   };

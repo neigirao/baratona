@@ -99,6 +99,42 @@ export type Database = {
         }
         Relationships: []
       }
+      checkins: {
+        Row: {
+          bar_id: number
+          checked_in_at: string
+          id: string
+          participant_id: string
+        }
+        Insert: {
+          bar_id: number
+          checked_in_at?: string
+          id?: string
+          participant_id: string
+        }
+        Update: {
+          bar_id?: number
+          checked_in_at?: string
+          id?: string
+          participant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkins_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consumption: {
         Row: {
           bar_id: number | null

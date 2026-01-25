@@ -3,6 +3,7 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { MapPin, Clock, CheckCircle, Circle, Star, Loader2, ChevronRight, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarRadarChart } from './BarRadarChart';
+import { VoteForm } from './VoteForm';
 import {
   Drawer,
   DrawerContent,
@@ -11,7 +12,7 @@ import {
 } from '@/components/ui/drawer';
 
 export function BarItinerary() {
-  const { appConfig, bars, barsLoading, getProjectedTime, getBarVotes } = useBaratona();
+  const { appConfig, bars, barsLoading, getProjectedTime, getBarVotes, currentUser, getUserVoteForBar, language } = useBaratona();
   const [selectedBarId, setSelectedBarId] = useState<number | null>(null);
   
   if (barsLoading) {
@@ -42,18 +43,22 @@ export function BarItinerary() {
   
   const selectedBar = bars.find(b => b.id === selectedBarId);
   const selectedBarVotes = selectedBarId ? getBarVotes(selectedBarId) : [];
+  const hasUserVotedForSelectedBar = selectedBarId && currentUser 
+    ? !!getUserVoteForBar(currentUser.id, selectedBarId)
+    : true;
   
   return (
     <>
       <div className="space-y-3 animate-slide-up">
         <h3 className="font-display text-sm font-semibold text-muted-foreground px-1">
-          Itinerário
+          {language === 'pt' ? 'Itinerário' : 'Itinerary'}
         </h3>
         
         <div className="space-y-2">
           {bars.map((bar) => {
             const status = getBarStatus(bar.id);
             const avgRating = getAverageRating(bar.id);
+            const hasVoted = currentUser ? !!getUserVoteForBar(currentUser.id, bar.id) : true;
             
             return (
               <button
@@ -90,6 +95,13 @@ export function BarItinerary() {
                     )}>
                       {bar.name}
                     </h4>
+                    
+                    {/* Show pending vote indicator */}
+                    {(status === 'completed' || status === 'current') && !hasVoted && (
+                      <span className="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded-full">
+                        {language === 'pt' ? 'Avaliar' : 'Rate'}
+                      </span>
+                    )}
                     
                     {avgRating && (
                       <div className="flex items-center gap-1 ml-auto">
@@ -139,8 +151,17 @@ export function BarItinerary() {
             {/* Vote Count */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="w-4 h-4" />
-              <span>{selectedBarVotes.length} {selectedBarVotes.length === 1 ? 'avaliação' : 'avaliações'}</span>
+              <span>
+                {selectedBarVotes.length} {selectedBarVotes.length === 1 
+                  ? (language === 'pt' ? 'avaliação' : 'review') 
+                  : (language === 'pt' ? 'avaliações' : 'reviews')}
+              </span>
             </div>
+            
+            {/* Vote Form - show if user hasn't voted for this bar yet */}
+            {selectedBarId && !hasUserVotedForSelectedBar && (
+              <VoteForm barId={selectedBarId} barName={selectedBar?.name} compact />
+            )}
             
             {/* Radar Chart */}
             {selectedBarId && <BarRadarChart barId={selectedBarId} />}

@@ -62,37 +62,47 @@ function RankingList({
 }
 
 export function ConsumptionRanking() {
-  const { participants, t, language } = useBaratona();
-  
-  // Get consumption data directly from Supabase hook to have access to all participants
-  const { consumption } = useConsumptionData();
+  const { participants, t, language, consumption } = useBaratona();
 
+  // Aggregate consumption by participant and type
   const drinkRanking = useMemo(() => {
-    const drinkData = consumption
+    const drinkTotals = new Map<string, number>();
+    
+    consumption
       .filter(c => c.type === 'drink' && c.count > 0)
-      .map(c => ({
-        participantId: c.participant_id,
-        participantName: participants.find(p => p.id === c.participant_id)?.name || 'Unknown',
-        count: c.count,
+      .forEach(c => {
+        const current = drinkTotals.get(c.participant_id) || 0;
+        drinkTotals.set(c.participant_id, current + c.count);
+      });
+    
+    return Array.from(drinkTotals.entries())
+      .map(([participantId, count]) => ({
+        participantId,
+        participantName: participants.find(p => p.id === participantId)?.name || 'Unknown',
+        count,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
-    
-    return drinkData;
   }, [consumption, participants]);
 
   const foodRanking = useMemo(() => {
-    const foodData = consumption
+    const foodTotals = new Map<string, number>();
+    
+    consumption
       .filter(c => c.type === 'food' && c.count > 0)
-      .map(c => ({
-        participantId: c.participant_id,
-        participantName: participants.find(p => p.id === c.participant_id)?.name || 'Unknown',
-        count: c.count,
+      .forEach(c => {
+        const current = foodTotals.get(c.participant_id) || 0;
+        foodTotals.set(c.participant_id, current + c.count);
+      });
+    
+    return Array.from(foodTotals.entries())
+      .map(([participantId, count]) => ({
+        participantId,
+        participantName: participants.find(p => p.id === participantId)?.name || 'Unknown',
+        count,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
-    
-    return foodData;
   }, [consumption, participants]);
 
   const hasAnyRanking = drinkRanking.length > 0 || foodRanking.length > 0;
@@ -128,12 +138,3 @@ export function ConsumptionRanking() {
     </Card>
   );
 }
-
-// Simple hook to get consumption data directly
-function useConsumptionData() {
-  const { consumption } = useConsumptionHook();
-  return { consumption };
-}
-
-// Import the hook from useSupabaseData
-import { useConsumption as useConsumptionHook } from '@/hooks/useSupabaseData';

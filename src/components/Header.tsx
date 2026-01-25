@@ -1,10 +1,11 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Globe, LogOut, Settings } from 'lucide-react';
+import { Globe, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 
 export function Header() {
-  const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig, t } = useBaratona();
+  const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
   
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -46,20 +47,13 @@ export function Header() {
             </Link>
           )}
           
-          {/* User/Logout */}
+          {/* User/Logout with confirmation */}
           {currentUser && (
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground hidden sm:block">
                 {currentUser.name}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentUser(null)}
-                className="h-8 w-8 p-0"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <LogoutConfirmDialog onConfirm={() => setCurrentUser(null)} />
             </div>
           )}
         </div>

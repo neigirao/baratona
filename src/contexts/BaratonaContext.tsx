@@ -6,7 +6,7 @@ import type { Database } from '@/integrations/supabase/types';
 type Participant = Database['public']['Tables']['participants']['Row'];
 type Bar = Database['public']['Tables']['bars']['Row'];
 type AppConfigRow = Database['public']['Tables']['app_config']['Row'];
-
+type Consumption = Database['public']['Tables']['consumption']['Row'];
 interface BaratonaContextType {
   // User
   currentUser: Participant | null;
@@ -39,6 +39,7 @@ interface BaratonaContextType {
   getTotalParticipantConsumption: (participantId: string) => { drinks: number; food: number };
   totalDrinks: number;
   totalFood: number;
+  consumption: Consumption[];
   
   // Votes
   submitVote: (participantId: string, barId: number, scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }) => Promise<boolean>;
@@ -71,6 +72,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   const currentBarId = appConfig?.current_bar_id ?? null;
   
   const { 
+    consumption,
     addDrink, 
     removeDrink, 
     addFood, 
@@ -179,6 +181,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
+    consumption,
     submitVote,
     getBarVotes,
     getUserVoteForBar,
@@ -209,6 +212,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
+    consumption,
     submitVote,
     getBarVotes,
     getUserVoteForBar,

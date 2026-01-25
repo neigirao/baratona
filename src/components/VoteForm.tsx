@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
 import { Beer, Utensils, Music, Users, Star, Loader2 } from 'lucide-react';
@@ -43,8 +43,14 @@ function StarRating({ value, onChange, label, icon }: StarRatingProps) {
   );
 }
 
-export function VoteForm() {
-  const { currentUser, appConfig, submitVote, getUserVoteForBar, t } = useBaratona();
+interface VoteFormProps {
+  barId?: number;
+  barName?: string;
+  compact?: boolean;
+}
+
+export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
+  const { currentUser, appConfig, submitVote, getUserVoteForBar, t, language } = useBaratona();
   
   const [drinkScore, setDrinkScore] = useState(0);
   const [foodScore, setFoodScore] = useState(0);
@@ -52,10 +58,21 @@ export function VoteForm() {
   const [serviceScore, setServiceScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   
-  if (!currentUser || !appConfig || appConfig.status === 'in_transit') return null;
+  // Use provided barId or fall back to current bar
+  const effectiveBarId = barId ?? appConfig?.current_bar_id;
   
-  // Check if user already voted for current bar
-  const existingVote = getUserVoteForBar(currentUser.id, appConfig.current_bar_id!);
+  // Reset form when bar changes
+  useEffect(() => {
+    setDrinkScore(0);
+    setFoodScore(0);
+    setVibeScore(0);
+    setServiceScore(0);
+  }, [effectiveBarId]);
+  
+  if (!currentUser || !effectiveBarId) return null;
+  
+  // Check if user already voted for this bar
+  const existingVote = getUserVoteForBar(currentUser.id, effectiveBarId);
   
   const handleSubmit = async () => {
     if (drinkScore === 0 || foodScore === 0 || vibeScore === 0 || serviceScore === 0) {
@@ -63,7 +80,7 @@ export function VoteForm() {
     }
     
     setSubmitting(true);
-    await submitVote(currentUser.id, appConfig.current_bar_id!, {
+    await submitVote(currentUser.id, effectiveBarId, {
       drinkScore,
       foodScore,
       vibeScore,
@@ -82,9 +99,14 @@ export function VoteForm() {
   
   if (existingVote) {
     return (
-      <div className="bg-card rounded-2xl p-4 border border-baratona-green/50 animate-fade-in">
+      <div className={cn(
+        "bg-card rounded-2xl border border-baratona-green/50 animate-fade-in",
+        compact ? "p-3" : "p-4"
+      )}>
         <div className="text-center">
-          <p className="text-sm text-baratona-green font-medium">✓ Voto registrado!</p>
+          <p className="text-sm text-baratona-green font-medium">
+            ✓ {language === 'pt' ? 'Voto registrado!' : 'Vote recorded!'}
+          </p>
           <div className="grid grid-cols-4 gap-2 mt-3">
             <div className="text-center">
               <Beer className="w-4 h-4 text-primary mx-auto" />
@@ -108,10 +130,17 @@ export function VoteForm() {
     );
   }
   
+  const title = barName 
+    ? `${t.vote} - ${barName}`
+    : `${t.vote} - ${language === 'pt' ? 'Bar Atual' : 'Current Bar'}`;
+  
   return (
-    <div className="bg-card rounded-2xl p-4 border border-border animate-slide-up">
+    <div className={cn(
+      "bg-card rounded-2xl border border-border animate-slide-up",
+      compact ? "p-3" : "p-4"
+    )}>
       <h3 className="text-center font-display text-sm font-semibold text-muted-foreground mb-4">
-        {t.vote} - Bar Atual
+        {title}
       </h3>
       
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -149,7 +178,7 @@ export function VoteForm() {
         {submitting ? (
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
         ) : null}
-        Enviar Avaliação
+        {language === 'pt' ? 'Enviar Avaliação' : 'Submit Review'}
       </Button>
     </div>
   );

@@ -62,7 +62,7 @@ function RankingList({
 }
 
 export function ConsumptionRanking() {
-  const { participants, t, language, consumption } = useBaratona();
+  const { participants, t, language, consumption, loading } = useBaratona();
 
   // Aggregate consumption by participant and type
   const drinkRanking = useMemo(() => {
@@ -106,6 +106,36 @@ export function ConsumptionRanking() {
   }, [consumption, participants]);
 
   const hasAnyRanking = drinkRanking.length > 0 || foodRanking.length > 0;
+
+  // Loading state
+  if (loading) {
+    return (
+      <Card className="animate-fade-in">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            {language === 'pt' ? 'Ranking' : 'Leaderboard'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded animate-pulse w-16" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded animate-pulse w-16" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!hasAnyRanking) {
     return null;

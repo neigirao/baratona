@@ -27,6 +27,14 @@ export function BarCheckin() {
             ? `Você saiu do ${currentBar.name}` 
             : `You left ${currentBar.name}`,
         });
+      } else {
+        toast({
+          title: language === 'pt' ? 'Erro no check-out' : 'Check-out failed',
+          description: language === 'pt' 
+            ? 'Não foi possível fazer check-out. Tente novamente.' 
+            : 'Could not check out. Please try again.',
+          variant: 'destructive',
+        });
       }
     } else {
       const success = await checkIn(currentUser.id, currentBarId);
@@ -36,6 +44,14 @@ export function BarCheckin() {
           description: language === 'pt' 
             ? `Você está no ${currentBar.name}! 🍻` 
             : `You're at ${currentBar.name}! 🍻`,
+        });
+      } else {
+        toast({
+          title: language === 'pt' ? 'Erro no check-in' : 'Check-in failed',
+          description: language === 'pt' 
+            ? 'Não foi possível fazer check-in. Tente novamente.' 
+            : 'Could not check in. Please try again.',
+          variant: 'destructive',
         });
       }
     }

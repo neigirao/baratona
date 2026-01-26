@@ -63,6 +63,20 @@ export function useBars() {
 
   useEffect(() => {
     fetchBars();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('bars-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bars' },
+        () => fetchBars()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchBars]);
 
   return { bars, loading, refetch: fetchBars };

@@ -3,6 +3,7 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
 import { Beer, Utensils, Music, Users, Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface StarRatingProps {
   value: number;
@@ -80,7 +81,7 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
     }
     
     setSubmitting(true);
-    await submitVote(currentUser.id, effectiveBarId, {
+    const success = await submitVote(currentUser.id, effectiveBarId, {
       drinkScore,
       foodScore,
       vibeScore,
@@ -88,11 +89,29 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
     });
     setSubmitting(false);
     
-    // Reset form
-    setDrinkScore(0);
-    setFoodScore(0);
-    setVibeScore(0);
-    setServiceScore(0);
+    if (success) {
+      // Success toast
+      toast({
+        title: language === 'pt' ? 'Avaliação enviada!' : 'Review submitted!',
+        description: language === 'pt' 
+          ? 'Obrigado pelo seu feedback! 🎉' 
+          : 'Thank you for your feedback! 🎉',
+      });
+      
+      // Reset form
+      setDrinkScore(0);
+      setFoodScore(0);
+      setVibeScore(0);
+      setServiceScore(0);
+    } else {
+      toast({
+        title: language === 'pt' ? 'Erro ao enviar' : 'Submit failed',
+        description: language === 'pt' 
+          ? 'Não foi possível enviar sua avaliação. Tente novamente.' 
+          : 'Could not submit your review. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
   
   const isComplete = drinkScore > 0 && foodScore > 0 && vibeScore > 0 && serviceScore > 0;

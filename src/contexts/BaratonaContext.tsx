@@ -41,6 +41,7 @@ interface BaratonaContextType {
   totalDrinks: number;
   totalFood: number;
   consumption: Consumption[];
+  consumptionLoading: boolean;
   
   // Votes
   submitVote: (participantId: string, barId: number, scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }) => Promise<boolean>;
@@ -57,6 +58,9 @@ interface BaratonaContextType {
   secondsAgo: number;
   isRefreshing: boolean;
   refreshAll: () => Promise<void>;
+  
+  // Loading alias for general components
+  loading: boolean;
 }
 
 const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
@@ -82,6 +86,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   
   const { 
     consumption,
+    loading: consumptionLoading,
     addDrink, 
     removeDrink, 
     addFood, 
@@ -215,6 +220,8 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     totalDrinks,
     totalFood,
     consumption,
+    consumptionLoading,
+    loading: consumptionLoading,
     submitVote,
     getBarVotes,
     getUserVoteForBar,
@@ -249,6 +256,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     totalDrinks,
     totalFood,
     consumption,
+    consumptionLoading,
     submitVote,
     getBarVotes,
     getUserVoteForBar,

@@ -4,6 +4,7 @@ import { Header } from '@/components/Header';
 import { MainTabs } from '@/components/MainTabs';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { SyncIndicator } from '@/components/SyncIndicator';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 
 export default function Index() {
   const { currentUser, secondsAgo, isRefreshing, refreshAll } = useBaratona();
@@ -13,17 +14,20 @@ export default function Index() {
   }
   
   return (
-    <PullToRefresh onRefresh={refreshAll} className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container max-w-lg mx-auto px-4 py-4 pb-6">
-        {/* Sync Indicator */}
-        <div className="flex justify-center mb-3">
-          <SyncIndicator secondsAgo={secondsAgo} isRefreshing={isRefreshing} />
-        </div>
+    <>
+      <OfflineIndicator />
+      <PullToRefresh onRefresh={refreshAll} className="min-h-screen bg-background">
+        <Header />
         
-        <MainTabs />
-      </main>
-    </PullToRefresh>
+        <main className="container max-w-lg mx-auto px-4 py-4 pb-6">
+          {/* Sync Indicator */}
+          <div className="flex justify-center mb-3">
+            <SyncIndicator secondsAgo={secondsAgo} isRefreshing={isRefreshing} />
+          </div>
+          
+          <MainTabs />
+        </main>
+      </PullToRefresh>
+    </>
   );
 }

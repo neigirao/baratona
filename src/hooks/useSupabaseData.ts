@@ -12,19 +12,19 @@ export function useParticipants() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      const { data, error } = await supabase
-        .from('participants')
-        .select('*')
-        .order('name');
-      
-      if (!error && data) {
-        setParticipants(data);
-      }
-      setLoading(false);
-    };
+  const fetchParticipants = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .order('name');
+    
+    if (!error && data) {
+      setParticipants(data);
+    }
+    setLoading(false);
+  }, []);
 
+  useEffect(() => {
     fetchParticipants();
 
     // Subscribe to realtime changes
@@ -40,32 +40,32 @@ export function useParticipants() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchParticipants]);
 
-  return { participants, loading };
+  return { participants, loading, refetch: fetchParticipants };
 }
 
 export function useBars() {
   const [bars, setBars] = useState<Bar[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchBars = async () => {
-      const { data, error } = await supabase
-        .from('bars')
-        .select('*')
-        .order('bar_order');
-      
-      if (!error && data) {
-        setBars(data);
-      }
-      setLoading(false);
-    };
-
-    fetchBars();
+  const fetchBars = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('bars')
+      .select('*')
+      .order('bar_order');
+    
+    if (!error && data) {
+      setBars(data);
+    }
+    setLoading(false);
   }, []);
 
-  return { bars, loading };
+  useEffect(() => {
+    fetchBars();
+  }, [fetchBars]);
+
+  return { bars, loading, refetch: fetchBars };
 }
 
 export function useAppConfig() {
@@ -180,7 +180,7 @@ export function useVotes() {
     [votes]
   );
 
-  return { votes, loading, submitVote, getBarVotes };
+  return { votes, loading, submitVote, getBarVotes, refetch: fetchVotes };
 }
 
 export function useConsumption(currentBarId?: number | null) {
@@ -385,5 +385,6 @@ export function useConsumption(currentBarId?: number | null) {
     getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
+    refetch: fetchConsumption,
   };
 }

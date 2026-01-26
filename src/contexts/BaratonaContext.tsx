@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Language, TRANSLATIONS, TranslationStrings } from '@/lib/constants';
 import { useParticipants, useBars, useAppConfig, useVotes, useConsumption } from '@/hooks/useSupabaseData';
+import { useSyncStatus } from '@/hooks/useSyncStatus';
 import type { Database } from '@/integrations/supabase/types';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
@@ -51,6 +52,11 @@ interface BaratonaContextType {
   getCurrentBar: () => Bar | undefined;
   getNextBar: () => Bar | undefined;
   currentBarId: number | null;
+  
+  // Sync status
+  secondsAgo: number;
+  isRefreshing: boolean;
+  refreshAll: () => Promise<void>;
 }
 
 const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
@@ -63,10 +69,13 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   });
   
   // Supabase data hooks
-  const { participants, loading: participantsLoading } = useParticipants();
-  const { bars, loading: barsLoading } = useBars();
-  const { appConfig, loading: appConfigLoading, updateConfig } = useAppConfig();
-  const { votes, submitVote: submitVoteToDb, getBarVotes } = useVotes();
+  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants();
+  const { bars, loading: barsLoading, refetch: refetchBars } = useBars();
+  const { appConfig, loading: appConfigLoading, updateConfig, refetch: refetchAppConfig } = useAppConfig();
+  const { votes, submitVote: submitVoteToDb, getBarVotes, refetch: refetchVotes } = useVotes();
+  
+  // Sync status
+  const { secondsAgo, isRefreshing, startRefresh, endRefresh, markUpdated } = useSyncStatus();
   
   // Get current bar ID from app config
   const currentBarId = appConfig?.current_bar_id ?? null;
@@ -82,7 +91,31 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getTotalParticipantConsumption,
     totalDrinks,
     totalFood,
+    refetch: refetchConsumption,
   } = useConsumption(currentBarId);
+  
+  // Mark updated when consumption changes (real-time updates)
+  useEffect(() => {
+    if (consumption.length > 0) {
+      markUpdated();
+    }
+  }, [consumption, markUpdated]);
+
+  // Refresh all data
+  const refreshAll = useCallback(async () => {
+    startRefresh();
+    try {
+      await Promise.all([
+        refetchParticipants(),
+        refetchBars(),
+        refetchAppConfig(),
+        refetchVotes(),
+        refetchConsumption(),
+      ]);
+    } finally {
+      endRefresh();
+    }
+  }, [refetchParticipants, refetchBars, refetchAppConfig, refetchVotes, refetchConsumption, startRefresh, endRefresh]);
 
   // Restore user from localStorage
   useEffect(() => {
@@ -189,6 +222,9 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getCurrentBar,
     getNextBar,
     currentBarId,
+    secondsAgo,
+    isRefreshing,
+    refreshAll,
   }), [
     currentUser,
     setCurrentUser,
@@ -220,6 +256,9 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     getCurrentBar,
     getNextBar,
     currentBarId,
+    secondsAgo,
+    isRefreshing,
+    refreshAll,
   ]);
 
   return (

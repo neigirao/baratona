@@ -29,13 +29,13 @@ export function Header() {
         <div className="flex items-center gap-2">
           {/* Language Toggle */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setLanguage(language === 'pt' ? 'en' : 'pt')}
-            className="h-8 w-8 p-0"
+            className="h-8 px-2 gap-1.5 text-xs font-medium"
           >
-            <Globe className="h-4 w-4" />
-            <span className="sr-only">Toggle language</span>
+            <Globe className="h-3.5 w-3.5" />
+            <span className="uppercase">{language}</span>
           </Button>
           
           {/* Admin Button */}

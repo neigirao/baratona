@@ -13,7 +13,9 @@ import {
   Car,
   Phone,
   AlertTriangle,
-  Loader2
+  Loader2,
+  PartyPopper,
+  RotateCcw
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
@@ -23,6 +25,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function Admin() {
   const { isAdmin, appConfig, updateAppConfig, bars, t } = useBaratona();
@@ -253,6 +266,82 @@ export default function Admin() {
                 Limpar
               </Button>
             </div>
+          )}
+        </div>
+        
+        {/* Finalize Event */}
+        <div className="bg-card rounded-2xl p-4 border border-baratona-green/50">
+          <h3 className="font-display text-sm font-semibold text-baratona-green mb-4 flex items-center gap-2">
+            <PartyPopper className="w-4 h-4" />
+            Finalizar Evento
+          </h3>
+          
+          {appConfig.status === 'finished' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground text-center">
+                🎉 Evento finalizado! Todos estão vendo o Baratona Wrapped.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full border-muted"
+                    disabled={updating}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reabrir Evento
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reabrir o evento?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Isso vai tirar todos do Baratona Wrapped e voltar para a tela normal.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={async () => {
+                      setUpdating(true);
+                      await updateAppConfig({ status: 'at_bar' });
+                      setUpdating(false);
+                    }}>
+                      Reabrir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  className="w-full h-14 bg-gradient-to-r from-baratona-green to-baratona-green/80 text-primary-foreground font-display font-bold text-lg"
+                  disabled={updating}
+                >
+                  <PartyPopper className="w-5 h-5 mr-2" />
+                  Finalizar Baratona 🎉
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Finalizar a Baratona?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Isso vai mostrar o "Baratona Wrapped" para todos os participantes com o resumo do evento.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={async () => {
+                    setUpdating(true);
+                    await updateAppConfig({ status: 'finished' });
+                    setUpdating(false);
+                  }}>
+                    Finalizar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
         

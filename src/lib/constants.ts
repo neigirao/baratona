@@ -30,7 +30,7 @@ export const BAR_COORDINATES: Record<number, [number, number]> = {
   9: [-22.9422, -43.3425], // Fregola - Freguesia
 };
 
-export type VanStatus = 'at_bar' | 'in_transit';
+export type VanStatus = 'at_bar' | 'in_transit' | 'finished';
 
 export interface AppConfig {
   status: VanStatus;

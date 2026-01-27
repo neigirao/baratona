@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useBaratona } from '@/contexts/BaratonaContext';
 
 // Emergency contact numbers
-const NEI_PHONE = '5521999999999'; // Replace with actual number
+const NEI_PHONE = '5521989921711';
 const SAMU_PHONE = '192';
 
 export function EmergencyPanel() {

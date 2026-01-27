@@ -117,7 +117,7 @@ export default function Admin() {
   };
   
   const handleSOSNei = () => {
-    window.open('https://wa.me/5521999999999?text=SOS%20Baratona!', '_blank');
+    window.open('https://wa.me/5521989921711?text=SOS%20Baratona!', '_blank');
   };
   
   return (

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { withRetry } from '@/hooks/useRetry';
 
 interface Checkin {
   id: string;
@@ -54,21 +55,35 @@ export function useCheckins() {
     // Haptic feedback
     if ('vibrate' in navigator) navigator.vibrate([50, 30, 50]);
 
-    const { error } = await supabase
-      .from('checkins')
-      .insert({
-        participant_id: participantId,
-        bar_id: barId,
-      });
-    
-    if (error) {
-      console.error('Error checking in:', error);
+    try {
+      await withRetry(
+        async () => {
+          const { error } = await supabase
+            .from('checkins')
+            .insert({
+              participant_id: participantId,
+              bar_id: barId,
+            });
+          
+          if (error) throw error;
+          return true;
+        },
+        {
+          maxAttempts: 3,
+          baseDelay: 1000,
+          onRetry: (attempt) => {
+            console.log(`[Check-in] Retrying attempt ${attempt}...`);
+          },
+        }
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking in after retries:', error);
       // Revert optimistic update
       fetchCheckins();
       return false;
     }
-    
-    return true;
   }, [fetchCheckins]);
 
   const checkOut = useCallback(async (participantId: string, barId: number) => {
@@ -77,19 +92,30 @@ export function useCheckins() {
       !(c.participant_id === participantId && c.bar_id === barId)
     ));
 
-    const { error } = await supabase
-      .from('checkins')
-      .delete()
-      .eq('participant_id', participantId)
-      .eq('bar_id', barId);
-    
-    if (error) {
-      console.error('Error checking out:', error);
+    try {
+      await withRetry(
+        async () => {
+          const { error } = await supabase
+            .from('checkins')
+            .delete()
+            .eq('participant_id', participantId)
+            .eq('bar_id', barId);
+          
+          if (error) throw error;
+          return true;
+        },
+        {
+          maxAttempts: 3,
+          baseDelay: 1000,
+        }
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking out after retries:', error);
       fetchCheckins();
       return false;
     }
-    
-    return true;
   }, [fetchCheckins]);
 
   const getBarCheckins = useCallback((barId: number) => {

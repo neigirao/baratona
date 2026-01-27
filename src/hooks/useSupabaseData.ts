@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { withRetry } from '@/hooks/useRetry';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
 type Bar = Database['public']['Tables']['bars']['Row'];
@@ -171,22 +172,37 @@ export function useVotes() {
     barId: number,
     scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
   ) => {
-    const { error } = await supabase
-      .from('votes')
-      .upsert({
-        participant_id: participantId,
-        bar_id: barId,
-        drink_score: scores.drinkScore,
-        food_score: scores.foodScore,
-        vibe_score: scores.vibeScore,
-        service_score: scores.serviceScore,
-      }, { onConflict: 'participant_id,bar_id' });
-    
-    if (error) {
-      console.error('Error submitting vote:', error);
+    try {
+      await withRetry(
+        async () => {
+          const { error } = await supabase
+            .from('votes')
+            .upsert({
+              participant_id: participantId,
+              bar_id: barId,
+              drink_score: scores.drinkScore,
+              food_score: scores.foodScore,
+              vibe_score: scores.vibeScore,
+              service_score: scores.serviceScore,
+            }, { onConflict: 'participant_id,bar_id' });
+          
+          if (error) throw error;
+          return true;
+        },
+        {
+          maxAttempts: 3,
+          baseDelay: 1000,
+          onRetry: (attempt) => {
+            console.log(`[Vote] Retrying attempt ${attempt}...`);
+          },
+        }
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error submitting vote after retries:', error);
       return false;
     }
-    return true;
   }, []);
 
   const getBarVotes = useCallback(
@@ -267,25 +283,36 @@ export function useConsumption(currentBarId?: number | null) {
       };
       setConsumption(prev => [...prev, optimisticRecord]);
       
-      // Insert new record
-      const { error } = await supabase
-        .from('consumption')
-        .insert({
-          participant_id: participantId,
-          type,
-          count: newCount,
-          bar_id: effectiveBarId,
-        });
-      
-      if (error) {
-        console.error('Error inserting consumption:', error);
+      // Insert new record with retry
+      try {
+        await withRetry(
+          async () => {
+            const { error } = await supabase
+              .from('consumption')
+              .insert({
+                participant_id: participantId,
+                type,
+                count: newCount,
+                bar_id: effectiveBarId,
+              });
+            
+            if (error) throw error;
+            return true;
+          },
+          {
+            maxAttempts: 3,
+            baseDelay: 1000,
+          }
+        );
+        
+        // Refetch to get the real ID
+        fetchConsumption();
+        return true;
+      } catch (error) {
+        console.error('Error inserting consumption after retries:', error);
         fetchConsumption();
         return false;
       }
-      
-      // Refetch to get the real ID
-      fetchConsumption();
-      return true;
     }
 
     const newCount = Math.max(0, current.count + delta);
@@ -304,29 +331,40 @@ export function useConsumption(currentBarId?: number | null) {
       navigator.vibrate(50);
     }
 
-    // Actual update - build query based on whether bar_id is null or not
-    let query = supabase
-      .from('consumption')
-      .update({ count: newCount })
-      .eq('participant_id', participantId)
-      .eq('type', type);
-    
-    if (effectiveBarId === null) {
-      query = query.is('bar_id', null);
-    } else {
-      query = query.eq('bar_id', effectiveBarId);
-    }
-    
-    const { error } = await query;
-    
-    if (error) {
-      console.error('Error updating consumption:', error);
+    // Actual update with retry - build query based on whether bar_id is null or not
+    try {
+      await withRetry(
+        async () => {
+          let query = supabase
+            .from('consumption')
+            .update({ count: newCount })
+            .eq('participant_id', participantId)
+            .eq('type', type);
+          
+          if (effectiveBarId === null) {
+            query = query.is('bar_id', null);
+          } else {
+            query = query.eq('bar_id', effectiveBarId);
+          }
+          
+          const { error } = await query;
+          
+          if (error) throw error;
+          return true;
+        },
+        {
+          maxAttempts: 3,
+          baseDelay: 1000,
+        }
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating consumption after retries:', error);
       // Revert optimistic update
       fetchConsumption();
       return false;
     }
-    
-    return true;
   }, [fetchConsumption]);
 
   const addDrink = useCallback(

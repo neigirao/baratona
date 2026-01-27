@@ -5,12 +5,18 @@ import { MainTabs } from '@/components/MainTabs';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { SyncIndicator } from '@/components/SyncIndicator';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { BaratonaWrapped } from '@/components/BaratonaWrapped';
 
 export default function Index() {
-  const { currentUser, secondsAgo, isRefreshing, refreshAll } = useBaratona();
+  const { currentUser, secondsAgo, isRefreshing, refreshAll, appConfig } = useBaratona();
   
   if (!currentUser) {
     return <ParticipantSelector />;
+  }
+  
+  // Show Wrapped view when event is finished
+  if (appConfig?.status === 'finished') {
+    return <BaratonaWrapped />;
   }
   
   return (

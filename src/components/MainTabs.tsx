@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
+import { useCheckins } from '@/hooks/useCheckins';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, Beer, Compass } from 'lucide-react';
 
@@ -21,8 +22,19 @@ import { BarItinerary } from '@/components/BarItinerary';
 import { EmergencyPanel } from '@/components/EmergencyPanel';
 
 export function MainTabs() {
-  const { language } = useBaratona();
+  const { language, currentUser, currentBarId } = useBaratona();
+  const { isCheckedIn } = useCheckins();
   const [activeTab, setActiveTab] = useState('now');
+  
+  // Navigate to consumption tab after successful check-in
+  const handleCheckinSuccess = useCallback(() => {
+    setActiveTab('consumption');
+  }, []);
+  
+  // Check if current user is checked in at current bar
+  const userIsCheckedInAtCurrentBar = currentUser && currentBarId 
+    ? isCheckedIn(currentUser.id, currentBarId) 
+    : false;
   
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -72,7 +84,7 @@ export function MainTabs() {
         <CountdownTimer />
         
         {/* Bar Check-in */}
-        <BarCheckin />
+        <BarCheckin onCheckinSuccess={handleCheckinSuccess} />
       </TabsContent>
       
       {/* Tab: Meu Consumo (My Consumption) */}
@@ -93,7 +105,7 @@ export function MainTabs() {
         <BaratonaMap />
         
         {/* Vote Form */}
-        <VoteForm />
+        <VoteForm isCheckedIn={userIsCheckedInAtCurrentBar} />
         
         {/* Bar Itinerary */}
         <BarItinerary />

@@ -3,6 +3,13 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { Beer, Utensils, Plus, Minus, MapPin, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+const DRINK_TYPES = [
+  { key: 'cerveja', label: 'Cerveja', emoji: '🍺' },
+  { key: 'cachaca', label: 'Cachaça', emoji: '🥃' },
+  { key: 'drink', label: 'Drink', emoji: '🍹' },
+  { key: 'batida', label: 'Batida', emoji: '🧉' },
+];
+
 export function ConsumptionCounter() {
   const { 
     currentUser, 
@@ -156,52 +163,59 @@ export function ConsumptionCounter() {
         {language === 'pt' ? 'Meu Consumo Neste Bar' : 'My Consumption Here'}
       </h3>
       
-      <div className="grid grid-cols-2 gap-6">
-        {/* Drinks */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Beer className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium">{t.drink}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleRemoveDrink}
-              className="counter-btn counter-btn-blue opacity-70 hover:opacity-100 w-10 h-10"
-              disabled={displayDrinks === 0}
-            >
-              <Minus className="w-5 h-5 text-primary-foreground" />
-            </button>
-            
-            <div className="flex flex-col items-center min-w-[3.5rem]">
-              <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingDrinks !== 0 ? 'scale-110' : ''}`}>
-                {displayDrinks}
-              </span>
-              {pendingDrinks !== 0 && (
-                <span className={`text-xs font-semibold ${pendingDrinks > 0 ? 'text-baratona-green' : 'text-destructive'}`}>
-                  {pendingDrinks > 0 ? `+${pendingDrinks}` : pendingDrinks}
-                </span>
-              )}
-            </div>
-            
-            <button
-              onClick={() => handleAddDrink(1)}
-              className="counter-btn counter-btn-blue w-10 h-10"
-            >
-              <Plus className="w-5 h-5 text-primary-foreground" />
-            </button>
-          </div>
-          
-          {/* Quick add +5 button */}
-          <button
-            onClick={() => handleAddDrink(5)}
-            className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
-          >
-            +5 🍺
-          </button>
+      {/* Drink Type Buttons Grid */}
+      <div className="mb-4">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Beer className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">{t.drink}</span>
         </div>
         
-        {/* Food */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {DRINK_TYPES.map((type) => (
+            <button
+              key={type.key}
+              onClick={() => handleAddDrink(1)}
+              className="flex flex-col items-center gap-1 p-3 rounded-xl bg-primary/10 hover:bg-primary/20 active:scale-95 transition-all border border-primary/20"
+            >
+              <span className="text-2xl">{type.emoji}</span>
+              <span className="text-xs font-medium text-primary">{type.label}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* Total drinks with +/- controls */}
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={handleRemoveDrink}
+            className="counter-btn counter-btn-blue opacity-70 hover:opacity-100 w-10 h-10"
+            disabled={displayDrinks === 0}
+          >
+            <Minus className="w-5 h-5 text-primary-foreground" />
+          </button>
+          
+          <div className="flex flex-col items-center min-w-[4rem]">
+            <span className="text-xs text-muted-foreground">{language === 'pt' ? 'Total' : 'Total'}</span>
+            <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingDrinks !== 0 ? 'scale-110' : ''}`}>
+              {displayDrinks}
+            </span>
+            {pendingDrinks !== 0 && (
+              <span className={`text-xs font-semibold ${pendingDrinks > 0 ? 'text-baratona-green' : 'text-destructive'}`}>
+                {pendingDrinks > 0 ? `+${pendingDrinks}` : pendingDrinks}
+              </span>
+            )}
+          </div>
+          
+          <button
+            onClick={() => handleAddDrink(1)}
+            className="counter-btn counter-btn-blue w-10 h-10"
+          >
+            <Plus className="w-5 h-5 text-primary-foreground" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="border-t border-border pt-4">
+        {/* Food Section */}
         <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             <Utensils className="w-5 h-5 text-secondary" />
@@ -245,7 +259,7 @@ export function ConsumptionCounter() {
           </button>
         </div>
       </div>
-      
+        
       {/* Auto-save indicator */}
       <div className="mt-4 flex items-center justify-center">
         {isSaving ? (

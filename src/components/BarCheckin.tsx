@@ -3,7 +3,11 @@ import { useCheckins } from '@/hooks/useCheckins';
 import { MapPin, Check, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export function BarCheckin() {
+interface BarCheckinProps {
+  onCheckinSuccess?: () => void;
+}
+
+export function BarCheckin({ onCheckinSuccess }: BarCheckinProps) {
   const { currentUser, getCurrentBar, participants, language, currentBarId } = useBaratona();
   const { checkIn, checkOut, getBarCheckins, isCheckedIn } = useCheckins();
   
@@ -45,6 +49,8 @@ export function BarCheckin() {
             ? `Você está no ${currentBar.name}! 🍻` 
             : `You're at ${currentBar.name}! 🍻`,
         });
+        // Navigate to consumption tab after successful check-in
+        onCheckinSuccess?.();
       } else {
         toast({
           title: language === 'pt' ? 'Erro no check-in' : 'Check-in failed',

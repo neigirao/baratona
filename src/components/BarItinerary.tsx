@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
+import { useCheckins } from '@/hooks/useCheckins';
 import { MapPin, Clock, CheckCircle, Circle, Star, Loader2, ChevronRight, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarRadarChart } from './BarRadarChart';
@@ -12,7 +13,8 @@ import {
 } from '@/components/ui/drawer';
 
 export function BarItinerary() {
-  const { appConfig, bars, barsLoading, getProjectedTime, getBarVotes, currentUser, getUserVoteForBar, language } = useBaratona();
+  const { appConfig, bars, barsLoading, getProjectedTime, getBarVotes, currentUser, getUserVoteForBar, language, currentBarId } = useBaratona();
+  const { isCheckedIn } = useCheckins();
   const [selectedBarId, setSelectedBarId] = useState<number | null>(null);
   
   if (barsLoading) {
@@ -46,6 +48,11 @@ export function BarItinerary() {
   const hasUserVotedForSelectedBar = selectedBarId && currentUser 
     ? !!getUserVoteForBar(currentUser.id, selectedBarId)
     : true;
+  
+  // Check if user is checked in at the selected bar (only if it's the current bar)
+  const isUserCheckedInAtSelectedBar = selectedBarId && currentUser && selectedBarId === currentBarId
+    ? isCheckedIn(currentUser.id, selectedBarId)
+    : false;
   
   return (
     <>
@@ -158,9 +165,14 @@ export function BarItinerary() {
               </span>
             </div>
             
-            {/* Vote Form - show if user hasn't voted for this bar yet */}
-            {selectedBarId && !hasUserVotedForSelectedBar && (
-              <VoteForm barId={selectedBarId} barName={selectedBar?.name} compact />
+            {/* Vote Form - show if user hasn't voted for this bar yet OR allow editing */}
+            {selectedBarId && (
+              <VoteForm 
+                barId={selectedBarId} 
+                barName={selectedBar?.name} 
+                compact 
+                isCheckedIn={isUserCheckedInAtSelectedBar}
+              />
             )}
             
             {/* Radar Chart */}

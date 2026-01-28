@@ -48,9 +48,10 @@ interface VoteFormProps {
   barId?: number;
   barName?: string;
   compact?: boolean;
+  isCheckedIn?: boolean;
 }
 
-export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
+export function VoteForm({ barId, barName, compact = false, isCheckedIn = false }: VoteFormProps) {
   const { currentUser, appConfig, submitVote, getUserVoteForBar, t, language } = useBaratona();
   
   const [drinkScore, setDrinkScore] = useState(0);
@@ -58,6 +59,7 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
   const [vibeScore, setVibeScore] = useState(0);
   const [serviceScore, setServiceScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   // Use provided barId or fall back to current bar
   const effectiveBarId = barId ?? appConfig?.current_bar_id;
@@ -68,6 +70,7 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
     setFoodScore(0);
     setVibeScore(0);
     setServiceScore(0);
+    setIsEditing(false);
   }, [effectiveBarId]);
   
   if (!currentUser || !effectiveBarId) return null;
@@ -103,6 +106,7 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
       setFoodScore(0);
       setVibeScore(0);
       setServiceScore(0);
+      setIsEditing(false);
     } else {
       toast({
         title: language === 'pt' ? 'Erro ao enviar' : 'Submit failed',
@@ -116,7 +120,19 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
   
   const isComplete = drinkScore > 0 && foodScore > 0 && vibeScore > 0 && serviceScore > 0;
   
-  if (existingVote) {
+  // Handle entering edit mode
+  const handleStartEditing = () => {
+    if (existingVote) {
+      setDrinkScore(existingVote.drink_score);
+      setFoodScore(existingVote.food_score);
+      setVibeScore(existingVote.vibe_score);
+      setServiceScore(existingVote.service_score);
+      setIsEditing(true);
+    }
+  };
+  
+  // Show existing vote with optional edit button
+  if (existingVote && !isEditing) {
     return (
       <div className={cn(
         "bg-card rounded-2xl border border-baratona-green/50 animate-fade-in",
@@ -144,6 +160,18 @@ export function VoteForm({ barId, barName, compact = false }: VoteFormProps) {
               <span className="text-xs font-bold">{existingVote.service_score}</span>
             </div>
           </div>
+          
+          {/* Edit button - only show when checked in at the bar */}
+          {isCheckedIn && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStartEditing}
+              className="mt-3"
+            >
+              {language === 'pt' ? 'Editar Avaliação' : 'Edit Review'}
+            </Button>
+          )}
         </div>
       </div>
     );

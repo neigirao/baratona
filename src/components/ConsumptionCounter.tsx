@@ -205,17 +205,9 @@ export function ConsumptionCounter() {
           ))}
         </div>
         
-        {/* Total drinks with +/- controls */}
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={handleRemoveDrink}
-            className="counter-btn counter-btn-blue opacity-70 hover:opacity-100 w-10 h-10"
-            disabled={displayDrinks === 0}
-          >
-            <Minus className="w-5 h-5 text-primary-foreground" />
-          </button>
-          
-          <div className="flex flex-col items-center min-w-[4rem]">
+        {/* Total drinks with correction control */}
+        <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col items-center">
             <span className="text-xs text-muted-foreground">{language === 'pt' ? 'Total' : 'Total'}</span>
             <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingDrinks !== 0 ? 'scale-110' : ''}`}>
               {displayDrinks}
@@ -228,10 +220,12 @@ export function ConsumptionCounter() {
           </div>
           
           <button
-            onClick={() => handleAddDrink(1)}
-            className="counter-btn counter-btn-blue w-10 h-10"
+            onClick={handleRemoveDrink}
+            className="counter-btn counter-btn-blue opacity-70 hover:opacity-100 w-10 h-10"
+            disabled={displayDrinks === 0}
+            title={language === 'pt' ? 'Corrigir (remover 1)' : 'Correct (remove 1)'}
           >
-            <Plus className="w-5 h-5 text-primary-foreground" />
+            <Minus className="w-5 h-5 text-primary-foreground" />
           </button>
         </div>
       </div>

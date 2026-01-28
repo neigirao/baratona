@@ -27,6 +27,7 @@ export function ConsumptionCounter() {
   const [pendingFood, setPendingFood] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
+  const [clickedDrinkType, setClickedDrinkType] = useState<string | null>(null);
   
   // Debounce timer ref
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -115,9 +116,15 @@ export function ConsumptionCounter() {
   // Early return AFTER all hooks
   if (!currentUser) return null;
   
-  const handleAddDrink = (amount: number = 1) => {
+  const handleAddDrink = (amount: number = 1, drinkTypeKey?: string) => {
     setPendingDrinks(prev => prev + amount);
     if ('vibrate' in navigator) navigator.vibrate(30);
+    
+    // Trigger button animation
+    if (drinkTypeKey) {
+      setClickedDrinkType(drinkTypeKey);
+      setTimeout(() => setClickedDrinkType(null), 300);
+    }
   };
   
   const handleRemoveDrink = () => {
@@ -174,11 +181,26 @@ export function ConsumptionCounter() {
           {DRINK_TYPES.map((type) => (
             <button
               key={type.key}
-              onClick={() => handleAddDrink(1)}
-              className="flex flex-col items-center gap-1 p-3 rounded-xl bg-primary/10 hover:bg-primary/20 active:scale-95 transition-all border border-primary/20"
+              onClick={() => handleAddDrink(1, type.key)}
+              className={`
+                relative flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-150
+                ${clickedDrinkType === type.key 
+                  ? 'bg-primary scale-110 border-primary shadow-lg shadow-primary/40' 
+                  : 'bg-primary/10 border-primary/20 hover:bg-primary/20 active:scale-95'
+                }
+              `}
             >
-              <span className="text-2xl">{type.emoji}</span>
-              <span className="text-xs font-medium text-primary">{type.label}</span>
+              <span className={`text-2xl transition-transform duration-150 ${clickedDrinkType === type.key ? 'scale-125' : ''}`}>
+                {type.emoji}
+              </span>
+              <span className={`text-xs font-medium transition-colors duration-150 ${clickedDrinkType === type.key ? 'text-primary-foreground' : 'text-primary'}`}>
+                {type.label}
+              </span>
+              {clickedDrinkType === type.key && (
+                <span className="absolute -top-1 -right-1 bg-baratona-green text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center animate-scale-in">
+                  +1
+                </span>
+              )}
             </button>
           ))}
         </div>

@@ -127,12 +127,6 @@ export function ConsumptionCounter() {
     }
   };
   
-  const handleRemoveDrink = () => {
-    if (displayDrinks > 0) {
-      setPendingDrinks(prev => prev - 1);
-      if ('vibrate' in navigator) navigator.vibrate(30);
-    }
-  };
   
   const handleAddFood = (amount: number = 1) => {
     setPendingFood(prev => prev + amount);
@@ -205,8 +199,8 @@ export function ConsumptionCounter() {
           ))}
         </div>
         
-        {/* Total drinks with correction control */}
-        <div className="flex items-center justify-center gap-4">
+        {/* Total drinks display */}
+        <div className="flex items-center justify-center">
           <div className="flex flex-col items-center">
             <span className="text-xs text-muted-foreground">{language === 'pt' ? 'Total' : 'Total'}</span>
             <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingDrinks !== 0 ? 'scale-110' : ''}`}>
@@ -214,19 +208,10 @@ export function ConsumptionCounter() {
             </span>
             {pendingDrinks !== 0 && (
               <span className={`text-xs font-semibold ${pendingDrinks > 0 ? 'text-baratona-green' : 'text-destructive'}`}>
-                {pendingDrinks > 0 ? `+${pendingDrinks}` : pendingDrinks}
+                +{pendingDrinks}
               </span>
             )}
           </div>
-          
-          <button
-            onClick={handleRemoveDrink}
-            className="counter-btn counter-btn-blue opacity-70 hover:opacity-100 w-10 h-10"
-            disabled={displayDrinks === 0}
-            title={language === 'pt' ? 'Corrigir (remover 1)' : 'Correct (remove 1)'}
-          >
-            <Minus className="w-5 h-5 text-primary-foreground" />
-          </button>
         </div>
       </div>
       

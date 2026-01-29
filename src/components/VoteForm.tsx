@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Beer, Utensils, Music, Users, Star, Loader2 } from 'lucide-react';
+import { Beer, Utensils, Music, Users, Star, Loader2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -49,9 +49,10 @@ interface VoteFormProps {
   barName?: string;
   compact?: boolean;
   isCheckedIn?: boolean;
+  onNavigateToConsumption?: () => void;
 }
 
-export function VoteForm({ barId, barName, compact = false, isCheckedIn = false }: VoteFormProps) {
+export function VoteForm({ barId, barName, compact = false, isCheckedIn = false, onNavigateToConsumption }: VoteFormProps) {
   const { currentUser, appConfig, submitVote, getUserVoteForBar, t, language } = useBaratona();
   
   const [drinkScore, setDrinkScore] = useState(0);
@@ -161,17 +162,32 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false 
             </div>
           </div>
           
-          {/* Edit button - only show when checked in at the bar */}
-          {isCheckedIn && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleStartEditing}
-              className="mt-3"
-            >
-              {language === 'pt' ? 'Editar Avaliação' : 'Edit Review'}
-            </Button>
-          )}
+          {/* Action buttons */}
+          <div className="flex flex-col gap-2 mt-3">
+            {/* Edit button - only show when checked in at the bar */}
+            {isCheckedIn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleStartEditing}
+              >
+                {language === 'pt' ? 'Editar Avaliação' : 'Edit Review'}
+              </Button>
+            )}
+            
+            {/* Back to consumption button */}
+            {onNavigateToConsumption && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onNavigateToConsumption}
+                className="text-muted-foreground"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                {language === 'pt' ? 'Voltar ao Consumo' : 'Back to Consumption'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );

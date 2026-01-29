@@ -26,8 +26,8 @@ export function MainTabs() {
   const { isCheckedIn } = useCheckins();
   const [activeTab, setActiveTab] = useState('now');
   
-  // Navigate to consumption tab after successful check-in
-  const handleCheckinSuccess = useCallback(() => {
+  // Navigate to consumption tab
+  const navigateToConsumption = useCallback(() => {
     setActiveTab('consumption');
   }, []);
   
@@ -84,7 +84,7 @@ export function MainTabs() {
         <CountdownTimer />
         
         {/* Bar Check-in */}
-        <BarCheckin onCheckinSuccess={handleCheckinSuccess} />
+        <BarCheckin onCheckinSuccess={navigateToConsumption} />
       </TabsContent>
       
       {/* Tab: Meu Consumo (My Consumption) */}
@@ -105,7 +105,7 @@ export function MainTabs() {
         <BaratonaMap />
         
         {/* Vote Form */}
-        <VoteForm isCheckedIn={userIsCheckedInAtCurrentBar} />
+        <VoteForm isCheckedIn={userIsCheckedInAtCurrentBar} onNavigateToConsumption={navigateToConsumption} />
         
         {/* Bar Itinerary */}
         <BarItinerary />

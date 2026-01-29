@@ -25,11 +25,20 @@ export function BarItinerary() {
     );
   }
   
-  const getBarStatus = (barId: number) => {
-    if (!appConfig) return 'upcoming';
-    if (barId < appConfig.current_bar_id!) return 'completed';
-    if (barId === appConfig.current_bar_id) return 'current';
+  const getBarStatus = (barOrder: number) => {
+    if (!appConfig || !currentBarId) return 'upcoming';
+    const currentBar = bars.find(b => b.id === currentBarId);
+    if (!currentBar) return 'upcoming';
+    
+    if (barOrder < currentBar.bar_order) return 'completed';
+    if (barOrder === currentBar.bar_order) return 'current';
     return 'upcoming';
+  };
+  
+  // Check if a bar can be rated (only visited or current bars)
+  const canRateBar = (barOrder: number) => {
+    const status = getBarStatus(barOrder);
+    return status === 'completed' || status === 'current';
   };
   
   const getAverageRating = (barId: number) => {
@@ -62,10 +71,11 @@ export function BarItinerary() {
         </h3>
         
         <div className="space-y-2">
-          {bars.map((bar) => {
-            const status = getBarStatus(bar.id);
+        {bars.map((bar) => {
+            const status = getBarStatus(bar.bar_order);
             const avgRating = getAverageRating(bar.id);
             const hasVoted = currentUser ? !!getUserVoteForBar(currentUser.id, bar.id) : true;
+            const ratable = canRateBar(bar.bar_order);
             
             return (
               <button
@@ -103,8 +113,8 @@ export function BarItinerary() {
                       {bar.name}
                     </h4>
                     
-                    {/* Show pending vote indicator */}
-                    {(status === 'completed' || status === 'current') && !hasVoted && (
+                    {/* Show pending vote indicator - only for ratable bars */}
+                    {ratable && !hasVoted && (
                       <span className="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded-full">
                         {language === 'pt' ? 'Avaliar' : 'Rate'}
                       </span>
@@ -165,14 +175,25 @@ export function BarItinerary() {
               </span>
             </div>
             
-            {/* Vote Form - show if user hasn't voted for this bar yet OR allow editing */}
-            {selectedBarId && (
+            {/* Vote Form - only show for bars that can be rated (visited or current) */}
+            {selectedBarId && selectedBar && canRateBar(selectedBar.bar_order) && (
               <VoteForm 
                 barId={selectedBarId} 
                 barName={selectedBar?.name} 
                 compact 
                 isCheckedIn={isUserCheckedInAtSelectedBar}
               />
+            )}
+            
+            {/* Message for upcoming bars */}
+            {selectedBarId && selectedBar && !canRateBar(selectedBar.bar_order) && (
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {language === 'pt' 
+                    ? 'Você poderá avaliar este bar quando a van chegar lá!' 
+                    : 'You can rate this bar when the van arrives!'}
+                </p>
+              </div>
             )}
             
             {/* Radar Chart */}

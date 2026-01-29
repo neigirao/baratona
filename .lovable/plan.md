@@ -1,46 +1,96 @@
 
-# Plano: Otimizar Controles de Bebida
 
-## Mudanca Proposta
+# Plano: Melhorias de UX no VoteForm e Bebidas
 
-Remover o botao '+' generico e manter apenas o botao '-' para correcoes, centralizando as adicoes nos botoes de tipo de bebida.
+## Problema 1: Sem Navegacao Apos Voto
 
-## Layout Visual Antes/Depois
+Quando o usuario envia uma avaliacao, ele ve a confirmacao mas nao tem como voltar facilmente para a aba de Consumo para continuar registrando o que esta bebendo.
 
-**Antes:**
+### Solucao
+
+Adicionar um botao "Voltar ao Consumo" / "Back to Consumption" no card de confirmacao do voto. Este botao chamara uma funcao passada como prop que navega de volta para a aba "consumption".
+
+---
+
+## Problema 2: Botao "-" de Bebidas Sem Sentido
+
+O usuario levantou um ponto valido: quando clica em "-" para remover uma bebida, de qual tipo ela seria removida? Cerveja? Cachaca? Nao faz sentido ter esse controle.
+
+### Solucao
+
+Remover completamente o botao "-" da secao de bebidas. Se o usuario errar, pode "esperar" o debounce nao salvar (2 segundos) ou simplesmente aceitar o erro. A experiencia e mais limpa sem esse botao confuso.
+
+---
+
+## Arquivos a Modificar
+
+### src/components/VoteForm.tsx
+
+1. Adicionar prop `onNavigateToConsumption?: () => void`
+2. No card de confirmacao (linhas 136-177), adicionar botao abaixo do "Editar Avaliacao":
+   - Texto: "Voltar ao Consumo" / "Back to Consumption"
+   - Icone: seta para esquerda ou icone de copo
+   - Ao clicar, chama `onNavigateToConsumption?.()`
+
+### src/components/ConsumptionCounter.tsx
+
+1. Remover o botao "-" da secao de bebidas (linhas 222-229)
+2. Centralizar apenas o display do total (linhas 209-220)
+3. Remover a funcao `handleRemoveDrink` que nao sera mais usada
+4. Remover import do `Minus` se nao for mais usado em outro lugar
+
+### src/components/MainTabs.tsx
+
+1. Passar callback `onNavigateToConsumption` para o VoteForm
+2. Este callback executa `setActiveTab('consumption')`
+
+---
+
+## Layout Visual Apos Mudancas
+
+### VoteForm (apos voto)
+
 ```text
-[Cerveja] [Cachaca] [Drink] [Batida]
-     
-      [-]    Total: 5    [+]
++--------------------------------+
+|   ✓ Voto registrado!           |
+|   [🍺 4] [🍴 3] [🎵 5] [👥 4]  |
+|                                |
+|   [Editar Avaliação]           |
+|   [← Voltar ao Consumo]        |
++--------------------------------+
 ```
 
-**Depois:**
+### ConsumptionCounter (bebidas)
+
 ```text
-[Cerveja] [Cachaca] [Drink] [Batida]
-     
-         [-]    Total: 5
++------------------------------------------+
+| [Cerveja] [Cachaça] [Drink] [Batida]     |
+|                                          |
+|              Total: 5                    |
++------------------------------------------+
 ```
 
-## Justificativa de Design
+---
 
-| Heuristica | Aplicacao |
-|------------|-----------|
-| Prevencao de erros | Botao '-' permite corrigir cliques acidentais |
-| Consistencia | Toda adicao passa pelos botoes de tipo |
-| Minimalismo | Remove elemento redundante |
-| Recuperacao | Usuario consegue subtrair se errar |
+## Secao Tecnica
 
-## Arquivo a Modificar
+### Props do VoteForm Atualizadas
 
-**src/components/ConsumptionCounter.tsx**
+```typescript
+interface VoteFormProps {
+  barId?: number;
+  barName?: string;
+  compact?: boolean;
+  isCheckedIn?: boolean;
+  onNavigateToConsumption?: () => void; // NOVO
+}
+```
 
-Localizar a secao do total de bebidas (linhas ~200-220) e:
-1. Remover o botao '+' generico
-2. Centralizar o display do total com o botao '-' ao lado
-3. Ajustar o layout para ficar balanceado visualmente
+### Remocao do Botao "-" em Bebidas
 
-## Codigo a Alterar
+O botao sera removido completamente. A comida mantem os botoes +/- porque:
+- Comida e generica (nao tem tipos)
+- Faz sentido corrigir "pedi 3 porcoes, na verdade foram 2"
 
-Substituir a estrutura atual de 3 elementos ([-] [total] [+]) por 2 elementos centralizados ([-] [total]).
+Bebidas agora sao only-add, pois cada tipo e um clique distinto.
 
-O botao '-' permanece para permitir correcoes, enquanto as adicoes sao feitas exclusivamente pelos botoes de tipo de bebida acima.

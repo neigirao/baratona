@@ -138,7 +138,31 @@ export function ConsumptionRanking() {
   }
 
   if (!hasAnyRanking) {
-    return null;
+    return (
+      <Card className="animate-fade-in">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            {language === 'pt' ? 'Ranking' : 'Leaderboard'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6 text-muted-foreground">
+            <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">
+              {language === 'pt' 
+                ? 'Nenhum consumo registrado ainda!' 
+                : 'No consumption logged yet!'}
+            </p>
+            <p className="text-xs mt-1 opacity-70">
+              {language === 'pt' 
+                ? 'Seja o primeiro a registrar uma bebida 🍻' 
+                : 'Be the first to log a drink 🍻'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

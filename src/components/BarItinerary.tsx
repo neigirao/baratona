@@ -63,12 +63,33 @@ export function BarItinerary() {
     ? isCheckedIn(currentUser.id, selectedBarId)
     : false;
   
+  // Calculate progress
+  const currentBarObj = currentBarId ? bars.find(b => b.id === currentBarId) : null;
+  const visitedCount = currentBarObj 
+    ? bars.filter(b => b.bar_order <= currentBarObj.bar_order).length 
+    : 0;
+  const totalBars = bars.length;
+  const progressPercent = totalBars > 0 ? (visitedCount / totalBars) * 100 : 0;
+  
   return (
     <>
       <div className="space-y-3 animate-slide-up">
-        <h3 className="font-display text-sm font-semibold text-muted-foreground px-1">
-          {language === 'pt' ? 'Itinerário' : 'Itinerary'}
-        </h3>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-display text-sm font-semibold text-muted-foreground">
+            {language === 'pt' ? 'Itinerário' : 'Itinerary'}
+          </h3>
+          <span className="text-xs text-muted-foreground">
+            {visitedCount}/{totalBars} {language === 'pt' ? 'visitados' : 'visited'}
+          </span>
+        </div>
+        
+        {/* Progress bar */}
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-primary to-baratona-green transition-all duration-500 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
         
         <div className="space-y-2">
         {bars.map((bar) => {

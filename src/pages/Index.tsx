@@ -6,6 +6,8 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { SyncIndicator } from '@/components/SyncIndicator';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { BaratonaWrapped } from '@/components/BaratonaWrapped';
+import { QuickAddFAB } from '@/components/QuickAddFAB';
+import { OnboardingOverlay } from '@/components/OnboardingOverlay';
 
 export default function Index() {
   const { currentUser, secondsAgo, isRefreshing, refreshAll, appConfig } = useBaratona();
@@ -22,10 +24,11 @@ export default function Index() {
   return (
     <>
       <OfflineIndicator />
+      <OnboardingOverlay />
       <PullToRefresh onRefresh={refreshAll} className="min-h-screen bg-background">
         <Header />
         
-        <main className="container max-w-lg mx-auto px-4 py-4 pb-6">
+        <main className="container max-w-lg mx-auto px-4 py-4 pb-24">
           {/* Sync Indicator */}
           <div className="flex justify-center mb-3">
             <SyncIndicator secondsAgo={secondsAgo} isRefreshing={isRefreshing} />
@@ -34,6 +37,9 @@ export default function Index() {
           <MainTabs />
         </main>
       </PullToRefresh>
+      
+      {/* Quick Add FAB */}
+      <QuickAddFAB />
     </>
   );
 }

@@ -13,6 +13,7 @@ import { NotificationPrompt } from '@/components/NotificationPrompt';
 // Tab: Meu Consumo (My Consumption)
 import { ConsumptionCounter } from '@/components/ConsumptionCounter';
 import { Baratometro } from '@/components/Baratometro';
+import { Achievements } from '@/components/Achievements';
 import { ConsumptionRanking } from '@/components/ConsumptionRanking';
 
 // Tab: Explorar (Explore)
@@ -91,6 +92,9 @@ export function MainTabs() {
       <TabsContent value="consumption" className="space-y-4 mt-0">
         {/* Consumption Counter */}
         <ConsumptionCounter />
+        
+        {/* Achievements */}
+        <Achievements />
         
         {/* Baratômetro */}
         <Baratometro />

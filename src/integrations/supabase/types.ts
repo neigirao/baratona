@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_key: string
+          id: string
+          participant_id: string
+          unlocked_at: string
+        }
+        Insert: {
+          achievement_key: string
+          id?: string
+          participant_id: string
+          unlocked_at?: string
+        }
+        Update: {
+          achievement_key?: string
+          id?: string
+          participant_id?: string
+          unlocked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_config: {
         Row: {
           broadcast_msg: string | null

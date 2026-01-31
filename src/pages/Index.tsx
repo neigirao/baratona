@@ -8,9 +8,13 @@ import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { BaratonaWrapped } from '@/components/BaratonaWrapped';
 import { QuickAddFAB } from '@/components/QuickAddFAB';
 import { OnboardingOverlay } from '@/components/OnboardingOverlay';
+import { useAchievementChecker } from '@/hooks/useAchievementChecker';
 
 export default function Index() {
   const { currentUser, secondsAgo, isRefreshing, refreshAll, appConfig } = useBaratona();
+  
+  // Auto-check and unlock achievements
+  useAchievementChecker();
   
   if (!currentUser) {
     return <ParticipantSelector />;

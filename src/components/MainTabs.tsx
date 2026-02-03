@@ -112,7 +112,7 @@ export function MainTabs() {
         <VoteForm isCheckedIn={userIsCheckedInAtCurrentBar} onNavigateToConsumption={navigateToConsumption} />
         
         {/* Bar Itinerary */}
-        <BarItinerary />
+        <BarItinerary onNavigateToConsumption={navigateToConsumption} />
         
         {/* Emergency Panel */}
         <EmergencyPanel />

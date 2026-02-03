@@ -86,6 +86,12 @@ export function MainTabs() {
         
         {/* Bar Check-in */}
         <BarCheckin onCheckinSuccess={navigateToConsumption} />
+        
+        {/* Vote Form for current bar */}
+        <VoteForm 
+          isCheckedIn={userIsCheckedInAtCurrentBar} 
+          onNavigateToConsumption={navigateToConsumption} 
+        />
       </TabsContent>
       
       {/* Tab: Meu Consumo (My Consumption) */}

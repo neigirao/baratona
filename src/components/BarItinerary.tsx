@@ -12,7 +12,11 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 
-export function BarItinerary() {
+interface BarItineraryProps {
+  onNavigateToConsumption?: () => void;
+}
+
+export function BarItinerary({ onNavigateToConsumption }: BarItineraryProps) {
   const { appConfig, bars, barsLoading, getProjectedTime, getBarVotes, currentUser, getUserVoteForBar, language, currentBarId } = useBaratona();
   const { isCheckedIn } = useCheckins();
   const [selectedBarId, setSelectedBarId] = useState<number | null>(null);
@@ -203,6 +207,10 @@ export function BarItinerary() {
                 barName={selectedBar?.name} 
                 compact 
                 isCheckedIn={isUserCheckedInAtSelectedBar}
+                onNavigateToConsumption={() => {
+                  setSelectedBarId(null);
+                  onNavigateToConsumption?.();
+                }}
               />
             )}
             

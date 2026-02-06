@@ -6,6 +6,9 @@ import { useCheckins } from '@/hooks/useCheckins';
 /**
  * Hook that automatically checks and unlocks achievements based on user actions.
  * Should be used once at the app level (e.g., in Index.tsx).
+ * 
+ * IMPORTANT: Uses hasInitialized flag to skip the first effect run,
+ * preventing achievements from being re-created on page load with pre-existing data.
  */
 export function useAchievementChecker() {
   const { 
@@ -20,9 +23,10 @@ export function useAchievementChecker() {
   const { unlockAchievement, isUnlocked } = useAchievements(currentUser?.id);
   const { checkins } = useCheckins();
   
-  // Track previous values to detect changes
-  const prevDrinks = useRef<number>(0);
-  const prevCheckins = useRef<number>(0);
+  // Track previous values to detect changes (-1 means not yet initialized)
+  const prevDrinks = useRef<number>(-1);
+  const prevCheckins = useRef<number>(-1);
+  const hasInitialized = useRef(false);
   
   useEffect(() => {
     if (!currentUser) return;
@@ -37,15 +41,6 @@ export function useAchievementChecker() {
     
     // Get participant's consumption by type
     const userConsumption = consumption.filter(c => c.participant_id === participantId);
-    const drinkTypes = new Set(
-      userConsumption
-        .filter(c => c.type === 'drink' && c.count > 0)
-        .map(c => c.bar_id) // Each bar represents a different "type" context
-    );
-    
-    // Actually check drink types from the 4 categories (cerveja, cachaca, drink, batida)
-    // Since we only track 'drink' type, we approximate by checking if user has drinks at 4+ different bars
-    // This is a simplification - in a full implementation, we'd track drink_type column
     
     // Get user votes
     const userVotes = bars.filter(bar => {
@@ -58,25 +53,33 @@ export function useAchievementChecker() {
     const firstBar = sortedBars[0];
     const lastBar = sortedBars[sortedBars.length - 1];
     
+    // Skip the first effect run to avoid re-creating achievements from pre-existing data
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      prevDrinks.current = drinks;
+      prevCheckins.current = checkinCount;
+      return;
+    }
+    
     // ========== ACHIEVEMENT CHECKS ==========
     
-    // 1. First Drink - Registered first drink
-    if (drinks > 0 && !isUnlocked('first_drink')) {
+    // 1. First Drink - Registered first drink (only if prev was 0, meaning user just added)
+    if (drinks > 0 && prevDrinks.current === 0 && !isUnlocked('first_drink')) {
       unlockAchievement('first_drink', language);
     }
     
-    // 2. Ten Drinks - Reached 10 drinks
-    if (drinks >= 10 && prevDrinks.current < 10 && !isUnlocked('ten_drinks')) {
+    // 2. Ten Drinks - Reached 10 drinks (only when crossing threshold during session)
+    if (drinks >= 10 && prevDrinks.current > 0 && prevDrinks.current < 10 && !isUnlocked('ten_drinks')) {
       unlockAchievement('ten_drinks', language);
     }
     
     // 3. Twenty Drinks (Legend) - Reached 20 drinks
-    if (drinks >= 20 && prevDrinks.current < 20 && !isUnlocked('twenty_drinks')) {
+    if (drinks >= 20 && prevDrinks.current > 0 && prevDrinks.current < 20 && !isUnlocked('twenty_drinks')) {
       unlockAchievement('twenty_drinks', language);
     }
     
-    // 4. Social Butterfly - Checked in at 5+ bars
-    if (checkinCount >= 5 && prevCheckins.current < 5 && !isUnlocked('social_butterfly')) {
+    // 4. Social Butterfly - Checked in at 5+ bars (only when crossing threshold during session)
+    if (checkinCount >= 5 && prevCheckins.current > 0 && prevCheckins.current < 5 && !isUnlocked('social_butterfly')) {
       unlockAchievement('social_butterfly', language);
     }
     

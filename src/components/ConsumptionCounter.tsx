@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { Beer, Utensils, Plus, Minus, MapPin, Check } from 'lucide-react';
+import { Beer, Utensils, Plus, Minus, MapPin, Check, Laugh } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const DRINK_TYPES = [
@@ -25,6 +25,10 @@ export function ConsumptionCounter() {
   // Local pending changes (delta from current database value)
   const [pendingDrinks, setPendingDrinks] = useState(0);
   const [pendingFood, setPendingFood] = useState(0);
+  const [jokeCount, setJokeCount] = useState(() => {
+    const saved = localStorage.getItem('baratona_jokes');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
   const [clickedDrinkType, setClickedDrinkType] = useState<string | null>(null);
@@ -131,6 +135,26 @@ export function ConsumptionCounter() {
   const handleAddFood = (amount: number = 1) => {
     setPendingFood(prev => prev + amount);
     if ('vibrate' in navigator) navigator.vibrate(30);
+  };
+
+  const handleAddJoke = () => {
+    setJokeCount(prev => {
+      const next = prev + 1;
+      localStorage.setItem('baratona_jokes', String(next));
+      return next;
+    });
+    if ('vibrate' in navigator) navigator.vibrate(30);
+  };
+
+  const handleRemoveJoke = () => {
+    if (jokeCount > 0) {
+      setJokeCount(prev => {
+        const next = prev - 1;
+        localStorage.setItem('baratona_jokes', String(next));
+        return next;
+      });
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    }
   };
   
   const handleRemoveFood = () => {
@@ -250,7 +274,46 @@ export function ConsumptionCounter() {
               <Plus className="w-5 h-5 text-secondary-foreground" />
             </button>
           </div>
+      
+      {/* Joke Counter Section */}
+      <div className="border-t border-border pt-4 mt-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Laugh className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium">{language === 'pt' ? 'Piadas' : 'Jokes'}</span>
+          </div>
           
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRemoveJoke}
+              className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10"
+              disabled={jokeCount === 0}
+            >
+              <Minus className="w-5 h-5 text-secondary-foreground" />
+            </button>
+            
+            <div className="flex flex-col items-center min-w-[3.5rem]">
+              <span className="font-display text-3xl font-bold text-foreground">
+                {jokeCount}
+              </span>
+            </div>
+            
+            <button
+              onClick={handleAddJoke}
+              className="counter-btn counter-btn-yellow w-10 h-10"
+            >
+              <Plus className="w-5 h-5 text-secondary-foreground" />
+            </button>
+          </div>
+          
+          <button
+            onClick={() => { for (let i = 0; i < 5; i++) handleAddJoke(); }}
+            className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
+          >
+            +5 😂
+          </button>
+        </div>
+      </div>
           {/* Quick add +5 button */}
           <button
             onClick={() => handleAddFood(5)}

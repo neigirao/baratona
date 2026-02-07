@@ -132,6 +132,35 @@ export default function Admin() {
           <p className="text-sm text-muted-foreground">Controle total da Baratona</p>
         </div>
         
+        {/* Current Bar Selector */}
+        <div className="bg-card rounded-2xl p-4 border border-border">
+          <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            Bar Atual
+          </h3>
+          
+          <Select 
+            value={appConfig.current_bar_id?.toString() || ''} 
+            onValueChange={async (value) => {
+              setUpdating(true);
+              await updateAppConfig({ current_bar_id: parseInt(value) });
+              setUpdating(false);
+            }}
+            disabled={updating}
+          >
+            <SelectTrigger className="h-12 text-base font-medium">
+              <SelectValue placeholder="Selecionar bar atual" />
+            </SelectTrigger>
+            <SelectContent>
+              {bars.map(bar => (
+                <SelectItem key={bar.id} value={bar.id.toString()}>
+                  {bar.bar_order}. {bar.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Van Status Control */}
         <div className="bg-card rounded-2xl p-4 border border-border">
           <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">

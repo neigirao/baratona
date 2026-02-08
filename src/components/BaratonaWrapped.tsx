@@ -50,7 +50,7 @@ function StatReveal({ value, label, icon: Icon, delay = 0 }: {
   );
 }
 
-export function BaratonaWrapped() {
+export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
   const { 
     currentUser, 
     participants, 
@@ -201,6 +201,17 @@ export function BaratonaWrapped() {
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-hidden">
+      {/* Close button (preview mode) */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-30 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+      )}
+
       {/* Progress dots */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
         {Array.from({ length: totalCards }).map((_, i) => (

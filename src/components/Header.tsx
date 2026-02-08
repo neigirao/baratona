@@ -1,10 +1,10 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Globe, Settings } from 'lucide-react';
+import { Globe, Settings, PartyPopper } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 
-export function Header() {
+export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
   const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
   
   return (
@@ -27,6 +27,19 @@ export function Header() {
         </Link>
         
         <div className="flex items-center gap-2">
+          {/* Wrapped Preview */}
+          {onShowWrapped && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onShowWrapped}
+              className="h-8 w-8 p-0 text-primary"
+              title="Retrospectiva"
+            >
+              <PartyPopper className="h-4 w-4" />
+            </Button>
+          )}
+          
           {/* Language Toggle */}
           <Button
             variant="outline"

@@ -1,107 +1,73 @@
 
 
-# Melhorias na Retrospectiva (Baratona Wrapped)
+# Retrospectiva Geral no Admin
 
-A retrospectiva atual tem 6 cards com conteudo basico. O plano abaixo adiciona novos cards, melhora as animacoes, inclui navegacao por swipe e enriquece os dados exibidos.
-
----
-
-## Novos Cards e Dados
-
-### Card: Posicao no Ranking (novo - apos o bar favorito)
-- Mostra em que posicao o usuario ficou no ranking de bebidas e comidas
-- Exibe algo como "Voce ficou em 3o lugar nas bebidas!" com uma medalha correspondente (ouro/prata/bronze ou numero)
-- Usa os dados de ranking que ja sao calculados no componente
-
-### Card: Bares Visitados (novo - apos posicao no ranking)
-- Mostra quantos bares o usuario visitou (dados de check-in)
-- Lista os bares visitados com icones de check
-- Importa o hook `useCheckins` para acessar os dados de check-in
-
-### Card: Conquistas Desbloqueadas (novo - apos bares visitados)
-- Mostra as conquistas que o usuario desbloqueou durante o evento
-- Grid de emojis das conquistas desbloqueadas
-- Exibe "X de 9 conquistas"
-- Importa o hook `useAchievements`
-
-### Card: Contador de Piadas (novo - antes dos campeoes)
-- Puxa o contador local de piadas do localStorage
-- Mostra o total de piadas contadas com animacao divertida
+Novo componente `AdminRetrospective` adicionado ao painel admin com um resumo completo do evento, visivel apenas para o administrador.
 
 ---
 
-## Melhorias de Navegacao
+## Secoes do Painel
 
-### Suporte a Swipe/Touch
-- Adiciona handlers de touch (touchstart/touchend) no container principal
-- Swipe para esquerda = proximo card
-- Swipe para direita = card anterior
-- Threshold de 50px para evitar swipes acidentais
+### 1. Ranking de Bebidas (quem mais bebeu)
+- Tabela com todos os participantes ordenados por total de bebidas (descendente)
+- Medalhas para os 3 primeiros
+- Dados vindos do array `consumption` filtrado por `type === 'drink'`
 
-### Barra de Progresso no Topo
-- Substitui os dots por uma barra de progresso tipo Instagram Stories
-- Cada segmento representa um card
-- O segmento ativo tem preenchimento animado
+### 2. Ranking de Comida (quem mais comeu)
+- Mesma estrutura, filtrado por `type === 'food'`
 
----
+### 3. Ranking de Piadas
+- Como piadas sao salvas em localStorage (chave `baratona_jokes`), so o admin vera o proprio contador local
+- Alternativa: exibir uma nota explicando que piadas sao locais e nao ha ranking global
+- Exibir apenas o total de piadas do admin como referencia
 
-## Melhorias Visuais
+### 4. Notas dos Restaurantes
+- Para cada bar, calcular a media de cada categoria (Bebida, Comida, Ambiente, Atendimento) e a media geral
+- Exibir em tabela: Bar | Bebida | Comida | Ambiente | Atendimento | Media
+- Destacar o melhor bar (maior media geral)
 
-### Animacoes de Contagem
-- Numeros grandes usam efeito de contagem animada (de 0 ate o valor final)
-- Cria um hook `useCountUp` simples que anima o valor durante ~1.5s
-
-### Particulas/Confetti no Card Final
-- Adiciona efeito de confetti no ultimo card (Campeoes) usando CSS puro
-- Pequenos circulos coloridos caindo pela tela
-
-### Texto de Compartilhamento Melhorado
-- Inclui posicao no ranking, bares visitados e conquistas no texto de compartilhamento
+### 5. Quem Usou / Quem Nao Usou
+- Comparar lista de participantes com quem tem pelo menos 1 check-in ou 1 consumo registrado
+- Exibir duas listas: "Participaram" (com icone verde) e "Nao participaram" (com icone cinza)
 
 ---
 
 ## Detalhes Tecnicos
 
-### Alteracoes em `src/components/BaratonaWrapped.tsx`
-1. Importar `useCheckins` e `useAchievements`
-2. Criar hook interno `useCountUp(target, duration)` para animar numeros
-3. Adicionar estado e handlers de touch para swipe navigation
-4. Incrementar `totalCards` de 6 para 10
-5. Adicionar novos cards:
-   - Card 4: Posicao no Ranking (gradiente indigo)
-   - Card 5: Bares Visitados (gradiente teal, usa `useCheckins`)
-   - Card 6: Conquistas (gradiente violet, usa `useAchievements`)
-   - Card 7: Piadas (gradiente pink, le `localStorage`)
-   - Cards 8-9: Group Stats e Champions (renumerados)
-6. Substituir dots de progresso por barras segmentadas estilo Stories
-7. Adicionar touch event listeners no container
-8. Melhorar `handleShare` com dados adicionais
+### Novo arquivo: `src/components/AdminRetrospective.tsx`
+- Importa `useBaratona` para acessar `participants`, `consumption`, `bars`, `getBarVotes`
+- Importa `useCheckins` para verificar quem fez check-in
+- Toda a logica de agregacao e feita com `useMemo` dentro do componente
+- Usa componentes `Table` do shadcn/ui para as tabelas
+- Usa `Card` para agrupar cada secao
 
-### Componentes Internos Novos (dentro do mesmo arquivo)
-- `CountUpNumber`: componente que anima um numero de 0 ao valor final usando `requestAnimationFrame`
-- `ProgressBars`: componente que renderiza a barra de progresso segmentada no topo
-- `ConfettiEffect`: particulas CSS animadas no card final
+### Alteracao em `src/pages/Admin.tsx`
+- Importa e renderiza `<AdminRetrospective />` como uma nova secao no final da pagina (antes dos botoes de emergencia)
+- Envolvido em um `Collapsible` ou accordion para nao poluir a tela, com titulo "Retrospectiva Geral" e icone `BarChart3`
 
-### Fluxo de Cards Atualizado
-
+### Calculo dos Rankings
 ```text
-0: Intro (Baratona 2026)
-1: Bebidas Pessoais
-2: Comida Pessoal
-3: Bar Favorito
-4: Posicao no Ranking (NOVO)
-5: Bares Visitados (NOVO)
-6: Conquistas (NOVO)
-7: Piadas (NOVO)
-8: Stats do Grupo
-9: Campeoes + Melhor Bar (final)
+consumption.filter(type === 'drink')
+  -> agrupar por participant_id (somando count)
+  -> ordenar desc
+  -> mapear nome do participante
 ```
 
-### Navegacao por Swipe
+### Calculo das Notas dos Bares
 ```text
-- onTouchStart: salva posicao X inicial
-- onTouchEnd: calcula delta X
-  - delta < -50px: nextCard()
-  - delta > 50px: prevCard()
+Para cada bar:
+  votes.filter(bar_id === bar.id)
+  -> media de drink_score, food_score, vibe_score, service_score
+  -> media geral = (drink + food + vibe + service) / 4
 ```
+
+### Calculo de Uso
+```text
+participantesAtivos = Set de participant_id que aparecem em checkins OU consumption
+participaram = participants.filter(id in participantesAtivos)
+naoParticiparam = participants.filter(id NOT in participantesAtivos)
+```
+
+### Sobre Piadas
+Como o contador de piadas e local (localStorage), nao e possivel criar um ranking global. O componente exibira uma nota explicando isso, e mostrara apenas o total local do dispositivo atual.
 

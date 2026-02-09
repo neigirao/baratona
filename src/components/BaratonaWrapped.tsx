@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { useCheckins } from '@/hooks/useCheckins';
 import { useAchievements, ACHIEVEMENTS } from '@/hooks/useAchievements';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Beer, Utensils, Trophy, Star, MapPin, Users, ChevronRight, PartyPopper, Share2, Medal, CheckCircle, Award, Laugh } from 'lucide-react';
 import { WrappedCard } from '@/components/wrapped/WrappedCard';
@@ -10,7 +11,7 @@ import { ProgressBars } from '@/components/wrapped/ProgressBars';
 import { ConfettiEffect } from '@/components/wrapped/ConfettiEffect';
 import { useCountUp } from '@/hooks/useCountUp';
 
-const TOTAL_CARDS = 10;
+const TOTAL_CARDS = 14;
 
 export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
   const { 
@@ -143,6 +144,36 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
     return { unlocked, total: ACHIEVEMENTS.length, count: unlocked.length };
   }, [unlockedAchievements]);
 
+  // Group achievements from DB
+  const [groupAchievements, setGroupAchievements] = useState<{ participant_id: string; achievement_key: string }[]>([]);
+  useEffect(() => {
+    supabase.from('achievements').select('participant_id, achievement_key').then(({ data }) => {
+      if (data) setGroupAchievements(data);
+    });
+  }, []);
+
+  const groupAchievementStats = useMemo(() => {
+    const uniqueKeys = new Set(groupAchievements.map(a => a.achievement_key));
+    return { unlocked: uniqueKeys.size, total: ACHIEVEMENTS.length, count: groupAchievements.length };
+  }, [groupAchievements]);
+
+  // Most popular bar (by unique check-ins)
+  const mostPopularBar = useMemo(() => {
+    const map = new Map<number, Set<string>>();
+    checkins.forEach(c => {
+      const set = map.get(c.bar_id) || new Set();
+      set.add(c.participant_id);
+      map.set(c.bar_id, set);
+    });
+    let bestId: number | null = null;
+    let bestCount = 0;
+    map.forEach((set, barId) => {
+      if (set.size > bestCount) { bestCount = set.size; bestId = barId; }
+    });
+    const bar = bars.find(b => b.id === bestId);
+    return bar ? { name: bar.name, count: bestCount } : null;
+  }, [checkins, bars]);
+
   // Jokes from localStorage
   const jokesCount = useMemo(() => {
     try {
@@ -189,7 +220,7 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
   };
 
   // Animated values for jokes card
-  const animatedJokes = useCountUp(jokesCount, 1500, currentCard === 7);
+  const animatedJokes = useCountUp(jokesCount, 1500, currentCard === 11);
 
   const handleShare = async () => {
     const rankText = rankings.userDrinkPosition > 0 
@@ -343,9 +374,105 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
           </div>
         </WrappedCard>
 
-        {/* Card 5: Bars Visited (NEW) */}
+        {/* Card 5: Top 3 Drinkers */}
         <WrappedCard 
           active={currentCard === 5} 
+          gradient="bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-400"
+        >
+          <Beer className="w-16 h-16 text-white mb-4" />
+          <h2 className="font-display text-xl font-bold text-white mb-6">
+            {language === 'pt' ? 'Top 3 Bebedores' : 'Top 3 Drinkers'}
+          </h2>
+          <div className="w-full max-w-xs space-y-3">
+            {rankings.drinkTop3.map((r, i) => (
+              <div key={r.id} className="bg-white/20 backdrop-blur-sm rounded-xl p-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${200 + i * 200}ms`, animationFillMode: 'both' }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{getMedalEmoji(i + 1)}</span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold">{r.name}</p>
+                  </div>
+                  <span className="text-white font-display text-xl font-black">{r.count} 🍺</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </WrappedCard>
+
+        {/* Card 6: Top 3 Eaters */}
+        <WrappedCard 
+          active={currentCard === 6} 
+          gradient="bg-gradient-to-br from-orange-600 via-orange-500 to-red-400"
+        >
+          <Utensils className="w-16 h-16 text-white mb-4" />
+          <h2 className="font-display text-xl font-bold text-white mb-6">
+            {language === 'pt' ? 'Top 3 Comedores' : 'Top 3 Eaters'}
+          </h2>
+          <div className="w-full max-w-xs space-y-3">
+            {rankings.foodTop3.map((r, i) => (
+              <div key={r.id} className="bg-white/20 backdrop-blur-sm rounded-xl p-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${200 + i * 200}ms`, animationFillMode: 'both' }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{getMedalEmoji(i + 1)}</span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold">{r.name}</p>
+                  </div>
+                  <span className="text-white font-display text-xl font-black">{r.count} 🍽️</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </WrappedCard>
+
+        {/* Card 7: Most Popular Bar */}
+        <WrappedCard 
+          active={currentCard === 7} 
+          gradient="bg-gradient-to-br from-cyan-600 via-cyan-500 to-teal-400"
+        >
+          <MapPin className="w-16 h-16 text-white mb-4" />
+          <h2 className="font-display text-xl font-bold text-white mb-4">
+            {language === 'pt' ? 'Bar Mais Popular' : 'Most Popular Bar'}
+          </h2>
+          <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+            <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Users className="w-12 h-12 text-white" />
+            </div>
+            <span className="font-display text-3xl md:text-5xl font-black text-white text-center drop-shadow-lg px-4">
+              {mostPopularBar?.name || 'N/A'}
+            </span>
+            {mostPopularBar && (
+              <p className="text-white/80 text-lg">
+                {mostPopularBar.count} {language === 'pt' ? 'pessoas passaram por lá' : 'people visited'}
+              </p>
+            )}
+          </div>
+        </WrappedCard>
+
+        {/* Card 8: Group Achievements */}
+        <WrappedCard 
+          active={currentCard === 8} 
+          gradient="bg-gradient-to-br from-violet-600 via-purple-500 to-fuchsia-500"
+        >
+          <Award className="w-16 h-16 text-white mb-4" />
+          <h2 className="font-display text-xl font-bold text-white mb-4">
+            {language === 'pt' ? 'Conquistas do Grupo' : 'Group Achievements'}
+          </h2>
+          <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+            <span className="font-display text-5xl md:text-7xl font-black text-white drop-shadow-lg">
+              {groupAchievementStats.unlocked}
+            </span>
+            <p className="text-white/80 text-lg text-center">
+              {language === 'pt' 
+                ? `de ${groupAchievementStats.total} conquistas possíveis desbloqueadas` 
+                : `of ${groupAchievementStats.total} possible achievements unlocked`}
+            </p>
+            <p className="text-white/60 text-sm">
+              {groupAchievementStats.count} {language === 'pt' ? 'conquistas no total' : 'total achievements'}
+            </p>
+          </div>
+        </WrappedCard>
+
+        {/* Card 9: Bars Visited */}
+        <WrappedCard 
+          active={currentCard === 9} 
           gradient="bg-gradient-to-br from-teal-600 via-teal-500 to-emerald-400"
         >
           <p className="text-white/80 text-lg mb-4">
@@ -356,7 +483,7 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
             label={language === 'pt' ? 'bares' : 'bars'} 
             icon={MapPin}
             delay={200}
-            active={currentCard === 5}
+            active={currentCard === 9}
           />
           {userCheckinData.barNames.length > 0 && (
             <div className="mt-6 w-full max-w-xs space-y-2 animate-in fade-in" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
@@ -370,14 +497,14 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
           )}
         </WrappedCard>
 
-        {/* Card 6: Achievements (NEW) */}
+        {/* Card 10: Personal Achievements */}
         <WrappedCard 
-          active={currentCard === 6} 
+          active={currentCard === 10} 
           gradient="bg-gradient-to-br from-violet-600 via-purple-500 to-fuchsia-500"
         >
           <Award className="w-16 h-16 text-white mb-4" />
           <h2 className="font-display text-xl font-bold text-white mb-2">
-            {language === 'pt' ? 'Conquistas' : 'Achievements'}
+            {language === 'pt' ? 'Suas Conquistas' : 'Your Achievements'}
           </h2>
           <p className="text-white/70 text-lg mb-6">
             {achievementsData.count} / {achievementsData.total}
@@ -403,9 +530,9 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
           </div>
         </WrappedCard>
 
-        {/* Card 7: Jokes Counter (NEW) */}
+        {/* Card 11: Jokes Counter */}
         <WrappedCard 
-          active={currentCard === 7} 
+          active={currentCard === 11} 
           gradient="bg-gradient-to-br from-pink-500 via-rose-500 to-red-400"
         >
           <p className="text-white/80 text-lg mb-4">
@@ -426,9 +553,9 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
           </div>
         </WrappedCard>
 
-        {/* Card 8: Group Stats */}
+        {/* Card 12: Group Stats */}
         <WrappedCard 
-          active={currentCard === 8} 
+          active={currentCard === 12} 
           gradient="bg-gradient-to-br from-green-600 via-emerald-500 to-teal-400"
         >
           <p className="text-white/80 text-lg mb-6">
@@ -440,14 +567,14 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
               label={language === 'pt' ? 'bebidas' : 'drinks'} 
               icon={Beer}
               delay={200}
-              active={currentCard === 8}
+              active={currentCard === 12}
             />
             <StatReveal 
               value={totalFood} 
               label={language === 'pt' ? 'comidas' : 'food'} 
               icon={Utensils}
               delay={400}
-              active={currentCard === 8}
+              active={currentCard === 12}
             />
           </div>
           <div className="flex items-center gap-2 mt-6 text-white/60 animate-in fade-in" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
@@ -456,12 +583,12 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
           </div>
         </WrappedCard>
 
-        {/* Card 9: Champions + Confetti */}
+        {/* Card 13: Champions + Confetti */}
         <WrappedCard 
-          active={currentCard === 9} 
+          active={currentCard === 13} 
           gradient="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600"
         >
-          {currentCard === 9 && <ConfettiEffect />}
+          {currentCard === 13 && <ConfettiEffect />}
           <Trophy className="w-16 h-16 text-white mb-4 animate-bounce relative z-20" />
           <h2 className="font-display text-2xl font-bold text-white mb-6 relative z-20">
             {language === 'pt' ? 'Campeões da Baratona' : 'Baratona Champions'}

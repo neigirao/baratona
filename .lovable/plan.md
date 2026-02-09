@@ -1,73 +1,105 @@
 
 
-# Retrospectiva Geral no Admin
+# Retrospectiva Enriquecida - Mais Dados sobre Pessoas e Grupo
 
-Novo componente `AdminRetrospective` adicionado ao painel admin com um resumo completo do evento, visivel apenas para o administrador.
+Vamos adicionar novas secoes tanto no **AdminRetrospective** (painel admin) quanto no **BaratonaWrapped** (retrospectiva do usuario), trazendo dados sobre outras pessoas e o grupo como um todo.
 
 ---
 
-## Secoes do Painel
+## Novas Secoes no AdminRetrospective
 
-### 1. Ranking de Bebidas (quem mais bebeu)
-- Tabela com todos os participantes ordenados por total de bebidas (descendente)
-- Medalhas para os 3 primeiros
-- Dados vindos do array `consumption` filtrado por `type === 'drink'`
+### 1. Ranking de Conquistas
+- Buscar todas as conquistas do banco (tabela `achievements`) para todos os participantes
+- Agrupar por `participant_id`, contar quantas conquistas cada um desbloqueou
+- Exibir tabela com medalhas, nome e total de conquistas
+- Mostrar quais conquistas especificas cada top-3 desbloqueou (com emojis)
 
-### 2. Ranking de Comida (quem mais comeu)
-- Mesma estrutura, filtrado por `type === 'food'`
+### 2. Consumo por Bar
+- Agrupar consumo por `bar_id` (somando drinks + food de todos os participantes)
+- Tabela: Bar | Total Bebidas | Total Comidas | Total Geral
+- Destacar o bar com maior consumo total
 
-### 3. Ranking de Piadas
-- Como piadas sao salvas em localStorage (chave `baratona_jokes`), so o admin vera o proprio contador local
-- Alternativa: exibir uma nota explicando que piadas sao locais e nao ha ranking global
-- Exibir apenas o total de piadas do admin como referencia
+### 3. Check-ins por Bar (Presenca)
+- Contar check-ins unicos por bar (quantas pessoas fizeram check-in em cada bar)
+- Tabela: Bar | Pessoas Presentes
+- Destacar o bar mais popular
 
-### 4. Notas dos Restaurantes
-- Para cada bar, calcular a media de cada categoria (Bebida, Comida, Ambiente, Atendimento) e a media geral
-- Exibir em tabela: Bar | Bebida | Comida | Ambiente | Atendimento | Media
-- Destacar o melhor bar (maior media geral)
+### 4. Estatisticas Gerais do Grupo
+- Card com numeros resumidos:
+  - Total de participantes
+  - Media de bebidas por pessoa
+  - Media de comidas por pessoa
+  - Total de conquistas desbloqueadas
+  - Total de avaliacoes feitas (votos)
 
-### 5. Quem Usou / Quem Nao Usou
-- Comparar lista de participantes com quem tem pelo menos 1 check-in ou 1 consumo registrado
-- Exibir duas listas: "Participaram" (com icone verde) e "Nao participaram" (com icone cinza)
+---
+
+## Novos Cards no BaratonaWrapped (usuario)
+
+### Card: Top 3 Bebedores do Grupo (apos card pessoal de ranking)
+- Mostra os 3 participantes que mais beberam com medalhas
+- Usa dados de ranking que ja sao calculados
+
+### Card: Top 3 Comedores do Grupo
+- Mesmo estilo, para comida
+
+### Card: Bar Mais Popular
+- Bar com mais check-ins do grupo
+- Mostra quantas pessoas passaram por la
+
+### Card: Conquistas do Grupo
+- Total de conquistas desbloqueadas por todos os participantes
+- "O grupo desbloqueou X de Y conquistas possiveis"
+
+O total de cards passa de 10 para 14.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Novo arquivo: `src/components/AdminRetrospective.tsx`
-- Importa `useBaratona` para acessar `participants`, `consumption`, `bars`, `getBarVotes`
-- Importa `useCheckins` para verificar quem fez check-in
-- Toda a logica de agregacao e feita com `useMemo` dentro do componente
-- Usa componentes `Table` do shadcn/ui para as tabelas
-- Usa `Card` para agrupar cada secao
+### Alteracoes em `src/components/AdminRetrospective.tsx`
+1. Buscar conquistas de todos os participantes do banco via query direta ao Supabase (nao usa o hook `useAchievements` que filtra por usuario)
+2. Novo `useMemo` para ranking de conquistas: agrupar por `participant_id`, contar, ordenar desc
+3. Novo `useMemo` para consumo por bar: agrupar `consumption` por `bar_id`, somar drinks e food separadamente
+4. Novo `useMemo` para check-ins por bar: contar participantes unicos por `bar_id`
+5. Novo `useMemo` para estatisticas gerais: medias, totais
+6. Importar `useEffect/useState` para buscar achievements e importar `supabase` client
+7. Importar `ACHIEVEMENTS` de `useAchievements` para mapear emojis
+8. Novos cards com `Card`, `Table`, `Badge`
 
-### Alteracao em `src/pages/Admin.tsx`
-- Importa e renderiza `<AdminRetrospective />` como uma nova secao no final da pagina (antes dos botoes de emergencia)
-- Envolvido em um `Collapsible` ou accordion para nao poluir a tela, com titulo "Retrospectiva Geral" e icone `BarChart3`
+### Alteracoes em `src/components/BaratonaWrapped.tsx`
+1. Incrementar `TOTAL_CARDS` de 10 para 14
+2. Adicionar 4 novos cards entre o card 4 (ranking pessoal) e o card 5 (bares visitados):
+   - Card 5: Top 3 Bebedores (gradiente amber)
+   - Card 6: Top 3 Comedores (gradiente orange)
+   - Card 7: Bar Mais Popular (gradiente cyan)
+   - Card 8: Conquistas do Grupo (gradiente violet)
+3. Renumerar os cards existentes (bares visitados passa a ser card 9, conquistas pessoais card 10, etc.)
+4. Buscar todas as conquistas do grupo via query Supabase dentro de `useMemo`/`useEffect`
+5. Calcular bar mais popular a partir dos check-ins (contar check-ins unicos por bar)
+6. Atualizar `handleShare` com novos dados
 
-### Calculo dos Rankings
+### Fluxo de Cards Atualizado no Wrapped
 ```text
-consumption.filter(type === 'drink')
-  -> agrupar por participant_id (somando count)
-  -> ordenar desc
-  -> mapear nome do participante
+0: Intro (Baratona 2026)
+1: Bebidas Pessoais
+2: Comida Pessoal
+3: Bar Favorito
+4: Posicao no Ranking
+5: Top 3 Bebedores (NOVO)
+6: Top 3 Comedores (NOVO)
+7: Bar Mais Popular (NOVO)
+8: Conquistas do Grupo (NOVO)
+9: Bares Visitados (renumerado)
+10: Conquistas Pessoais (renumerado)
+11: Piadas (renumerado)
+12: Stats do Grupo (renumerado)
+13: Campeoes + Melhor Bar (renumerado)
 ```
 
-### Calculo das Notas dos Bares
-```text
-Para cada bar:
-  votes.filter(bar_id === bar.id)
-  -> media de drink_score, food_score, vibe_score, service_score
-  -> media geral = (drink + food + vibe + service) / 4
-```
-
-### Calculo de Uso
-```text
-participantesAtivos = Set de participant_id que aparecem em checkins OU consumption
-participaram = participants.filter(id in participantesAtivos)
-naoParticiparam = participants.filter(id NOT in participantesAtivos)
-```
-
-### Sobre Piadas
-Como o contador de piadas e local (localStorage), nao e possivel criar um ranking global. O componente exibira uma nota explicando isso, e mostrara apenas o total local do dispositivo atual.
+### Dados Necessarios
+- Conquistas de todos: query `SELECT * FROM achievements` (nova query no AdminRetrospective e useEffect no Wrapped)
+- Check-ins por bar: ja disponivel via `useCheckins()`
+- Consumo por bar: ja disponivel via `consumption` do contexto
+- Nao precisa de migracoes no banco
 

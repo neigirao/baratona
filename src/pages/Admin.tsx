@@ -15,8 +15,12 @@ import {
   AlertTriangle,
   Loader2,
   PartyPopper,
-  RotateCcw
+  RotateCcw,
+  BarChart3,
+  ChevronDown
 } from 'lucide-react';
+import { AdminRetrospective } from '@/components/AdminRetrospective';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Navigate } from 'react-router-dom';
 import {
   Select,
@@ -374,6 +378,22 @@ export default function Admin() {
           )}
         </div>
         
+        {/* Retrospective */}
+        <Collapsible>
+          <CollapsibleTrigger className="w-full">
+            <div className="bg-card rounded-2xl p-4 border border-border flex items-center justify-between">
+              <h3 className="font-display text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Retrospectiva Geral
+              </h3>
+              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <AdminRetrospective />
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Emergency Buttons */}
         <div className="bg-card rounded-2xl p-4 border border-destructive/50">
           <h3 className="font-display text-sm font-semibold text-destructive mb-4 flex items-center gap-2">

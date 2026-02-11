@@ -252,12 +252,13 @@ export function useConsumption(currentBarId?: number | null) {
     };
   }, [fetchConsumption]);
 
-  // Stable updateCount using ref - now includes bar_id
+  // Stable updateCount using ref - now includes bar_id and optional subtype
   const updateCount = useCallback(async (
     participantId: string, 
     type: 'drink' | 'food', 
     delta: number,
-    barId?: number | null
+    barId?: number | null,
+    subtype?: string
   ) => {
     const effectiveBarId = barId ?? null;
     
@@ -273,28 +274,31 @@ export function useConsumption(currentBarId?: number | null) {
       const newCount = Math.max(0, delta);
       
       // Optimistic update - add new record
-      const optimisticRecord: Consumption = {
+      const optimisticRecord = {
         id: crypto.randomUUID(),
         participant_id: participantId,
         type,
         count: newCount,
         bar_id: effectiveBarId,
         updated_at: new Date().toISOString(),
-      };
+        subtype: subtype || null,
+      } as Consumption;
       setConsumption(prev => [...prev, optimisticRecord]);
       
       // Insert new record with retry
       try {
         await withRetry(
           async () => {
+            const insertData: Record<string, unknown> = {
+              participant_id: participantId,
+              type,
+              count: newCount,
+              bar_id: effectiveBarId,
+            };
+            if (subtype) insertData.subtype = subtype;
             const { error } = await supabase
               .from('consumption')
-              .insert({
-                participant_id: participantId,
-                type,
-                count: newCount,
-                bar_id: effectiveBarId,
-              });
+              .insert(insertData as any);
             
             if (error) throw error;
             return true;
@@ -335,9 +339,11 @@ export function useConsumption(currentBarId?: number | null) {
     try {
       await withRetry(
         async () => {
+          const updateData: Record<string, unknown> = { count: newCount };
+          if (subtype) updateData.subtype = subtype;
           let query = supabase
             .from('consumption')
-            .update({ count: newCount })
+            .update(updateData as any)
             .eq('participant_id', participantId)
             .eq('type', type);
           
@@ -368,7 +374,7 @@ export function useConsumption(currentBarId?: number | null) {
   }, [fetchConsumption]);
 
   const addDrink = useCallback(
-    (participantId: string, barId?: number | null) => updateCount(participantId, 'drink', 1, barId),
+    (participantId: string, barId?: number | null, subtype?: string) => updateCount(participantId, 'drink', 1, barId, subtype),
     [updateCount]
   );
   

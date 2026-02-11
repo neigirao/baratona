@@ -1,0 +1,1 @@
+ALTER TABLE public.consumption ADD COLUMN subtype text;

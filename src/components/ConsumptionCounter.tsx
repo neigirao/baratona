@@ -13,6 +13,7 @@ const DRINK_TYPES = [
 export function ConsumptionCounter() {
   const { 
     currentUser, 
+    addDrink: contextAddDrink,
     updateConsumption, 
     getParticipantConsumption, 
     getTotalParticipantConsumption,
@@ -35,6 +36,7 @@ export function ConsumptionCounter() {
   
   // Debounce timer ref
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastDrinkSubtype = useRef<string | null>(null);
   
   const currentBar = getCurrentBar();
   
@@ -62,7 +64,8 @@ export function ConsumptionCounter() {
       const promises: Promise<boolean>[] = [];
       
       if (pendingDrinks !== 0) {
-        promises.push(updateConsumption(currentUser.id, 'drink', pendingDrinks, currentBarId));
+        // For drinks, pass the last selected subtype if available
+        promises.push(updateConsumption(currentUser.id, 'drink', pendingDrinks, currentBarId, lastDrinkSubtype.current || undefined));
       }
       
       if (pendingFood !== 0) {
@@ -124,8 +127,9 @@ export function ConsumptionCounter() {
     setPendingDrinks(prev => prev + amount);
     if ('vibrate' in navigator) navigator.vibrate(30);
     
-    // Trigger button animation
+    // Track subtype for persistence
     if (drinkTypeKey) {
+      lastDrinkSubtype.current = drinkTypeKey;
       setClickedDrinkType(drinkTypeKey);
       setTimeout(() => setClickedDrinkType(null), 300);
     }

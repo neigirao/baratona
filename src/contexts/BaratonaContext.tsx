@@ -31,11 +31,11 @@ interface BaratonaContextType {
   updateAppConfig: (updates: Partial<Omit<AppConfigRow, 'id' | 'updated_at'>>) => Promise<boolean>;
   
   // Consumption - now with bar_id support
-  addDrink: (participantId: string, barId?: number | null) => Promise<boolean>;
+  addDrink: (participantId: string, barId?: number | null, subtype?: string) => Promise<boolean>;
   removeDrink: (participantId: string, barId?: number | null) => Promise<boolean>;
   addFood: (participantId: string, barId?: number | null) => Promise<boolean>;
   removeFood: (participantId: string, barId?: number | null) => Promise<boolean>;
-  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number, barId?: number | null) => Promise<boolean>;
+  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number, barId?: number | null, subtype?: string) => Promise<boolean>;
   getParticipantConsumption: (participantId: string, barId?: number | null) => { drinks: number; food: number };
   getTotalParticipantConsumption: (participantId: string) => { drinks: number; food: number };
   totalDrinks: number;

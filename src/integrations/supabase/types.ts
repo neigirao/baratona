@@ -170,6 +170,7 @@ export type Database = {
           count: number
           id: string
           participant_id: string
+          subtype: string | null
           type: string
           updated_at: string
         }
@@ -178,6 +179,7 @@ export type Database = {
           count?: number
           id?: string
           participant_id: string
+          subtype?: string | null
           type: string
           updated_at?: string
         }
@@ -186,6 +188,7 @@ export type Database = {
           count?: number
           id?: string
           participant_id?: string
+          subtype?: string | null
           type?: string
           updated_at?: string
         }

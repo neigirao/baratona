@@ -5,7 +5,7 @@ import { ACHIEVEMENTS } from '@/hooks/useAchievements';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy, Utensils, Beer, Star, Users, UserX, Laugh, Info, Award, MapPin, BarChart3 } from 'lucide-react';
+import { Trophy, Utensils, Beer, Star, Users, UserX, Laugh, Info, Award, MapPin, BarChart3, Clock, CheckCircle, XCircle, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
@@ -13,6 +13,13 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 function getMedal(index: number) {
   return MEDALS[index] || `${index + 1}º`;
 }
+
+const SUBTYPE_CONFIG: Record<string, { label: string; emoji: string }> = {
+  cerveja: { label: 'Cerveja', emoji: '🍺' },
+  cachaca: { label: 'Cachaça', emoji: '🥃' },
+  drink: { label: 'Drink', emoji: '🍹' },
+  batida: { label: 'Batida', emoji: '🧉' },
+};
 
 export function AdminRetrospective() {
   const { participants, consumption, bars, getBarVotes } = useBaratona();
@@ -110,6 +117,104 @@ export function AdminRetrospective() {
 
   const bestBar = barRatings.length > 0 && barRatings[0].voteCount > 0 ? barRatings[0] : null;
 
+  // === NEW: Global average across all bars ===
+  const globalAverage = useMemo(() => {
+    const rated = barRatings.filter(b => b.voteCount > 0);
+    if (rated.length === 0) return null;
+    const sum = rated.reduce((s, b) => s + b.avg, 0);
+    return (sum / rated.length).toFixed(1);
+  }, [barRatings]);
+
+  // === NEW: Consolidated bar summary ===
+  const barSummary = useMemo(() => {
+    return bars.map(bar => {
+      const rating = barRatings.find(r => r.bar.id === bar.id) || { drink: 0, food: 0, vibe: 0, service: 0, avg: 0, voteCount: 0 };
+      const cons = consumptionPerBar.find(c => c.bar.id === bar.id) || { drinks: 0, food: 0, total: 0 };
+      const checkinData = checkinsPerBar.find(c => c.bar.id === bar.id) || { count: 0 };
+      return {
+        bar,
+        avgRating: rating.avg,
+        drinkRating: rating.drink,
+        foodRating: rating.food,
+        vibeRating: rating.vibe,
+        serviceRating: rating.service,
+        voteCount: rating.voteCount,
+        totalDrinks: cons.drinks,
+        totalFood: cons.food,
+        presence: checkinData.count,
+      };
+    }).filter(b => b.voteCount > 0 || b.totalDrinks > 0 || b.totalFood > 0 || b.presence > 0)
+      .sort((a, b) => b.avgRating - a.avgRating);
+  }, [bars, barRatings, consumptionPerBar, checkinsPerBar]);
+
+  // === NEW: Subtype drink rankings ===
+  const subtypeRankings = useMemo(() => {
+    const subtypeMap = new Map<string, Map<string, number>>();
+    consumption.forEach(c => {
+      if (c.type !== 'drink') return;
+      const sub = (c as any).subtype as string | null;
+      if (!sub) return;
+      const participantMap = subtypeMap.get(sub) || new Map<string, number>();
+      participantMap.set(c.participant_id, (participantMap.get(c.participant_id) || 0) + c.count);
+      subtypeMap.set(sub, participantMap);
+    });
+    const result: { subtype: string; ranking: { participant: typeof participants[0] | undefined; total: number }[] }[] = [];
+    subtypeMap.forEach((pMap, sub) => {
+      const ranking = Array.from(pMap.entries())
+        .map(([pid, total]) => ({ participant: participants.find(p => p.id === pid), total }))
+        .filter(r => r.participant)
+        .sort((a, b) => b.total - a.total);
+      if (ranking.length > 0) result.push({ subtype: sub, ranking });
+    });
+    return result.sort((a, b) => a.subtype.localeCompare(b.subtype));
+  }, [consumption, participants]);
+
+  // === NEW: Fidelity ranking (unique bars visited) ===
+  const fidelityRanking = useMemo(() => {
+    const map = new Map<string, Set<number>>();
+    checkins.forEach(c => {
+      const set = map.get(c.participant_id) || new Set();
+      set.add(c.bar_id);
+      map.set(c.participant_id, set);
+    });
+    return Array.from(map.entries())
+      .map(([pid, barSet]) => ({ participant: participants.find(p => p.id === pid), barsVisited: barSet.size }))
+      .filter(r => r.participant)
+      .sort((a, b) => b.barsVisited - a.barsVisited);
+  }, [checkins, participants]);
+
+  // === NEW: Who voted / who didn't ===
+  const { votedList, notVotedList } = useMemo(() => {
+    const voterIds = new Set<string>();
+    bars.forEach(bar => {
+      getBarVotes(bar.id).forEach(v => voterIds.add(v.participant_id));
+    });
+    return {
+      votedList: participants.filter(p => voterIds.has(p.id)),
+      notVotedList: participants.filter(p => !voterIds.has(p.id)),
+    };
+  }, [participants, bars, getBarVotes]);
+
+  // === NEW: Peak hour per bar ===
+  const peakHours = useMemo(() => {
+    const barHourMap = new Map<number, Map<number, number>>();
+    checkins.forEach(c => {
+      const hour = new Date(c.checked_in_at).getHours();
+      const hourMap = barHourMap.get(c.bar_id) || new Map<number, number>();
+      hourMap.set(hour, (hourMap.get(hour) || 0) + 1);
+      barHourMap.set(c.bar_id, hourMap);
+    });
+    return bars.map(bar => {
+      const hourMap = barHourMap.get(bar.id);
+      if (!hourMap || hourMap.size === 0) return { bar, peakHour: null, count: 0 };
+      let maxHour = 0, maxCount = 0;
+      hourMap.forEach((count, hour) => {
+        if (count > maxCount) { maxCount = count; maxHour = hour; }
+      });
+      return { bar, peakHour: maxHour, count: maxCount };
+    }).filter(b => b.peakHour !== null);
+  }, [checkins, bars]);
+
   // Group stats
   const groupStats = useMemo(() => {
     const totalDrinks = drinkRanking.reduce((s, r) => s + r.total, 0);
@@ -147,7 +252,7 @@ export function AdminRetrospective() {
 
   return (
     <div className="space-y-4">
-      {/* Group Stats */}
+      {/* 1. Group Stats + Global Average */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -173,15 +278,73 @@ export function AdminRetrospective() {
               <p className="text-2xl font-bold">{groupStats.totalAchievements}</p>
               <p className="text-xs text-muted-foreground">Conquistas desbloqueadas</p>
             </div>
-            <div className="bg-muted/50 rounded-lg p-3 text-center col-span-2">
+            <div className="bg-muted/50 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold">{groupStats.totalVotes}</p>
               <p className="text-xs text-muted-foreground">Avaliações feitas</p>
             </div>
+            {globalAverage && (
+              <div className="bg-yellow-500/10 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold">{globalAverage}/5</p>
+                <p className="text-xs text-muted-foreground">Nota média geral</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Drink Ranking */}
+      {/* 2. Resumo Completo por Bar */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Crown className="w-4 h-4 text-amber-500" />
+            Resumo Completo por Bar
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {barSummary.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum dado ainda.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bar</TableHead>
+                    <TableHead className="text-center">Média</TableHead>
+                    <TableHead className="text-center">🍺</TableHead>
+                    <TableHead className="text-center">🍽️</TableHead>
+                    <TableHead className="text-center">🎵</TableHead>
+                    <TableHead className="text-center">🤝</TableHead>
+                    <TableHead className="text-center">Bebidas</TableHead>
+                    <TableHead className="text-center">Comidas</TableHead>
+                    <TableHead className="text-center">👥</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {barSummary.map((b, i) => (
+                    <TableRow key={b.bar.id} className={i === 0 ? 'font-semibold bg-amber-500/10' : ''}>
+                      <TableCell className="whitespace-nowrap">
+                        {i === 0 && '🏆 '}{b.bar.name}
+                      </TableCell>
+                      <TableCell className="text-center font-bold">
+                        {b.voteCount > 0 ? b.avgRating.toFixed(1) : '-'}
+                      </TableCell>
+                      <TableCell className="text-center">{b.voteCount > 0 ? b.drinkRating.toFixed(1) : '-'}</TableCell>
+                      <TableCell className="text-center">{b.voteCount > 0 ? b.foodRating.toFixed(1) : '-'}</TableCell>
+                      <TableCell className="text-center">{b.voteCount > 0 ? b.vibeRating.toFixed(1) : '-'}</TableCell>
+                      <TableCell className="text-center">{b.voteCount > 0 ? b.serviceRating.toFixed(1) : '-'}</TableCell>
+                      <TableCell className="text-center">{b.totalDrinks}</TableCell>
+                      <TableCell className="text-center">{b.totalFood}</TableCell>
+                      <TableCell className="text-center">{b.presence}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 3. Drink Ranking */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -215,7 +378,50 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Food Ranking */}
+      {/* 4. Ranking por Tipo de Bebida */}
+      {subtypeRankings.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-purple-500" />
+              Ranking por Tipo de Bebida
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-4">
+            {subtypeRankings.map(({ subtype, ranking }) => {
+              const config = SUBTYPE_CONFIG[subtype] || { label: subtype, emoji: '🍺' };
+              return (
+                <div key={subtype}>
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                    <span className="text-lg">{config.emoji}</span>
+                    Rei da {config.label}
+                  </h4>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {ranking.slice(0, 5).map((r, i) => (
+                        <TableRow key={r.participant!.id} className={i < 3 ? 'font-semibold' : ''}>
+                          <TableCell>{getMedal(i)}</TableCell>
+                          <TableCell>{r.participant!.name}</TableCell>
+                          <TableCell className="text-right">{r.total} {config.emoji}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 5. Food Ranking */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -249,7 +455,7 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Achievement Ranking */}
+      {/* 6. Achievement Ranking */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -292,7 +498,47 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Consumption per Bar */}
+      {/* 7. Fidelity Ranking */}
+      {fidelityRanking.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-emerald-500" />
+              Ranking de Fidelidade
+              <span className="text-xs text-muted-foreground font-normal ml-auto">Bares visitados</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead className="text-right">Bares</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fidelityRanking.map((r, i) => (
+                  <TableRow key={r.participant!.id} className={i < 3 ? 'font-semibold' : ''}>
+                    <TableCell>{getMedal(i)}</TableCell>
+                    <TableCell>
+                      {r.participant!.name}
+                      {r.barsVisited === bars.length && bars.length > 0 && (
+                        <Badge variant="secondary" className="ml-2 text-xs bg-emerald-500/10 text-emerald-700">
+                          🎖️ Todos!
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">{r.barsVisited}/{bars.length}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 8. Consumption per Bar */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -330,7 +576,7 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Check-ins per Bar */}
+      {/* 9. Check-ins per Bar */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -367,7 +613,7 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Bar Ratings */}
+      {/* 10. Bar Ratings */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -416,7 +662,71 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Jokes */}
+      {/* 11. Who Voted / Who Didn't */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Star className="w-4 h-4 text-indigo-500" />
+            Quem Votou / Quem Não Votou
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div>
+            <h4 className="text-sm font-semibold text-indigo-600 mb-1 flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5" />
+              Votaram ({votedList.length})
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {votedList.map(p => (
+                <Badge key={p.id} variant="secondary" className="bg-indigo-500/10 text-indigo-700 border-indigo-500/20">
+                  ✅ {p.name}
+                </Badge>
+              ))}
+              {votedList.length === 0 && <p className="text-sm text-muted-foreground">Ninguém ainda.</p>}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+              <XCircle className="w-3.5 h-3.5" />
+              Não votaram ({notVotedList.length})
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {notVotedList.map(p => (
+                <Badge key={p.id} variant="outline" className="text-muted-foreground">
+                  ⚪ {p.name}
+                </Badge>
+              ))}
+              {notVotedList.length === 0 && <p className="text-sm text-muted-foreground">Todos votaram! 🎉</p>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 12. Peak Hours */}
+      {peakHours.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="w-4 h-4 text-rose-500" />
+              Hora de Pico por Bar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2">
+              {peakHours.map(ph => (
+                <div key={ph.bar.id} className="flex items-center justify-between text-sm">
+                  <span className="font-medium">{ph.bar.name}</span>
+                  <span className="text-muted-foreground">
+                    🕐 {ph.peakHour!.toString().padStart(2, '0')}h ({ph.count} check-ins)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 13. Jokes */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -435,7 +745,7 @@ export function AdminRetrospective() {
         </CardContent>
       </Card>
 
-      {/* Usage */}
+      {/* 14. Usage */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

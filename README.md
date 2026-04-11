@@ -1,73 +1,203 @@
-# Welcome to your Lovable project
+# Baratona 2026
 
-## Project info
+Aplicação web para gerenciamento colaborativo de uma "baratona": roteiro de bares com check-ins, consumo, votação, ranking, painel admin em tempo real e retrospectiva final (Wrapped).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Sumário
+- [Visão geral](#visão-geral)
+- [Principais funcionalidades](#principais-funcionalidades)
+- [Arquitetura](#arquitetura)
+- [Stack](#stack)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Pré-requisitos](#pré-requisitos)
+- [Configuração local](#configuração-local)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Scripts](#scripts)
+- [Modelo de dados](#modelo-de-dados)
+- [Fluxos de negócio](#fluxos-de-negócio)
+- [Decisões e trade-offs](#decisões-e-trade-offs)
+- [Evolução recomendada](#evolução-recomendada)
+- [Evolução assistida por IA](#evolução-assistida-por-ia)
+- [Contribuição](#contribuição)
 
-## How can I edit this code?
+## Visão geral
 
-There are several ways of editing your application.
+A Baratona centraliza, em uma interface mobile-first:
 
-**Use Lovable**
+- seleção de participante;
+- status da van e deslocamento entre bares;
+- check-in por bar;
+- contadores de comida e bebida por participante;
+- votação da experiência de cada bar;
+- achievements/gamificação;
+- ranking do grupo;
+- painel de administração (controle operacional do evento);
+- retrospectiva final (Baratona Wrapped).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+A sincronização é feita via Supabase Realtime, com atualizações em tempo real para todos os dispositivos conectados.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Principais funcionalidades
 
-**Use your preferred IDE**
+### Área do participante
+- Escolha de nome com persistência local (`localStorage`).
+- Acompanhamento de status atual (no bar/em trânsito/finalizado).
+- Check-in no bar atual.
+- Registro de consumo com feedback háptico e atualização otimista.
+- Votação por bar (bebida, comida, vibe e atendimento).
+- Acompanhamento de ranking e estatísticas.
+- Conquistas automáticas com notificações toast.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Área administrativa
+- Alteração de bar atual.
+- Controle da van (`at_bar` ↔ `in_transit`).
+- Configuração de origem/destino em deslocamento.
+- Ajuste de atraso global.
+- Envio e limpeza de broadcast.
+- Finalização/reabertura do evento.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Arquitetura
 
-Follow these steps:
+A documentação arquitetural completa está em:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Resumo:
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **UI**: páginas + componentes React (modular por domínio).
+- **Estado de domínio**: `BaratonaContext` como fachada de leitura/escrita.
+- **Dados**: hooks de Supabase com fetch inicial + realtime + refetch.
+- **Persistência**: Postgres no Supabase com migrações versionadas.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Stack
+
+- React 18 + TypeScript
+- Vite
+- Tailwind CSS + shadcn/ui + Radix UI
+- React Router DOM
+- Supabase JS
+- TanStack React Query
+- Recharts
+- Leaflet / React-Leaflet
+- Vitest + Testing Library
+
+## Estrutura do projeto
+
+```text
+src/
+  components/          # UI de domínio + componentes base
+  contexts/            # Contexto global da aplicação
+  hooks/               # Hooks de integração e regras
+  integrations/        # Client/tipos Supabase
+  lib/                 # utilitários, constantes, i18n
+  pages/               # rotas principais
+supabase/
+  migrations/          # evolução do schema
+docs/
+  ARQUITETURA.md       # documentação técnica detalhada
+```
+
+## Pré-requisitos
+
+- Node.js 20+
+- npm 10+ (ou Bun, opcional)
+- Projeto Supabase configurado
+
+## Configuração local
+
+```bash
+# 1) Instalar dependências
+npm install
+
+# 2) Configurar variáveis de ambiente
+cp .env.example .env
+
+# 3) Subir ambiente de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Variáveis de ambiente
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Defina no `.env`:
 
-**Use GitHub Codespaces**
+```bash
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+> Observação: o client Supabase usa essas variáveis em `src/integrations/supabase/client.ts`.
 
-## What technologies are used for this project?
+## Scripts
 
-This project is built with:
+```bash
+npm run dev         # desenvolvimento
+npm run build       # build de produção
+npm run build:dev   # build modo development
+npm run preview     # preview local do build
+npm run lint        # lint
+npm run test        # testes (vitest)
+npm run test:watch  # testes em watch mode
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Modelo de dados
 
-## How can I deploy this project?
+Entidades principais no banco:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- `participants`
+- `bars`
+- `app_config`
+- `votes`
+- `consumption`
+- `checkins`
+- `achievements`
 
-## Can I connect a custom domain to my Lovable project?
+Detalhes de constraints, índices e políticas em `supabase/migrations`.
 
-Yes, you can!
+## Fluxos de negócio
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Participante seleciona nome e entra na experiência.
+2. Usuários registram check-in/consumo/votos ao longo do roteiro.
+3. Admin controla deslocamentos, atraso e comunicação.
+4. Quando finalizado, app muda para modo Wrapped com retrospectiva.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Decisões e trade-offs
+
+- **Pró**: UX rápida com atualização otimista + realtime.
+- **Contra**: consistência eventual de curtíssimo prazo.
+- **Pró**: simplicidade operacional com Supabase.
+- **Contra**: políticas RLS públicas exigem cuidado para ambientes abertos.
+
+## Evolução recomendada
+
+- Adicionar autenticação real e perfis de permissão por papel.
+- Restringir updates sensíveis por políticas RLS.
+- Incluir testes e2e dos fluxos críticos.
+- Evoluir para multi-evento (com `event_id`).
+
+
+## Evolução assistida por IA
+
+Para tornar a evolução por agentes mais segura e previsível, o projeto agora possui:
+
+- `AGENTS.md`: regras operacionais para agentes (escopo, contratos críticos, checklist de PR).
+- `docs/AI_PLAYBOOK.md`: playbook com fluxo de execução, prompt base e definição de pronto.
+
+Recomendação prática para qualquer task via IA:
+
+1. Ler `README.md`, `docs/ARQUITETURA.md` e `AGENTS.md`.
+2. Trabalhar em mudanças pequenas e reversíveis.
+3. Validar com `npm run typecheck`, `npm run lint`, `npm run test` e `npm run build`.
+4. Atualizar documentação junto com a mudança de código.
+
+Fase 2 (implementada):
+
+- Template de PR com checklist de qualidade em `.github/pull_request_template.md`.
+- Base de testes para hooks em `src/hooks/*.test.ts(x)` com setup Vitest/JSDOM (`src/test/setup.ts`).
+
+
+
+## Contribuição
+
+- Guia de contribuição: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Regras para agentes: [`AGENTS.md`](AGENTS.md)
+- Playbook de execução com IA: [`docs/AI_PLAYBOOK.md`](docs/AI_PLAYBOOK.md)
+
+CI automatizada em PR/push: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).

@@ -11,6 +11,7 @@ import FAQ from './pages/FAQ';
 import Explore from './pages/Explore';
 import CreateEvent from './pages/CreateEvent';
 import EventLanding from './pages/EventLanding';
+import EventLive from './pages/EventLive';
 import EventAdmin from './pages/EventAdmin';
 import Admin from './pages/Admin';
 import NeiLegacy from './pages/NeiLegacy';
@@ -39,14 +40,8 @@ const App = () => (
             <Route path="/explorar" element={<Explore />} />
             <Route path="/criar" element={<CreateEvent />} />
             <Route path="/baratona/:slug" element={<EventLanding />} />
-            <Route
-              path="/baratona/:slug/admin"
-              element={
-                <EventProviderShell>
-                  <EventAdmin />
-                </EventProviderShell>
-              }
-            />
+            <Route path="/baratona/:slug/live" element={<EventLive />} />
+            <Route path="/baratona/:slug/admin" element={<EventAdmin />} />
             <Route
               path="/admin"
               element={

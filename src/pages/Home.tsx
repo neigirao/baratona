@@ -1,41 +1,153 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useSeo } from '@/hooks/useSeo';
+import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight } from 'lucide-react';
 
 export default function Home() {
-  useSeo('Baratona Platform | Crie e compartilhe sua baratona', 'Plataforma para criar baratonas públicas e privadas, com ranking, check-in, consumo, mapa e FAQ.');
+  useSeo(
+    'Baratona — Crie sua rota de bares com os amigos',
+    'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.'
+  );
+
+  const features = [
+    {
+      icon: Beer,
+      title: 'Consumo em tempo real',
+      desc: 'Contador de bebidas e comidas por bar, com ranking de quem mandou mais.',
+    },
+    {
+      icon: Trophy,
+      title: 'Votação e ranking',
+      desc: 'Avalie cada bar em bebida, comida, ambiente e atendimento. O melhor bar ganha.',
+    },
+    {
+      icon: MapPin,
+      title: 'Mapa e navegação',
+      desc: 'Veja todos os bares no mapa, rota completa e abra no Google Maps com 1 toque.',
+    },
+    {
+      icon: Users,
+      title: 'Check-in por bar',
+      desc: 'Registre presença em cada bar. Quem visitou mais bares ganha o selo de fidelidade.',
+    },
+    {
+      icon: Star,
+      title: 'Conquistas e Wrapped',
+      desc: 'Desbloqueie conquistas durante o evento e receba um resumo tipo Spotify Wrapped.',
+    },
+    {
+      icon: Zap,
+      title: 'Admin em tempo real',
+      desc: 'Painel do organizador com controle de status, broadcast e retrospectiva completa.',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container max-w-5xl mx-auto px-4 py-10 space-y-8">
-        <section className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">Baratona Platform</h1>
-          <p className="text-muted-foreground">Crie, compartilhe e administre sua baratona com tudo que já existe na app original.</p>
-          <div className="flex justify-center gap-3">
-            <Button asChild><Link to="/criar">Criar minha Baratona</Link></Button>
-            <Button variant="outline" asChild><Link to="/explorar">Explorar baratonas</Link></Button>
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/10" />
+        <div className="absolute top-20 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
+
+        <div className="relative container max-w-5xl mx-auto px-4 py-20 md:py-32 text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium">
+            <Beer className="w-4 h-4" />
+            <span>Gratuita na v1</span>
           </div>
-        </section>
 
-        <section className="grid md:grid-cols-3 gap-4">
-          {['Pública ou privada', 'Ranqueamento completo', 'Mapa + operação em tempo real'].map((item) => (
-            <Card key={item}><CardHeader><CardTitle className="text-lg">{item}</CardTitle></CardHeader></Card>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+            <span className="text-primary">BARA</span>
+            <span className="text-secondary">TONA</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Crie roteiros de bares com seus amigos. Ranking, votação, check-in, mapa, conquistas e 
+            retrospectiva — tudo num app que funciona até com sinal ruim.
+          </p>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
+            <Button asChild size="lg" className="text-base font-bold px-8 shadow-lg shadow-primary/30">
+              <Link to="/criar">
+                Criar minha Baratona
+                <ChevronRight className="w-5 h-5 ml-1" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="text-base border-muted-foreground/30">
+              <Link to="/explorar">Explorar baratonas</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="container max-w-5xl mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+          Tudo que você precisa pra uma <span className="text-primary">baratona épica</span>
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map(({ icon: Icon, title, desc }) => (
+            <Card key={title} className="bg-card/60 border-border/50 hover:border-primary/40 transition-colors">
+              <CardContent className="pt-6 space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">{title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
+              </CardContent>
+            </Card>
           ))}
-        </section>
+        </div>
+      </section>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">FAQ rápido</h2>
-          <Card>
-            <CardContent className="pt-6 space-y-3 text-sm">
-              <p><strong>Precisa pagar?</strong> Não, a plataforma é gratuita na v1.</p>
-              <p><strong>Posso criar evento privado?</strong> Sim, com convite.</p>
-              <p><strong>Como criar?</strong> Faça login com Google e use o criador.</p>
-              <Button variant="link" asChild className="px-0"><Link to="/faq">Ver FAQ completo</Link></Button>
-            </CardContent>
-          </Card>
-        </section>
-      </main>
+      {/* How it works */}
+      <section className="container max-w-5xl mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+          Como funciona
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-6">
+          {[
+            { step: '01', title: 'Crie o evento', desc: 'Defina nome, cidade, visibilidade e adicione os bares do roteiro.' },
+            { step: '02', title: 'Convide os amigos', desc: 'Compartilhe o link. Público ou privado, você escolhe.' },
+            { step: '03', title: 'Curta e acompanhe', desc: 'No dia, todo mundo registra consumo, vota e acompanha em tempo real.' },
+          ].map(({ step, title, desc }) => (
+            <div key={step} className="text-center space-y-3">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-secondary/15 text-secondary font-black text-xl" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                {step}
+              </div>
+              <h3 className="font-semibold text-lg">{title}</h3>
+              <p className="text-muted-foreground text-sm">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="container max-w-3xl mx-auto px-4 py-16 text-center space-y-4">
+        <h2 className="text-2xl font-bold">Pronto pra montar sua rota?</h2>
+        <p className="text-muted-foreground">É grátis e leva menos de 2 minutos.</p>
+        <div className="flex justify-center gap-3">
+          <Button asChild size="lg" className="font-bold px-8">
+            <Link to="/criar">Começar agora</Link>
+          </Button>
+          <Button asChild variant="ghost" size="lg">
+            <Link to="/faq">Ver FAQ</Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 py-8">
+        <div className="container max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p style={{ fontFamily: 'Orbitron, sans-serif' }} className="font-bold text-foreground">BARATONA</p>
+          <div className="flex gap-4">
+            <Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
+            <Link to="/explorar" className="hover:text-foreground transition-colors">Explorar</Link>
+            <Link to="/criar" className="hover:text-foreground transition-colors">Criar</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,112 +1,162 @@
 
 
-# Retrospectiva Admin Enriquecida - Medias por Bar, Ranking por Tipo e Extras
+# Plano de Correcao e Melhorias - Analise pos-Codex
 
-## Resumo das Mudancas
+## Diagnostico: O que o Codex fez
 
-Adicionar ao `AdminRetrospective.tsx`:
-1. **Resumo Completo por Bar** - uma tabela consolidada mostrando, para cada bar: nota media (bebida, comida, ambiente, atendimento), quantidade total de bebidas, quantidade total de comidas e numero de check-ins, tudo numa unica visao
-2. **Ranking por tipo de bebida** - nota sobre limitacao atual e migracao para viabilizar
-3. **Novos insights extras** que faltam
+O Codex criou uma camada de plataforma multi-evento **por cima** da aplicacao existente, incluindo:
+
+1. **Novas tabelas** (migracoes `platform_v1` e `platform_event_runtime`): `profiles`, `platform_roles`, `events`, `event_members`, `event_invites`, `event_bars`, `event_app_config`, `event_checkins`, `event_consumption`, `event_votes`, `event_achievements`
+2. **Novas paginas**: `Home.tsx`, `Explore.tsx`, `CreateEvent.tsx`, `EventLanding.tsx`, `EventAdmin.tsx`, `FAQ.tsx`
+3. **Novos arquivos**: `platformApi.ts`, `platformEvents.ts`, `usePlatformAuth.ts`, `NeiLegacy.tsx`
+4. **Rotas novas** no `App.tsx`: `/`, `/faq`, `/explorar`, `/criar`, `/baratona/:slug`, `/baratona/:slug/admin`, `/nei`
+
+## Problemas Identificados
+
+### P1. Layout da Home destruido
+A `Home.tsx` foi substituida por uma pagina generica e sem identidade visual. Texto placeholder ("Baratona Platform"), sem cores, sem emocao, sem o estilo que o app original tinha.
+
+### P2. FAQ vazio e sem conteudo real
+Apenas 4 perguntas banais com respostas de uma linha. Nao reflete o espirito do evento.
+
+### P3. Pagina Explore sem funcionar de verdade
+Chama `listPublicEventsApi()` que consulta a tabela `events` (provavelmente vazia). As tabelas novas (`events`, `event_bars`, etc.) existem no SQL mas **nao estao refletidas no `types.ts`** (que so conhece as tabelas originais: `participants`, `bars`, `votes`, `consumption`, `checkins`, `app_config`, `achievements`). Isso significa que `platformApi.ts` usa `supabase as any` para contornar tipos -- funciona em runtime se as tabelas existirem, mas sem seguranca de tipos.
+
+### P4. CreateEvent sem wizard de bares
+O formulario de criacao grava em `events` mas nao tem nenhum passo para adicionar bares ao evento. O evento e criado vazio.
+
+### P5. EventLanding minimalista demais
+So mostra nome, descricao, cidade e dois botoes. Nao tem CTA de participar, nao tem informacao dos bares, nao tem mapa.
+
+### P6. EventAdmin renderiza `<Admin />` diretamente
+O `EventAdmin` verifica se o usuario e o owner e renderiza o componente `Admin.tsx` original, que usa `useBaratona()` -- que por sua vez le das tabelas **originais** (`bars`, `app_config`, `consumption`, etc.), nao das novas `event_*`. Ou seja, o admin de um evento novo nao vai funcionar -- vai mostrar dados do evento legado.
+
+### P7. NeiLegacy funciona mas depende de auth
+O `/nei` exige login Google + `platform_roles.super_admin`. Isso esta correto conceitualmente, mas o app original funcionava sem login (selecao de participante por nome). Precisa garantir que o fluxo legacy continue acessivel para o super_admin.
+
+### P8. Codigo duplicado/morto
+`platformEvents.ts` tem funcoes de localStorage (`getPlatformEvents`, `savePlatformEvents`, `createPlatformEvent`) que sao residuais -- o `platformApi.ts` ja faz tudo via Supabase. Codigo morto que confunde.
+
+### P9. Nenhuma integracao real entre tabelas novas e UI existente
+A UI existente (consumo, checkin, votos, mapa, retrospectiva, wrapped) le tudo via `BaratonaContext` que usa `useSupabaseData` apontando para as tabelas originais. As tabelas `event_*` criadas pelo Codex nao tem nenhum hook, context ou componente que as consuma. Sao tabelas orfas.
 
 ---
 
-## 1. Card "Resumo Completo por Bar"
+## Plano de Correcao (por prioridade)
 
-Nova secao que cruza dados de notas, consumo e presenca num unico lugar para cada bar:
+### Fase 1: Restaurar e proteger o que funciona
 
-| Bar | Nota Media | Bebida | Comida | Ambiente | Atendimento | Total Bebidas | Total Comidas | Presenca |
-|-----|-----------|--------|--------|----------|-------------|--------------|--------------|----------|
-| Bar A | 4.2 | 4.5 | 3.8 | 4.0 | 4.5 | 45 | 12 | 8 |
+**1.1 Reverter a Home para o estilo original**
+- Redesenhar `Home.tsx` mantendo a identidade visual do app (cores, gradientes, estilo mobile-first)
+- Hero section com emocao: titulo chamativo, descricao do conceito de baratona, CTA forte
+- Secao de features com icones e descricoes reais
+- Footer com links uteis
+- Manter os CTAs "Criar minha Baratona" e "Explorar"
 
-- Combina dados de `barRatings`, `consumptionPerBar` e `checkinsPerBar` ja calculados
-- Ordenado por nota media geral (descendente)
-- Destaque visual para o bar campeao
+**1.2 Reescrever FAQ com conteudo real**
+- Expandir para 10-15 perguntas reais sobre como funciona uma baratona
+- Usar accordion/collapsible para melhor UX
+- Conteudo que explique: o que e, como participar, como criar, como funciona no dia, privacidade, etc.
 
-## 2. Ranking por Tipo de Bebida
+**1.3 Limpar codigo morto**
+- Remover funcoes localStorage de `platformEvents.ts` (manter apenas `normalizeSlug` e os tipos)
+- Ou mover tipos para arquivo proprio e remover `platformEvents.ts`
 
-**Limitacao atual**: o banco de dados grava apenas `type = 'drink'` sem distinguir cerveja, cachaca, drink ou batida. Os botoes de tipo na interface sao puramente visuais e nao persistem o subtipo.
+### Fase 2: Fazer as paginas novas funcionarem de verdade
 
-**Solucao**: Criar uma migracao adicionando uma coluna `subtype` na tabela `consumption` (nullable, para manter compatibilidade) e atualizar o fluxo de gravacao para registrar o subtipo. Com isso, a retrospectiva podera mostrar rankings como "quem mais tomou cerveja" vs "quem mais tomou cachaca".
+**2.1 Wizard de criacao completo (`CreateEvent.tsx`)**
+- Step 1: Nome, descricao, cidade, visibilidade, tipo (open_baratona / special_circuit)
+- Step 2: Adicionar bares (nome, endereco, horario, ordem) -- interface de lista editavel
+- Step 3: Revisao e confirmacao
+- Ao salvar: criar evento + `event_bars` + `event_app_config` numa transacao
 
-**Migracao necessaria**:
-- `ALTER TABLE consumption ADD COLUMN subtype text;`
+**2.2 Pagina Explore funcional (`Explore.tsx`)**
+- Cards visuais com data, cidade, numero de bares, status
+- Filtros por cidade e tipo de evento
+- Skeleton loading
+- Estado vazio com CTA para criar
 
-**Alteracao no codigo**:
-- `useConsumption` / `BaratonaContext`: ao chamar `updateConsumption` para drinks, passar o subtipo (cerveja, cachaca, drink, batida)
-- `ConsumptionCounter.tsx`: ajustar `handleAddDrink` para passar o `drinkTypeKey` ate o banco
-- `AdminRetrospective.tsx`: novo ranking agrupando por `subtype`, mostrando top bebedores por categoria
+**2.3 Event Landing rica (`EventLanding.tsx`)**
+- Mostrar lista de bares do evento (consultar `event_bars`)
+- Mapa com localizacao dos bares
+- Botao "Participar" (criar `event_member`)
+- Compartilhar link
+- Se o evento for privado, exigir codigo de convite
 
-Apos a migracao, a retrospectiva tera:
-- Ranking "Rei da Cerveja" (quem mais tomou cerveja)
-- Ranking "Rei da Cachaca"
-- Ranking "Rei do Drink"
-- Ranking "Rei da Batida"
-- Cada um com medalhas e totais
+### Fase 3: Conectar a UI existente ao modelo multi-evento
 
-## 3. Extras que Faltam (sugestoes)
+**3.1 Criar `EventBaratonaContext`**
+- Novo context que aceita um `event_id` e le/escreve nas tabelas `event_*`
+- Mesma interface do `BaratonaContext` atual, mas parametrizado por evento
+- Hooks internos: `useEventBars(eventId)`, `useEventAppConfig(eventId)`, `useEventConsumption(eventId)`, etc.
 
-### 3a. "Hora de Pico" por Bar
-- Usando o campo `checked_in_at` dos check-ins, calcular em qual horario cada bar teve mais atividade
-- Exibir como "Bar X teve mais movimento as 21h"
+**3.2 Criar pagina `/baratona/:slug/live`**
+- Pagina do participante durante o evento (equivalente ao `Index.tsx` atual)
+- Usa `EventBaratonaContext` com o `event_id` do slug
+- Reutiliza todos os componentes existentes: `MainTabs`, `Header`, `ConsumptionCounter`, `VoteForm`, `BaratonaMap`, `BarCheckin`, etc.
 
-### 3b. "Quem Votou / Quem Nao Votou"
-- Semelhante ao "quem usou/nao usou", mas especifico para avaliacoes
-- Mostrar quais participantes deixaram avaliacoes e quais nao
+**3.3 Adaptar `/baratona/:slug/admin`**
+- Em vez de renderizar `<Admin />` com o context legado, renderizar um admin que usa `EventBaratonaContext`
+- Mesma UI do admin atual, mas lendo/escrevendo nas tabelas `event_*`
 
-### 3c. "Fidelidade" - Quem Visitou Mais Bares
-- Ranking de participantes por numero de bares visitados (check-ins unicos por bar)
-- Medalhas para quem passou por todos os bares
+### Fase 4: Manter o legado `/nei` intacto
 
-### 3d. Media Global de Notas
-- Uma linha de resumo com a media geral de todos os bares combinados (todas as categorias)
-- "A nota media geral da Baratona foi 3.8/5"
+**4.1 Garantir que `/nei` continue usando as tabelas originais**
+- `NeiLegacy.tsx` ja renderiza `<Index />` dentro de `<BaratonaProvider>` (via `EventProviderShell` no App.tsx)
+- Isso esta correto -- o legado continua usando `participants`, `bars`, `app_config`, etc.
+- Apenas garantir que o guard de `super_admin` funcione com o Google Auth configurado
+
+**4.2 Adicionar indicador visual de "modo legado"**
+- Badge ou banner sutil no `/nei` indicando que e o evento original
+
+### Fase 5: Tipos e seguranca
+
+**5.1 Regenerar types.ts**
+- As tabelas novas (`events`, `event_bars`, `event_app_config`, etc.) precisam aparecer no `types.ts`
+- Isso acontece automaticamente quando as migracoes sao aplicadas pelo Lovable -- pode ser necessario triggerar a regeneracao
+
+**5.2 Remover `as any` do platformApi.ts**
+- Apos types.ts atualizado, usar tipos corretos em todas as queries
+- Adicionar validacao de input nos endpoints de criacao
 
 ---
 
 ## Detalhes Tecnicos
 
-### Migracao SQL
-```text
-ALTER TABLE consumption ADD COLUMN subtype text;
-```
-- Coluna nullable para nao quebrar dados existentes
-- Valores esperados: 'cerveja', 'cachaca', 'drink', 'batida' (ou null para registros antigos/comida)
+### Arquivos a criar
+- `src/contexts/EventBaratonaContext.tsx` -- context multi-evento
+- `src/hooks/useEventData.ts` -- hooks para tabelas `event_*`
+- `src/pages/EventLive.tsx` -- pagina do participante no evento
 
-### Alteracoes em arquivos
+### Arquivos a modificar significativamente
+- `src/pages/Home.tsx` -- redesign completo
+- `src/pages/FAQ.tsx` -- conteudo real + accordion
+- `src/pages/CreateEvent.tsx` -- wizard multi-step com bares
+- `src/pages/Explore.tsx` -- cards visuais + filtros
+- `src/pages/EventLanding.tsx` -- landing rica com bares e mapa
+- `src/pages/EventAdmin.tsx` -- usar EventBaratonaContext
+- `src/lib/platformApi.ts` -- remover `as any`, adicionar funcoes para bares
+- `src/lib/platformEvents.ts` -- limpar codigo morto
+- `src/App.tsx` -- adicionar rota `/baratona/:slug/live`
 
-**`src/hooks/useSupabaseData.ts`** (ou equivalente):
-- Atualizar a funcao de upsert de consumo para incluir `subtype` quando disponivel
+### Arquivos que NAO devem ser tocados
+- `src/contexts/BaratonaContext.tsx` -- continua funcionando para o legado `/nei`
+- `src/hooks/useSupabaseData.ts` -- idem, serve o legado
+- `src/components/AdminRetrospective.tsx` -- funciona com o context atual
+- `src/components/BaratonaWrapped.tsx` -- idem
+- `src/pages/Index.tsx` -- pagina legada, intacta
+- `src/pages/Admin.tsx` -- admin legado, intacto
+- Todos os componentes de UI existentes (MainTabs, ConsumptionCounter, VoteForm, etc.)
 
-**`src/contexts/BaratonaContext.tsx`**:
-- Ajustar assinatura de `addDrink`/`updateConsumption` para aceitar `subtype` opcional
-- Propagar o parametro ate a camada de persistencia
+### Migracoes necessarias
+- Nenhuma nova migracao de schema (as tabelas do Codex ja estao corretas)
+- Pode ser necessario seed data para testes
 
-**`src/components/ConsumptionCounter.tsx`**:
-- Passar `type.key` (cerveja, cachaca, etc.) como subtype na chamada de persistencia
+### Ordem de execucao recomendada
+1. Limpar codigo morto + restaurar Home e FAQ (visual, sem risco)
+2. Wizard de criacao com bares (funcionalidade core)
+3. EventBaratonaContext + EventLive (conectar UI existente ao multi-evento)
+4. Explore e EventLanding melhoradas
+5. EventAdmin conectado ao novo context
+6. Testes end-to-end do fluxo completo
 
-**`src/components/AdminRetrospective.tsx`**:
-- Novo `useMemo` para o resumo consolidado por bar (cruzando ratings + consumo + checkins)
-- Novo `useMemo` para ranking por subtipo de bebida (agrupando consumption por subtype + participant_id)
-- Novo `useMemo` para "quem votou / nao votou" (cruzando votos com participantes)
-- Novo `useMemo` para ranking de fidelidade (contando bares unicos por participante via checkins)
-- Novo `useMemo` para hora de pico (agrupando checkins por hora do dia por bar)
-- Novo `useMemo` para media global de todas as avaliacoes
-- Novos cards/tabelas para cada secao
-
-### Ordem das Secoes na Retrospectiva
-```text
-1. Estatisticas Gerais (existente, atualizado com media global de notas)
-2. Resumo Completo por Bar (NOVO - tabela consolidada)
-3. Ranking de Bebidas (existente)
-4. Ranking por Tipo de Bebida (NOVO - cerveja, cachaca, drink, batida)
-5. Ranking de Comida (existente)
-6. Ranking de Conquistas (existente)
-7. Ranking de Fidelidade (NOVO - quem visitou mais bares)
-8. Consumo por Bar (existente)
-9. Presenca por Bar (existente)
-10. Notas dos Restaurantes (existente)
-11. Quem Votou / Quem Nao Votou (NOVO)
-12. Piadas (existente)
-13. Quem Usou / Quem Nao Usou (existente)
-```

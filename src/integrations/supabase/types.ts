@@ -209,6 +209,403 @@ export type Database = {
           },
         ]
       }
+      event_achievements: {
+        Row: {
+          achievement_key: string
+          event_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_key: string
+          event_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_key?: string
+          event_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_achievements_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_app_config: {
+        Row: {
+          broadcast_msg: string | null
+          current_bar_id: string | null
+          destination_bar_id: string | null
+          event_id: string
+          global_delay_minutes: number
+          id: string
+          origin_bar_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          broadcast_msg?: string | null
+          current_bar_id?: string | null
+          destination_bar_id?: string | null
+          event_id: string
+          global_delay_minutes?: number
+          id?: string
+          origin_bar_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          broadcast_msg?: string | null
+          current_bar_id?: string | null
+          destination_bar_id?: string | null
+          event_id?: string
+          global_delay_minutes?: number
+          id?: string
+          origin_bar_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_app_config_current_bar_id_fkey"
+            columns: ["current_bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_app_config_destination_bar_id_fkey"
+            columns: ["destination_bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_app_config_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_app_config_origin_bar_id_fkey"
+            columns: ["origin_bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_bars: {
+        Row: {
+          address: string
+          bar_order: number
+          created_at: string
+          event_id: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          scheduled_time: string | null
+        }
+        Insert: {
+          address?: string
+          bar_order?: number
+          created_at?: string
+          event_id: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          scheduled_time?: string | null
+        }
+        Update: {
+          address?: string
+          bar_order?: number
+          created_at?: string
+          event_id?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          scheduled_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bars_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_checkins: {
+        Row: {
+          bar_id: string
+          checked_in_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bar_id: string
+          checked_in_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bar_id?: string
+          checked_in_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_consumption: {
+        Row: {
+          bar_id: string | null
+          count: number
+          event_id: string
+          id: string
+          subtype: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bar_id?: string | null
+          count?: number
+          event_id: string
+          id?: string
+          subtype?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bar_id?: string | null
+          count?: number
+          event_id?: string
+          id?: string
+          subtype?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_consumption_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_consumption_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_invites: {
+        Row: {
+          code: string
+          created_at: string
+          event_id: string
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          used_count: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          event_id: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          used_count?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          event_id?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          used_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_invites_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_members: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          event_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          event_id: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          event_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_members_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_votes: {
+        Row: {
+          bar_id: string
+          created_at: string
+          drink_score: number
+          event_id: string
+          food_score: number
+          id: string
+          service_score: number
+          user_id: string
+          vibe_score: number
+        }
+        Insert: {
+          bar_id: string
+          created_at?: string
+          drink_score: number
+          event_id: string
+          food_score: number
+          id?: string
+          service_score: number
+          user_id: string
+          vibe_score: number
+        }
+        Update: {
+          bar_id?: string
+          created_at?: string
+          drink_score?: number
+          event_id?: string
+          food_score?: number
+          id?: string
+          service_score?: number
+          user_id?: string
+          vibe_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_votes_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_votes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          city: string | null
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          name: string
+          owner_name: string | null
+          owner_user_id: string
+          slug: string
+          status: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          name: string
+          owner_name?: string | null
+          owner_user_id: string
+          slug: string
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          name?: string
+          owner_name?: string | null
+          owner_user_id?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       participants: {
         Row: {
           created_at: string
@@ -227,6 +624,54 @@ export type Database = {
           id?: string
           is_admin?: boolean
           name?: string
+        }
+        Relationships: []
+      }
+      platform_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

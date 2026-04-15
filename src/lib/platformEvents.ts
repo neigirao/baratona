@@ -12,6 +12,7 @@ export interface PlatformEvent {
   ownerId: string;
   ownerName: string;
   createdAt: string;
+  eventDate?: string | null;
 }
 
 export function normalizeSlug(value: string) {

@@ -113,7 +113,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
                       size="sm"
                       variant={bar.id === currentBarId ? 'default' : 'outline'}
                       className="text-xs"
-                      onClick={() => handleSetCurrentBar(bar.id)}
+                      onClick={() => handleSetCurrentBar(bar.id as any)}
                     >
                       {bar.bar_order}. {bar.name}
                     </Button>
@@ -129,7 +129,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => handleSetTransit(currentBar.id, nextBar.id)}
+                    onClick={() => handleSetTransit(currentBar.id as any, nextBar.id as any)}
                   >
                     🚐 {currentBar.name} → {nextBar.name}
                   </Button>

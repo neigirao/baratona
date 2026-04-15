@@ -7,9 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { type PlatformEvent } from '@/lib/platformEvents';
 import { listPublicEventsWithBarCountApi } from '@/lib/platformApi';
 import { useSeo } from '@/hooks/useSeo';
-import { MapPin, Beer, ChevronLeft, Search, Plus } from 'lucide-react';
+import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar } from 'lucide-react';
 
-type EnrichedEvent = PlatformEvent & { barCount: number };
+type EnrichedEvent = PlatformEvent & { barCount: number; memberCount: number };
 
 export default function Explore() {
   useSeo('Explorar baratonas | Baratona Platform', 'Encontre baratonas públicas por nome e cidade.');
@@ -84,9 +84,13 @@ export default function Explore() {
                 {event.description && (
                   <p className="text-muted-foreground line-clamp-2">{event.description}</p>
                 )}
-                <div className="flex items-center gap-4 text-muted-foreground">
+                <div className="flex items-center gap-4 text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
                   <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {event.barCount} bares</span>
+                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {event.memberCount}</span>
+                  {event.eventDate && (
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(event.eventDate).toLocaleDateString('pt-BR')}</span>
+                  )}
                 </div>
                 <Button asChild size="sm">
                   <Link to={`/baratona/${event.slug}`}>Ver baratona</Link>

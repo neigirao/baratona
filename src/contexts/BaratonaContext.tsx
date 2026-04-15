@@ -63,7 +63,7 @@ interface BaratonaContextType {
   loading: boolean;
 }
 
-const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
+export const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
 
 export function BaratonaProvider({ children }: { children: ReactNode }) {
   // User state from localStorage

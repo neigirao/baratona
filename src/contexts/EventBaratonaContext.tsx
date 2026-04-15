@@ -1,36 +1,20 @@
 /**
- * EventBaratonaContext — drop-in replacement for BaratonaContext
- * that reads/writes from event_* tables parameterized by eventId.
- *
- * Components that call `useBaratona()` will transparently receive
- * data from the correct event when wrapped in <EventBaratonaProvider>.
- *
- * The key difference from the legacy context:
- *  - Bar IDs are UUIDs (string) instead of integers.
- *  - "Participants" are mapped from event_members + auth user.
- *  - All CRUD targets event_* tables.
+ * EventBaratonaContext — provides values through the SAME BaratonaContext
+ * so that existing components calling useBaratona() work transparently.
  */
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
-import { Language, TRANSLATIONS, type TranslationStrings } from '@/lib/constants';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import { Language, TRANSLATIONS } from '@/lib/constants';
+import { BaratonaContext } from '@/contexts/BaratonaContext';
 import { useEventBars, useEventAppConfig, useEventVotes, useEventConsumption, useEventCheckins, useEventMembers } from '@/hooks/useEventData';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
-import type { Database } from '@/integrations/supabase/types';
 
-type EventBar = Database['public']['Tables']['event_bars']['Row'];
-type EventAppConfig = Database['public']['Tables']['event_app_config']['Row'];
-type EventMember = Database['public']['Tables']['event_members']['Row'];
-
-// A "participant" in the event context is an EventMember mapped to look like a legacy Participant
 interface EventParticipant {
-  id: string;        // user_id
-  name: string;      // display_name
-  is_admin: boolean;  // role === 'event_owner'
+  id: string;
+  name: string;
+  is_admin: boolean;
   created_at: string;
 }
-
-// We re-export the same hook name so existing components work
-const EventBaratonaContext = createContext<any>(undefined);
 
 interface Props {
   eventId: string;
@@ -40,12 +24,10 @@ interface Props {
 export function EventBaratonaProvider({ eventId, children }: Props) {
   const { user } = usePlatformAuth();
 
-  // Language
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('baratona_lang') as Language) || 'pt');
   useEffect(() => { localStorage.setItem('baratona_lang', language); }, [language]);
   const t = TRANSLATIONS[language];
 
-  // Data hooks
   const { bars, loading: barsLoading, refetch: refetchBars } = useEventBars(eventId);
   const { appConfig, loading: appConfigLoading, updateConfig, refetch: refetchAppConfig } = useEventAppConfig(eventId);
   const { votes, submitVote: submitVoteRaw, getBarVotes: getBarVotesRaw, refetch: refetchVotes } = useEventVotes(eventId);
@@ -62,7 +44,6 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     refetch: refetchConsumption,
   } = useEventConsumption(eventId, currentBarId);
 
-  // Sync
   const { secondsAgo, isRefreshing, startRefresh, endRefresh, markUpdated } = useSyncStatus();
   useEffect(() => { if (consumption.length > 0) markUpdated(); }, [consumption, markUpdated]);
 
@@ -73,7 +54,6 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     } finally { endRefresh(); }
   }, [refetchBars, refetchAppConfig, refetchVotes, refetchConsumption, refetchMembers, refetchCheckins, startRefresh, endRefresh]);
 
-  // Map members → participants (legacy shape)
   const participants = useMemo<EventParticipant[]>(() =>
     members.map(m => ({
       id: m.user_id,
@@ -83,7 +63,6 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     })),
   [members]);
 
-  // Current user as participant
   const currentUser = useMemo(() => {
     if (!user) return null;
     return participants.find(p => p.id === user.id) || null;
@@ -91,15 +70,7 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
 
   const isAdmin = currentUser?.is_admin || false;
 
-  // Wrap consumption functions to use user_id field names (event tables use user_id, legacy uses participant_id)
-  // The existing components pass participant_id which in event context equals user_id — works transparently.
-
-  // Votes wrapper: adapt barId type
-  const submitVote = useCallback(async (
-    participantId: string,
-    barId: any,
-    scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
-  ) => {
+  const submitVote = useCallback(async (participantId: string, barId: any, scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }) => {
     if ('vibrate' in navigator) navigator.vibrate(50);
     return submitVoteRaw(participantId, String(barId), scores);
   }, [submitVoteRaw]);
@@ -110,14 +81,11 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     return votes.find(v => v.user_id === participantId && v.bar_id === String(barId));
   }, [votes]);
 
-  // Computed
   const getProjectedTime = useCallback((scheduledTime: string): string => {
     const delay = appConfig?.global_delay_minutes || 0;
     const [hours, minutes] = scheduledTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + delay;
-    const newHours = Math.floor(totalMinutes / 60) % 24;
-    const newMinutes = totalMinutes % 60;
-    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+    const total = hours * 60 + minutes + delay;
+    return `${Math.floor(total / 60) % 24}`.padStart(2, '0') + ':' + `${total % 60}`.padStart(2, '0');
   }, [appConfig?.global_delay_minutes]);
 
   const getCurrentBar = useCallback(() => {
@@ -132,7 +100,6 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     return idx < bars.length - 1 ? bars[idx + 1] : undefined;
   }, [getCurrentBar, bars]);
 
-  // Setters (no-op for now — event mode doesn't have participant selection)
   const setCurrentUser = useCallback(() => {}, []);
 
   const value = useMemo(() => ({
@@ -171,14 +138,6 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     secondsAgo,
     isRefreshing,
     refreshAll,
-    // Event-specific extras
-    eventId,
-    members,
-    checkins,
-    checkIn,
-    checkOut,
-    isCheckedIn,
-    getBarCheckins,
   }), [
     currentUser, isAdmin, language, t, participants, membersLoading,
     bars, barsLoading, appConfig, appConfigLoading, updateConfig,
@@ -188,20 +147,11 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     submitVote, getBarVotes, getUserVoteForBar,
     getProjectedTime, getCurrentBar, getNextBar, currentBarId,
     secondsAgo, isRefreshing, refreshAll,
-    eventId, members, checkins, checkIn, checkOut, isCheckedIn, getBarCheckins,
   ]);
 
   return (
-    <EventBaratonaContext.Provider value={value}>
+    <BaratonaContext.Provider value={value as any}>
       {children}
-    </EventBaratonaContext.Provider>
+    </BaratonaContext.Provider>
   );
-}
-
-export function useEventBaratona() {
-  const context = useContext(EventBaratonaContext);
-  if (context === undefined) {
-    throw new Error('useEventBaratona must be used within an EventBaratonaProvider');
-  }
-  return context;
 }

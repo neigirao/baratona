@@ -25,6 +25,7 @@ export default function CreateEvent() {
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [eventType, setEventType] = useState<'open_baratona' | 'special_circuit'>('open_baratona');
   const [bars, setBars] = useState<BarDraft[]>([]);
+  const [eventDate, setEventDate] = useState('');
   const [saving, setSaving] = useState(false);
   const slug = useMemo(() => normalizeSlug(name), [name]);
 
@@ -84,6 +85,7 @@ export default function CreateEvent() {
           eventType,
           ownerId: user.id,
           ownerName: user.user_metadata?.full_name || user.email || 'Organizador',
+          eventDate: eventDate || null,
         },
         bars
       );
@@ -125,6 +127,7 @@ export default function CreateEvent() {
             <div><Label>Descrição</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Conte o que rola nessa baratona..." required /></div>
             <div><Label>Cidade</Label><Input value={city} onChange={(e) => setCity(e.target.value)} required /></div>
             <div><Label>Slug (URL)</Label><Input value={slug} readOnly className="text-muted-foreground" /></div>
+            <div><Label>Data do evento</Label><Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} /></div>
             <div>
               <Label>Tipo de evento</Label>
               <div className="flex gap-2 mt-2">

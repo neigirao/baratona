@@ -112,12 +112,28 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
           </CardContent></Card>
         </div>
 
+        {isComidaDiButeco && (
+          <Card className="border-secondary/40 bg-secondary/5">
+            <CardContent className="py-4 space-y-2">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Download className="w-4 h-4 text-secondary" /> Importar do site oficial
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Sincroniza a lista de butecos a partir de comidadibuteco.com.br (idempotente).
+              </p>
+              <Button onClick={handleScrape} disabled={scraping} size="sm" variant="secondary" className="w-full">
+                {scraping ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</> : 'Importar / Atualizar butecos'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="status">Controle</TabsTrigger>
             <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
-            <TabsTrigger value="bars">Bares</TabsTrigger>
+            <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
           </TabsList>
 
           {/* Control tab */}

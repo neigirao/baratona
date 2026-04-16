@@ -181,6 +181,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
                 </div>
               </CardContent>
             </Card>
+            )}
 
             <Button variant="destructive" className="w-full" onClick={handleFinishEvent}>
               Finalizar Evento

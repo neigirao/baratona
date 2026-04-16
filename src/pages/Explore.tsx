@@ -10,10 +10,12 @@ import { useSeo } from '@/hooks/useSeo';
 import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar } from 'lucide-react';
 
 type EnrichedEvent = PlatformEvent & { barCount: number; memberCount: number };
+type FilterType = 'all' | 'open_baratona' | 'special_circuit';
 
 export default function Explore() {
-  useSeo('Explorar baratonas | Baratona Platform', 'Encontre baratonas públicas por nome e cidade.');
+  useSeo('Explorar baratonas | Baratona Platform', 'Encontre baratonas e circuitos especiais por nome, cidade e tipo.');
   const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<FilterType>('all');
   const [events, setEvents] = useState<EnrichedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,8 +29,12 @@ export default function Explore() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return events.filter((e) => !q || e.name.toLowerCase().includes(q) || e.city.toLowerCase().includes(q));
-  }, [events, search]);
+    return events.filter((e) => {
+      if (typeFilter !== 'all' && e.eventType !== typeFilter) return false;
+      if (q && !e.name.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [events, search, typeFilter]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,7 +43,7 @@ export default function Explore() {
           <Button variant="ghost" size="icon" asChild>
             <Link to="/"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <h1 className="text-3xl font-bold">Explorar baratonas</h1>
+          <h1 className="text-3xl font-bold">Explorar</h1>
         </div>
 
         <div className="relative">
@@ -48,6 +54,23 @@ export default function Explore() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {([
+            { id: 'all', label: 'Todos' },
+            { id: 'open_baratona', label: 'Baratonas' },
+            { id: 'special_circuit', label: 'Circuitos especiais' },
+          ] as { id: FilterType; label: string }[]).map((opt) => (
+            <Button
+              key={opt.id}
+              size="sm"
+              variant={typeFilter === opt.id ? 'default' : 'outline'}
+              onClick={() => setTypeFilter(opt.id)}
+            >
+              {opt.label}
+            </Button>
+          ))}
         </div>
 
         {loading && (
@@ -67,7 +90,7 @@ export default function Explore() {
         {!loading && !error && filtered.length === 0 && (
           <div className="text-center py-16 space-y-4">
             <Beer className="w-12 h-12 mx-auto text-muted-foreground" />
-            <p className="text-muted-foreground">Nenhuma baratona encontrada.</p>
+            <p className="text-muted-foreground">Nenhum evento encontrado.</p>
             <Button asChild>
               <Link to="/criar"><Plus className="w-4 h-4 mr-2" /> Criar uma baratona</Link>
             </Button>
@@ -75,29 +98,44 @@ export default function Explore() {
         )}
 
         <div className="grid md:grid-cols-2 gap-4">
-          {filtered.map((event) => (
-            <Card key={event.id} className="hover:border-primary/40 transition-colors">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{event.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {event.description && (
-                  <p className="text-muted-foreground line-clamp-2">{event.description}</p>
+          {filtered.map((event) => {
+            const isCircuit = event.eventType === 'special_circuit';
+            return (
+              <Card key={event.id} className="hover:border-primary/40 transition-colors overflow-hidden">
+                {event.coverImageUrl && (
+                  <div className="aspect-[16/7] bg-muted overflow-hidden">
+                    <img src={event.coverImageUrl} alt={event.name} className="w-full h-full object-cover" loading="lazy" />
+                  </div>
                 )}
-                <div className="flex items-center gap-4 text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
-                  <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {event.barCount} bares</span>
-                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {event.memberCount}</span>
-                  {event.eventDate && (
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(event.eventDate).toLocaleDateString('pt-BR')}</span>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-lg leading-tight">{event.name}</CardTitle>
+                    {isCircuit && (
+                      <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-bold uppercase whitespace-nowrap">
+                        Circuito
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  {event.description && (
+                    <p className="text-muted-foreground line-clamp-2">{event.description}</p>
                   )}
-                </div>
-                <Button asChild size="sm">
-                  <Link to={`/baratona/${event.slug}`}>Ver baratona</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex items-center gap-4 text-muted-foreground flex-wrap">
+                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
+                    <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {event.barCount} {isCircuit ? 'butecos' : 'bares'}</span>
+                    <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {event.memberCount}</span>
+                    {event.eventDate && (
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(event.eventDate).toLocaleDateString('pt-BR')}</span>
+                    )}
+                  </div>
+                  <Button asChild size="sm">
+                    <Link to={`/baratona/${event.slug}`}>Ver detalhes</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

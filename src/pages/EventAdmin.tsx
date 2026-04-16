@@ -11,9 +11,10 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3 } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2 } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
   const {
@@ -24,6 +25,27 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [activeTab, setActiveTab] = useState('status');
+  const [scraping, setScraping] = useState(false);
+  const isCircuit = event.eventType === 'special_circuit';
+  const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+
+  const handleScrape = async () => {
+    setScraping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-comida-di-boteco', {
+        body: { slug: event.slug },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Falha no scrape');
+      toast({ title: `Scrape concluído: ${data.count} butecos importados` });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: 'Erro no scrape', description: msg, variant: 'destructive' });
+    } finally {
+      setScraping(false);
+    }
+  };
 
   const currentBar = getCurrentBar();
   const nextBar = getNextBar();
@@ -90,12 +112,28 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
           </CardContent></Card>
         </div>
 
+        {isComidaDiButeco && (
+          <Card className="border-secondary/40 bg-secondary/5">
+            <CardContent className="py-4 space-y-2">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Download className="w-4 h-4 text-secondary" /> Importar do site oficial
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Sincroniza a lista de butecos a partir de comidadibuteco.com.br (idempotente).
+              </p>
+              <Button onClick={handleScrape} disabled={scraping} size="sm" variant="secondary" className="w-full">
+                {scraping ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</> : 'Importar / Atualizar butecos'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="status">Controle</TabsTrigger>
             <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
-            <TabsTrigger value="bars">Bares</TabsTrigger>
+            <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
           </TabsList>
 
           {/* Control tab */}
@@ -122,6 +160,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
               </CardContent>
             </Card>
 
+            {!isCircuit && (
             <Card>
               <CardContent className="py-4 space-y-3">
                 <h3 className="font-semibold text-sm">Van em Trânsito</h3>
@@ -142,6 +181,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
                 </div>
               </CardContent>
             </Card>
+            )}
 
             <Button variant="destructive" className="w-full" onClick={handleFinishEvent}>
               Finalizar Evento

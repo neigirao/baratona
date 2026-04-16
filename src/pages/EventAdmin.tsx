@@ -11,9 +11,10 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3 } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2 } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
   const {
@@ -24,6 +25,27 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [activeTab, setActiveTab] = useState('status');
+  const [scraping, setScraping] = useState(false);
+  const isCircuit = event.eventType === 'special_circuit';
+  const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+
+  const handleScrape = async () => {
+    setScraping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-comida-di-boteco', {
+        body: { slug: event.slug },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Falha no scrape');
+      toast({ title: `Scrape concluído: ${data.count} butecos importados` });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: 'Erro no scrape', description: msg, variant: 'destructive' });
+    } finally {
+      setScraping(false);
+    }
+  };
 
   const currentBar = getCurrentBar();
   const nextBar = getNextBar();

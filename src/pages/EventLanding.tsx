@@ -7,8 +7,9 @@ import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import NotFound from './NotFound';
 import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, type EventBar } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { MapPin, Clock, Beer, Users, Share2, ChevronLeft } from 'lucide-react';
+import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();

@@ -13,6 +13,10 @@ export interface PlatformEvent {
   ownerName: string;
   createdAt: string;
   eventDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  coverImageUrl?: string | null;
+  externalSourceUrl?: string | null;
 }
 
 export function normalizeSlug(value: string) {

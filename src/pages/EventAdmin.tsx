@@ -160,6 +160,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
               </CardContent>
             </Card>
 
+            {!isCircuit && (
             <Card>
               <CardContent className="py-4 space-y-3">
                 <h3 className="font-semibold text-sm">Van em Trânsito</h3>

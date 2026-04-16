@@ -16,6 +16,10 @@ function mapRow(row: any): PlatformEvent {
     ownerName: row.owner_name || 'Organizador',
     createdAt: row.created_at,
     eventDate: row.event_date || null,
+    startDate: row.start_date || null,
+    endDate: row.end_date || null,
+    coverImageUrl: row.cover_image_url || null,
+    externalSourceUrl: row.external_source_url || null,
   };
 }
 
@@ -27,7 +31,14 @@ export interface EventBar {
   latitude?: number | null;
   longitude?: number | null;
   barOrder: number;
-  scheduledTime: string;
+  scheduledTime: string | null;
+  featuredDish?: string | null;
+  dishDescription?: string | null;
+  dishImageUrl?: string | null;
+  neighborhood?: string | null;
+  phone?: string | null;
+  instagram?: string | null;
+  externalId?: string | null;
 }
 
 function mapBarRow(row: any): EventBar {
@@ -39,7 +50,14 @@ function mapBarRow(row: any): EventBar {
     latitude: row.latitude,
     longitude: row.longitude,
     barOrder: row.bar_order,
-    scheduledTime: row.scheduled_time || '18:00',
+    scheduledTime: row.scheduled_time,
+    featuredDish: row.featured_dish || null,
+    dishDescription: row.dish_description || null,
+    dishImageUrl: row.dish_image_url || null,
+    neighborhood: row.neighborhood || null,
+    phone: row.phone || null,
+    instagram: row.instagram || null,
+    externalId: row.external_id || null,
   };
 }
 

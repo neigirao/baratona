@@ -311,33 +311,54 @@ export type Database = {
           address: string
           bar_order: number
           created_at: string
+          dish_description: string | null
+          dish_image_url: string | null
           event_id: string
+          external_id: string | null
+          featured_dish: string | null
           id: string
+          instagram: string | null
           latitude: number | null
           longitude: number | null
           name: string
+          neighborhood: string | null
+          phone: string | null
           scheduled_time: string | null
         }
         Insert: {
           address?: string
           bar_order?: number
           created_at?: string
+          dish_description?: string | null
+          dish_image_url?: string | null
           event_id: string
+          external_id?: string | null
+          featured_dish?: string | null
           id?: string
+          instagram?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
+          neighborhood?: string | null
+          phone?: string | null
           scheduled_time?: string | null
         }
         Update: {
           address?: string
           bar_order?: number
           created_at?: string
+          dish_description?: string | null
+          dish_image_url?: string | null
           event_id?: string
+          external_id?: string | null
+          featured_dish?: string | null
           id?: string
+          instagram?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
+          neighborhood?: string | null
+          phone?: string | null
           scheduled_time?: string | null
         }
         Relationships: [
@@ -564,45 +585,57 @@ export type Database = {
       events: {
         Row: {
           city: string | null
+          cover_image_url: string | null
           created_at: string
           description: string | null
+          end_date: string | null
           event_date: string | null
           event_type: string
+          external_source_url: string | null
           id: string
           name: string
           owner_name: string | null
           owner_user_id: string
           slug: string
+          start_date: string | null
           status: string
           updated_at: string
           visibility: string
         }
         Insert: {
           city?: string | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          end_date?: string | null
           event_date?: string | null
           event_type?: string
+          external_source_url?: string | null
           id?: string
           name: string
           owner_name?: string | null
           owner_user_id: string
           slug: string
+          start_date?: string | null
           status?: string
           updated_at?: string
           visibility?: string
         }
         Update: {
           city?: string | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          end_date?: string | null
           event_date?: string | null
           event_type?: string
+          external_source_url?: string | null
           id?: string
           name?: string
           owner_name?: string | null
           owner_user_id?: string
           slug?: string
+          start_date?: string | null
           status?: string
           updated_at?: string
           visibility?: string

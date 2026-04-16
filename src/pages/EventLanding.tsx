@@ -80,21 +80,51 @@ export default function EventLanding() {
     }
   };
 
+  const isCircuit = event.eventType === 'special_circuit';
+  const dateLabel = (() => {
+    if (isCircuit && (event.startDate || event.endDate)) {
+      const fmt = (d?: string | null) =>
+        d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
+      const start = fmt(event.startDate);
+      const end = fmt(event.endDate);
+      if (start && end) return `${start} – ${end}`;
+      return start || end;
+    }
+    if (event.eventDate) {
+      return new Date(event.eventDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      });
+    }
+    return null;
+  })();
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-3xl mx-auto px-4 py-10 space-y-6">
+      {event.coverImageUrl && (
+        <div className="w-full h-48 sm:h-64 overflow-hidden bg-muted">
+          <img src={event.coverImageUrl} alt={event.name} className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="container max-w-3xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/explorar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{event.name}</h1>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold">{event.name}</h1>
+              {isCircuit && (
+                <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-xs font-bold uppercase">
+                  Circuito Especial
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1 flex-wrap">
               <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
-              <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {bars.length} bares</span>
-              <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-xs font-medium">
-                {event.visibility === 'public' ? 'Pública' : 'Privada'}
-              </span>
+              <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {bars.length} {isCircuit ? 'butecos' : 'bares'}</span>
+              {dateLabel && (
+                <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {dateLabel}</span>
+              )}
             </div>
           </div>
         </div>
@@ -103,17 +133,18 @@ export default function EventLanding() {
           <p className="text-muted-foreground leading-relaxed">{event.description}</p>
         )}
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {!isMember && (
-            <Button onClick={handleJoin} disabled={joining} className="flex-1">
+            <Button onClick={handleJoin} disabled={joining} className="flex-1 min-w-[140px]">
               <Users className="w-4 h-4 mr-2" />
               {joining ? 'Entrando...' : 'Participar'}
             </Button>
           )}
           {isMember && (
-            <Button asChild className="flex-1">
-              <Link to={`/baratona/${event.slug}/live`}>Abrir evento</Link>
+            <Button asChild className="flex-1 min-w-[140px]">
+              <Link to={`/baratona/${event.slug}/live`}>
+                {isCircuit ? 'Abrir circuito' : 'Abrir evento'}
+              </Link>
             </Button>
           )}
           <Button variant="outline" onClick={handleShare}>
@@ -126,36 +157,49 @@ export default function EventLanding() {
           )}
         </div>
 
-        {/* Bar list */}
-        {bars.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Roteiro</h2>
-            <div className="space-y-2">
-              {bars.map((bar) => (
-                <Card key={bar.id} className="bg-card/60">
-                  <CardContent className="py-4 flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-                      {bar.barOrder}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold">{bar.name}</p>
-                      {bar.address && <p className="text-sm text-muted-foreground">{bar.address}</p>}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
-                      <Clock className="w-3.5 h-3.5" />
-                      {bar.scheduledTime}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
+        {isCircuit ? (
+          <SpecialCircuitLanding event={event} bars={bars} />
+        ) : (
+          bars.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-xl font-semibold">Roteiro</h2>
+              <div className="space-y-2">
+                {bars.map((bar) => (
+                  <Card key={bar.id} className="bg-card/60">
+                    <CardContent className="py-4 flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                        {bar.barOrder}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold">{bar.name}</p>
+                        {bar.address && <p className="text-sm text-muted-foreground">{bar.address}</p>}
+                      </div>
+                      {bar.scheduledTime && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
+                          <Clock className="w-3.5 h-3.5" />
+                          {bar.scheduledTime}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )
         )}
 
         <Card className="bg-card/60">
-          <CardContent className="py-4 text-sm text-muted-foreground">
+          <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
             <p><strong className="text-foreground">Organizador:</strong> {event.ownerName}</p>
-            <p><strong className="text-foreground">Tipo:</strong> {event.eventType === 'open_baratona' ? 'Baratona aberta' : 'Circuito especial'}</p>
+            <p><strong className="text-foreground">Tipo:</strong> {isCircuit ? 'Circuito especial (visitação livre)' : 'Baratona aberta'}</p>
+            {event.externalSourceUrl && (
+              <p>
+                <strong className="text-foreground">Fonte oficial:</strong>{' '}
+                <a href={event.externalSourceUrl} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 underline">
+                  {new URL(event.externalSourceUrl).hostname} <ExternalLink className="w-3 h-3" />
+                </a>
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

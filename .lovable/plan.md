@@ -1,90 +1,114 @@
 
 
-# Analise do Plano e Proximos Passos
+O usuário quer integrar o Comida di Buteco como um evento especial pré-cadastrado na plataforma, usando os dados do site oficial (https://comidadibuteco.com.br/butecos/rio-de-janeiro/) que lista os bares participantes do Rio.
 
-## O que ja foi feito (Fases 1 e 2)
+Vou usar o Firecrawl (já disponível como connector) para extrair os dados do site oficial, e criar um evento "Comida di Buteco - Rio 2026" como um circuito especial (`special_circuit`) na plataforma.
 
-| Item | Status |
-|------|--------|
-| Home redesenhada com identidade visual | Feito |
-| FAQ com 14+ perguntas reais em accordion | Feito |
-| Codigo morto limpo do platformEvents.ts | Feito |
-| Wizard de criacao com 3 steps (dados, bares, revisao) | Feito |
-| Explore com busca, skeleton e estado vazio | Feito |
-| EventLanding com lista de bares, join e share | Feito |
-| Tabelas event_* criadas com RLS | Feito |
-| platformApi.ts com funcoes completas | Feito |
-| Rotas configuradas no App.tsx | Feito |
+# Plano: Integrar Comida di Buteco como Evento Especial
 
-## O que falta (Fases 3, 4 e 5 + extras)
+## Visão geral
 
-### Fase 3: EventBaratonaContext (CRITICO - sem isso o "modo live" nao funciona)
+Criar um evento pré-cadastrado "Comida di Buteco RJ" na plataforma usando os dados reais do site oficial. Diferente de uma baratona (sequência cronológica), o Comida di Buteco é um **circuito especial** — visitação livre dos bares ao longo de semanas, votação por petisco.
 
-O `EventLive.tsx` atual e apenas um placeholder com "modo ao vivo em breve". Nenhum componente existente (consumo, check-in, votacao, mapa, conquistas, wrapped) funciona para eventos novos porque todos dependem do `BaratonaContext` que le das tabelas legadas.
+## Etapas
 
-**O que precisa ser feito:**
-1. Criar `src/contexts/EventBaratonaContext.tsx` - context identico ao `BaratonaContext` mas parametrizado por `event_id`, lendo/escrevendo nas tabelas `event_*`
-2. Criar `src/hooks/useEventData.ts` - hooks equivalentes ao `useSupabaseData.ts` para tabelas `event_checkins`, `event_consumption`, `event_votes`, `event_app_config`, `event_achievements`
-3. Reescrever `EventLive.tsx` para usar o novo context e renderizar os mesmos componentes (`MainTabs`, `Header`, `ConsumptionCounter`, `VoteForm`, `BaratonaMap`, etc.)
-4. Reescrever `EventAdmin.tsx` para ter o painel admin completo (controle de status, broadcast, retrospectiva) usando o novo context
+### 1. Coletar dados do site oficial
+- Habilitar conector Firecrawl
+- Criar edge function `scrape-comida-di-boteco` que faz scrape de https://comidadibuteco.com.br/butecos/rio-de-janeiro/
+- Extrair para cada bar: nome, endereço, bairro, nome do petisco, descrição, foto, telefone (se disponível)
+- Salvar em tabela auxiliar `external_bar_sources` para reaproveitar e versionar
 
-### Fase 4: Legado /nei
+### 2. Adaptar schema para circuito especial
+- Adicionar à tabela `events`:
+  - `event_type` já existe (`open_baratona` | `special_circuit`)
+  - Adicionar `start_date` e `end_date` (período do circuito)
+  - Adicionar `cover_image_url` e `external_source_url`
+- Adicionar à tabela `event_bars`:
+  - `featured_dish` (texto - nome do petisco)
+  - `dish_description` (texto)
+  - `dish_image_url` (texto)
+  - Tornar `scheduled_time` opcional (circuitos não têm horário fixo)
 
-O `/nei` exige `super_admin` no `platform_roles`, mas ninguem tem esse role no banco. Precisa:
-1. Inserir o role de super_admin para o usuario correto via migracao ou seed
-2. Adicionar badge visual "Evento Original" no `/nei`
+### 3. Adaptar UI para tipo "circuito especial"
+- `EventLanding`: quando for `special_circuit`, mostrar grid de bares com cards de petiscos (foto + descrição) em vez de timeline cronológica
+- `EventLive`: esconder componentes de logística de van (VanStatus, CountdownTimer); manter check-in, votação, mapa
+- `BaratonaMap`: mostrar todos os bares como pontos de interesse simultâneos (sem origem/destino)
+- `VoteForm`: adaptar para votar no petisco (categoria única) em vez de 4 dimensões
 
-### Fase 5: Tipos e seguranca
+### 4. Seed do evento Comida di Buteco
+- Migration que cria o evento "Comida di Buteco RJ 2026" como `special_circuit`, público, visibilidade `public`
+- Após scrape, popular `event_bars` com todos os bares retornados (estimativa: 40-80 bares)
+- Owner do evento: super_admin (Nei)
 
-1. Remover `as any` do `platformApi.ts` - as tabelas `event_*` ja existem no `types.ts`, entao pode-se tipar corretamente
-2. Validacao de input na criacao de eventos
+### 5. Destaque na Home e Explore
+- Seção "Eventos em destaque" na Home mostrando o card do Comida di Buteco
+- Filtro no Explore por `event_type` (Baratona vs Circuito Especial)
 
----
+## Detalhes técnicos
 
-## Extras que podemos fazer alem do plano original
+**Por que Firecrawl e não fetch direto?**  
+O site provavelmente tem proteção anti-bot e renderização JS. Firecrawl resolve com `formats: ['markdown', { type: 'json', schema }]` retornando dados estruturados.
 
-### E1. Data e horario do evento
-As tabelas `events` nao tem campo de data do evento (`event_date`). Sem isso, nao da pra mostrar "quando vai ser" no Explore nem ordenar por data. Migracao simples: `ALTER TABLE events ADD COLUMN event_date date;`
-
-### E2. Contador de participantes no Explore e Landing
-O card de Explore e a Landing nao mostram quantos participantes ja entraram. Basta uma query `count` em `event_members`.
-
-### E3. Editar evento apos criacao
-Nao existe tela para o owner editar nome, descricao, adicionar/remover bares depois de criar. Isso e essencial para organizadores.
-
-### E4. Convite por codigo para eventos privados
-A tabela `event_invites` ja existe mas nao ha UI para gerar codigos nem tela para o participante digitar o codigo.
-
-### E5. Notificacoes e broadcast para eventos novos
-O sistema de broadcast do admin legado (`app_config.broadcast_msg`) nao esta conectado aos eventos novos. O `event_app_config` tem o campo mas nao ha UI.
-
-### E6. Galeria de fotos do evento
-Storage bucket para participantes enviarem fotos durante o evento, com galeria na retrospectiva.
-
-### E7. Ranking em tempo real durante o evento
-Leaderboard ao vivo mostrando quem mais bebeu, quem mais fez check-in, com animacoes de mudanca de posicao.
-
-### E8. Historico de baratonas do usuario
-Pagina "Minhas Baratonas" mostrando eventos que o usuario criou e participou, com stats resumidos.
-
----
-
-## Ordem de execucao recomendada
-
-```text
-1. EventBaratonaContext + useEventData (base para tudo)
-2. EventLive funcional (reutilizando componentes existentes)
-3. EventAdmin funcional (admin completo para eventos novos)
-4. Data do evento + contador de participantes (UX basica)
-5. Remover `as any` do platformApi
-6. Editar evento apos criacao
-7. Convite por codigo
-8. Historico de baratonas do usuario
+**Schema do JSON extraction:**
+```typescript
+{
+  bars: [{
+    name: string,
+    address: string,
+    neighborhood: string,
+    dish_name: string,
+    dish_description: string,
+    dish_image_url: string,
+    phone?: string,
+    instagram?: string
+  }]
+}
 ```
 
-## Detalhes tecnicos
+**Edge function (Deno) chama Firecrawl REST v2:**
+- Endpoint: `POST /scrape` com `formats: [{ type: 'json', schema }]`
+- Retorna lista normalizada de bares
+- Insere/atualiza `event_bars` para o evento `comida-di-boteco-rj-2026`
+- Re-executável (idempotente via `external_id` único)
 
-O `EventBaratonaContext` precisa expor a mesma interface (`BaratonaContextType`) para que os componentes existentes funcionem sem alteracao. A diferenca e interna: em vez de queries em `bars`, `consumption`, `checkins`, `votes`, `app_config`, ele consulta `event_bars`, `event_consumption`, `event_checkins`, `event_votes`, `event_app_config` filtrado por `event_id`. Os tipos de ID mudam de `integer` (legado) para `uuid` (event_*), entao sera necessario adaptar a interface para aceitar ambos ou criar um wrapper.
+**Geocoding dos endereços:**  
+Para o mapa funcionar, precisamos de lat/lng. Opções:
+- (a) Usar Nominatim (OpenStreetMap, gratuito) na própria edge function
+- (b) Deixar lat/lng nulo e mapa abrir no Google Maps com endereço como query
 
-Os componentes existentes (`ConsumptionCounter`, `VoteForm`, `BarCheckin`, `BaratonaMap`) usam `useBaratona()`. Para reutiliza-los, o `EventBaratonaContext` deve ser fornecido via um provider que exponha o mesmo hook `useBaratona()` ou os componentes devem aceitar o context via prop/generic hook.
+Recomendo **(a)** com fallback para (b).
 
+## Perguntas antes de executar
+
+Preciso confirmar 3 pontos antes de começar:
+<lov-tool-use id="toolu_vrtx_01MHcefpyoaGhMXcfffS6EFr" name="questions--ask_questions" requires-approval="true" integration-id="questions" data="{\"questions\": [{\"header\":\"Escopo do scrape\",\"question\":\"O Comida di Buteco tem várias edições por ano e cidade. Quero confirmar o escopo inicial:\",\"options\":[{\"label\":\"Só Rio de Janeiro, edição atual\",\"description\":\"Apenas a página do RJ, criar 1 evento único\"},{\"label\":\"Rio + outras capitais\",\"description\":\"Scrape de várias cidades, criar 1 evento por cidade\"},{\"label\":\"Só Rio + permitir clonar\",\"description\":\"Começar com RJ, mas deixar função pronta para outras cidades\"}],\"multiSelect\":false},{\"header\":\"Votação no circuito\",\"question\":\"No Comida di Buteco oficial, vota-se no petisco (uma nota geral). Como adaptar nosso sistema de votação?\",\"options\":[{\"label\":\"Voto único no petisco (1-5)\",\"description\":\"Simplificar: uma nota geral por bar, igual ao oficial\"},{\"label\":\"Manter 4 dimensões (bebida, comida, ambiente, atendimento)\",\"description\":\"Reutilizar o sistema atual sem mudança\"},{\"label\":\"Híbrido: petisco em destaque + 3 outras\",\"description\":\"Petisco vira a nota principal, mantém ambiente e atendimento\"}],\"multiSelect\":false},{\"header\":\"Quem cria\",\"question\":\"Quem deve ser o dono (owner) deste evento Comida di Buteco?\",\"options\":[{\"label\":\"Super admin (Nei)\",\"description\":\"Evento oficial da plataforma, gerenciado pelo admin geral\"},{\"label\":\"Conta institucional 'Comida di Buteco'\",\"description\":\"Criar um perfil específico para eventos parceiros\"},{\"label\":\"Qualquer admin pode clonar\",\"description\":\"Template público que qualquer organizador pode usar como base\"}],\"multiSelect\":false}]}">
+</lov-tool-use>
+<lov-plan>
+
+# Plano: Integrar Comida di Buteco como Evento Especial
+
+## Contexto
+
+O usuário quer que o evento **Comida di Buteco - Rio de Janeiro** (https://comidadibuteco.com.br/butecos/rio-de-janeiro/) seja um evento pré-cadastrado na plataforma, do tipo **circuito especial** (visitação livre, votação por petisco), reutilizando todas as funcionalidades já criadas.
+
+## Visão geral
+
+1. **Scrape** do site oficial para extrair os bares participantes e seus petiscos
+2. **Adaptar** o schema e a UI para suportar circuitos especiais (sem cronograma de van)
+3. **Seed** do evento "Comida di Buteco RJ" pronto para uso
+4. **Destacar** o evento na Home e Explore
+
+## Etapas
+
+### 1. Coletar dados do site (Firecrawl)
+- Habilitar o conector **Firecrawl**
+- Edge function `scrape-comida-di-boteco` faz scrape de https://comidadibuteco.com.br/butecos/rio-de-janeiro/ usando `formats: [{ type: 'json', schema }]`
+- Para cada bar extrai: `name`, `address`, `neighborhood`, `dish_name`, `dish_description`, `dish_image_url`, `phone`, `instagram`
+- Geocoding via Nominatim (OSM, gratuito) para obter `lat`/`lng`
+- Insere/atualiza em `event_bars` (idempotente via `external_id`)
+
+### 2. Adaptar schema
+**`events`:** adicionar `start_date`, `end_date`, `cover_image_url`, `external_source_url`  
+**`event_bars`:** adicionar `featured_dish`, `dish_description`, `dish_image_url`, `external_id`; tornar `scheduled_time` opcional
+
+### 3. Adaptar UI para

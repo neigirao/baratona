@@ -93,6 +93,38 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Featured Events */}
+      {(featured === null || featured.length > 0) && (
+        <section className="container max-w-5xl mx-auto px-4 py-12">
+          <div className="flex items-end justify-between mb-6 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-secondary text-sm font-semibold mb-1">
+                <Sparkles className="w-4 h-4" />
+                <span>Em destaque</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold">Eventos pra você curtir</h2>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="hidden sm:flex">
+              <Link to="/explorar">Ver todos <ChevronRight className="w-4 h-4 ml-1" /></Link>
+            </Button>
+          </div>
+
+          {featured === null ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-80 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featured.map((e) => (
+                <FeaturedEventCard key={e.id} event={e} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Features */}
       <section className="container max-w-5xl mx-auto px-4 py-16">
         <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">

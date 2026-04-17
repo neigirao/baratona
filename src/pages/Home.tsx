@@ -1,14 +1,26 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSeo } from '@/hooks/useSeo';
-import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight } from 'lucide-react';
+import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles } from 'lucide-react';
+import { listFeaturedEventsApi } from '@/lib/platformApi';
+import type { PlatformEvent } from '@/lib/platformEvents';
+import { FeaturedEventCard } from '@/components/FeaturedEventCard';
+
+type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 
 export default function Home() {
   useSeo(
     'Baratona — Crie sua rota de bares com os amigos',
     'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.'
   );
+
+  const [featured, setFeatured] = useState<FeaturedEvent[] | null>(null);
+  useEffect(() => {
+    listFeaturedEventsApi(3).then(setFeatured).catch(() => setFeatured([]));
+  }, []);
 
   const features = [
     {
@@ -80,6 +92,38 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Featured Events */}
+      {(featured === null || featured.length > 0) && (
+        <section className="container max-w-5xl mx-auto px-4 py-12">
+          <div className="flex items-end justify-between mb-6 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-secondary text-sm font-semibold mb-1">
+                <Sparkles className="w-4 h-4" />
+                <span>Em destaque</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold">Eventos pra você curtir</h2>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="hidden sm:flex">
+              <Link to="/explorar">Ver todos <ChevronRight className="w-4 h-4 ml-1" /></Link>
+            </Button>
+          </div>
+
+          {featured === null ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-80 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featured.map((e) => (
+                <FeaturedEventCard key={e.id} event={e} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Features */}
       <section className="container max-w-5xl mx-auto px-4 py-16">

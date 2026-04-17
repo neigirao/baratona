@@ -160,13 +160,19 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   const submitVote = useCallback(async (
     participantId: string, 
     barId: number, 
-    scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
+    scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }
   ) => {
     // Haptic feedback
     if ('vibrate' in navigator) {
       navigator.vibrate(50);
     }
-    return submitVoteToDb(participantId, barId, scores);
+    // Legacy uses 4 dimensions only — coerce to 0 if missing (legacy schema requires NOT NULL)
+    return submitVoteToDb(participantId, barId, {
+      drinkScore: scores.drinkScore ?? 0,
+      foodScore: scores.foodScore ?? 0,
+      vibeScore: scores.vibeScore ?? 0,
+      serviceScore: scores.serviceScore ?? 0,
+    });
   }, [submitVoteToDb]);
 
   const getUserVoteForBar = useCallback((participantId: string, barId: number) => {

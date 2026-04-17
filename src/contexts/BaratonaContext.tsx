@@ -44,9 +44,9 @@ interface BaratonaContextType {
   consumptionLoading: boolean;
   
   // Votes
-  submitVote: (participantId: string, barId: number, scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }) => Promise<boolean>;
+  submitVote: (participantId: string, barId: number, scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }) => Promise<boolean>;
   getBarVotes: (barId: number) => Array<Database['public']['Tables']['votes']['Row']>;
-  getUserVoteForBar: (participantId: string, barId: number) => Database['public']['Tables']['votes']['Row'] | undefined;
+  getUserVoteForBar: (participantId: string, barId: number) => (Database['public']['Tables']['votes']['Row'] & { dish_score?: number | null }) | undefined;
   
   // Computed
   getProjectedTime: (scheduledTime: string) => string;

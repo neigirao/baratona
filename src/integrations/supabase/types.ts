@@ -535,35 +535,38 @@ export type Database = {
         Row: {
           bar_id: string
           created_at: string
-          drink_score: number
+          dish_score: number | null
+          drink_score: number | null
           event_id: string
-          food_score: number
+          food_score: number | null
           id: string
-          service_score: number
+          service_score: number | null
           user_id: string
-          vibe_score: number
+          vibe_score: number | null
         }
         Insert: {
           bar_id: string
           created_at?: string
-          drink_score: number
+          dish_score?: number | null
+          drink_score?: number | null
           event_id: string
-          food_score: number
+          food_score?: number | null
           id?: string
-          service_score: number
+          service_score?: number | null
           user_id: string
-          vibe_score: number
+          vibe_score?: number | null
         }
         Update: {
           bar_id?: string
           created_at?: string
-          drink_score?: number
+          dish_score?: number | null
+          drink_score?: number | null
           event_id?: string
-          food_score?: number
+          food_score?: number | null
           id?: string
-          service_score?: number
+          service_score?: number | null
           user_id?: string
-          vibe_score?: number
+          vibe_score?: number | null
         }
         Relationships: [
           {

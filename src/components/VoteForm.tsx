@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Beer, Utensils, Music, Users, Star, Loader2, ArrowLeft } from 'lucide-react';
+import { Beer, Utensils, Music, Users, Star, Loader2, ArrowLeft, ChefHat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -10,9 +10,11 @@ interface StarRatingProps {
   onChange: (value: number) => void;
   label: string;
   icon: React.ReactNode;
+  size?: 'sm' | 'lg';
 }
 
-function StarRating({ value, onChange, label, icon }: StarRatingProps) {
+function StarRating({ value, onChange, label, icon, size = 'sm' }: StarRatingProps) {
+  const starSize = size === 'lg' ? 'w-9 h-9' : 'w-6 h-6';
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="flex items-center gap-1 text-muted-foreground">
@@ -31,7 +33,8 @@ function StarRating({ value, onChange, label, icon }: StarRatingProps) {
           >
             <Star
               className={cn(
-                "w-6 h-6 transition-colors",
+                starSize,
+                "transition-colors",
                 star <= value 
                   ? "text-secondary fill-secondary" 
                   : "text-muted-foreground"
@@ -53,17 +56,24 @@ interface VoteFormProps {
 }
 
 export function VoteForm({ barId, barName, compact = false, isCheckedIn = false, onNavigateToConsumption }: VoteFormProps) {
-  const { currentUser, appConfig, submitVote, getUserVoteForBar, t, language } = useBaratona();
+  const { currentUser, appConfig, bars, submitVote, getUserVoteForBar, t, language, eventType } = useBaratona();
+  
+  const isCircuit = eventType === 'special_circuit';
   
   const [drinkScore, setDrinkScore] = useState(0);
   const [foodScore, setFoodScore] = useState(0);
   const [vibeScore, setVibeScore] = useState(0);
   const [serviceScore, setServiceScore] = useState(0);
+  const [dishScore, setDishScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
   // Use provided barId or fall back to current bar
   const effectiveBarId = barId ?? appConfig?.current_bar_id;
+  
+  // Find bar metadata (for featured_dish in circuit mode)
+  const bar = bars.find((b: any) => b.id === effectiveBarId) as any;
+  const featuredDish = bar?.featured_dish as string | undefined;
   
   // Reset form when bar changes
   useEffect(() => {
@@ -71,30 +81,30 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
     setFoodScore(0);
     setVibeScore(0);
     setServiceScore(0);
+    setDishScore(0);
     setIsEditing(false);
   }, [effectiveBarId]);
   
   if (!currentUser || !effectiveBarId) return null;
   
   // Check if user already voted for this bar
-  const existingVote = getUserVoteForBar(currentUser.id, effectiveBarId);
+  const existingVote = getUserVoteForBar(currentUser.id, effectiveBarId) as any;
   
   const handleSubmit = async () => {
-    if (drinkScore === 0 || foodScore === 0 || vibeScore === 0 || serviceScore === 0) {
-      return;
+    if (isCircuit) {
+      if (dishScore === 0) return;
+    } else {
+      if (drinkScore === 0 || foodScore === 0 || vibeScore === 0 || serviceScore === 0) return;
     }
     
     setSubmitting(true);
-    const success = await submitVote(currentUser.id, effectiveBarId, {
-      drinkScore,
-      foodScore,
-      vibeScore,
-      serviceScore,
-    });
+    const success = await submitVote(currentUser.id, effectiveBarId, isCircuit
+      ? { dishScore }
+      : { drinkScore, foodScore, vibeScore, serviceScore }
+    );
     setSubmitting(false);
     
     if (success) {
-      // Success toast
       toast({
         title: language === 'pt' ? 'Avaliação enviada!' : 'Review submitted!',
         description: language === 'pt' 
@@ -102,11 +112,11 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
           : 'Thank you for your feedback! 🎉',
       });
       
-      // Reset form
       setDrinkScore(0);
       setFoodScore(0);
       setVibeScore(0);
       setServiceScore(0);
+      setDishScore(0);
       setIsEditing(false);
     } else {
       toast({
@@ -119,15 +129,21 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
     }
   };
   
-  const isComplete = drinkScore > 0 && foodScore > 0 && vibeScore > 0 && serviceScore > 0;
+  const isComplete = isCircuit
+    ? dishScore > 0
+    : drinkScore > 0 && foodScore > 0 && vibeScore > 0 && serviceScore > 0;
   
   // Handle entering edit mode
   const handleStartEditing = () => {
     if (existingVote) {
-      setDrinkScore(existingVote.drink_score);
-      setFoodScore(existingVote.food_score);
-      setVibeScore(existingVote.vibe_score);
-      setServiceScore(existingVote.service_score);
+      if (isCircuit) {
+        setDishScore(existingVote.dish_score ?? 0);
+      } else {
+        setDrinkScore(existingVote.drink_score ?? 0);
+        setFoodScore(existingVote.food_score ?? 0);
+        setVibeScore(existingVote.vibe_score ?? 0);
+        setServiceScore(existingVote.service_score ?? 0);
+      }
       setIsEditing(true);
     }
   };
@@ -143,29 +159,43 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
           <p className="text-sm text-baratona-green font-medium">
             ✓ {language === 'pt' ? 'Voto registrado!' : 'Vote recorded!'}
           </p>
-          <div className="grid grid-cols-4 gap-2 mt-3">
-            <div className="text-center">
-              <Beer className="w-4 h-4 text-primary mx-auto" />
-              <span className="text-xs font-bold">{existingVote.drink_score}</span>
+          {isCircuit ? (
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <ChefHat className="w-5 h-5 text-secondary" />
+              <span className="text-xs text-muted-foreground">
+                {featuredDish || (language === 'pt' ? 'Petisco' : 'Dish')}:
+              </span>
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(s => (
+                  <Star key={s} className={cn("w-4 h-4", s <= (existingVote.dish_score ?? 0) ? "text-secondary fill-secondary" : "text-muted-foreground")} />
+                ))}
+              </div>
             </div>
-            <div className="text-center">
-              <Utensils className="w-4 h-4 text-secondary mx-auto" />
-              <span className="text-xs font-bold">{existingVote.food_score}</span>
+          ) : (
+            <div className="grid grid-cols-4 gap-2 mt-3">
+              <div className="text-center">
+                <Beer className="w-4 h-4 text-primary mx-auto" />
+                <span className="text-xs font-bold">{existingVote.drink_score}</span>
+              </div>
+              <div className="text-center">
+                <Utensils className="w-4 h-4 text-secondary mx-auto" />
+                <span className="text-xs font-bold">{existingVote.food_score}</span>
+              </div>
+              <div className="text-center">
+                <Music className="w-4 h-4 text-destructive mx-auto" />
+                <span className="text-xs font-bold">{existingVote.vibe_score}</span>
+              </div>
+              <div className="text-center">
+                <Users className="w-4 h-4 text-muted-foreground mx-auto" />
+                <span className="text-xs font-bold">{existingVote.service_score}</span>
+              </div>
             </div>
-            <div className="text-center">
-              <Music className="w-4 h-4 text-destructive mx-auto" />
-              <span className="text-xs font-bold">{existingVote.vibe_score}</span>
-            </div>
-            <div className="text-center">
-              <Users className="w-4 h-4 text-muted-foreground mx-auto" />
-              <span className="text-xs font-bold">{existingVote.service_score}</span>
-            </div>
-          </div>
+          )}
           
           {/* Action buttons */}
           <div className="flex flex-col gap-2 mt-3">
-            {/* Edit button - only show when checked in at the bar */}
-            {isCheckedIn && (
+            {/* Edit button - circuit mode allows edit anytime, baratona requires checkin */}
+            {(isCircuit || isCheckedIn) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -175,8 +205,7 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
               </Button>
             )}
             
-            {/* Back to consumption button */}
-            {onNavigateToConsumption && (
+            {onNavigateToConsumption && !isCircuit && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -193,9 +222,13 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
     );
   }
   
-  const title = barName 
-    ? `${t.vote} - ${barName}`
-    : `${t.vote} - ${language === 'pt' ? 'Bar Atual' : 'Current Bar'}`;
+  const title = isCircuit
+    ? (featuredDish
+        ? `${language === 'pt' ? 'Avaliar petisco' : 'Rate dish'}: ${featuredDish}`
+        : (language === 'pt' ? 'Avaliar petisco' : 'Rate dish'))
+    : (barName 
+        ? `${t.vote} - ${barName}`
+        : `${t.vote} - ${language === 'pt' ? 'Bar Atual' : 'Current Bar'}`);
   
   return (
     <div className={cn(
@@ -206,32 +239,44 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
         {title}
       </h3>
       
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <StarRating
-          value={drinkScore}
-          onChange={setDrinkScore}
-          label={t.drink}
-          icon={<Beer className="w-4 h-4" />}
-        />
-        <StarRating
-          value={foodScore}
-          onChange={setFoodScore}
-          label={t.food}
-          icon={<Utensils className="w-4 h-4" />}
-        />
-        <StarRating
-          value={vibeScore}
-          onChange={setVibeScore}
-          label={t.vibe}
-          icon={<Music className="w-4 h-4" />}
-        />
-        <StarRating
-          value={serviceScore}
-          onChange={setServiceScore}
-          label={t.service}
-          icon={<Users className="w-4 h-4" />}
-        />
-      </div>
+      {isCircuit ? (
+        <div className="flex justify-center mb-4">
+          <StarRating
+            value={dishScore}
+            onChange={setDishScore}
+            label={language === 'pt' ? 'Nota do petisco' : 'Dish rating'}
+            icon={<ChefHat className="w-4 h-4" />}
+            size="lg"
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <StarRating
+            value={drinkScore}
+            onChange={setDrinkScore}
+            label={t.drink}
+            icon={<Beer className="w-4 h-4" />}
+          />
+          <StarRating
+            value={foodScore}
+            onChange={setFoodScore}
+            label={t.food}
+            icon={<Utensils className="w-4 h-4" />}
+          />
+          <StarRating
+            value={vibeScore}
+            onChange={setVibeScore}
+            label={t.vibe}
+            icon={<Music className="w-4 h-4" />}
+          />
+          <StarRating
+            value={serviceScore}
+            onChange={setServiceScore}
+            label={t.service}
+            icon={<Users className="w-4 h-4" />}
+          />
+        </div>
+      )}
       
       <Button
         onClick={handleSubmit}

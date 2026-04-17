@@ -71,7 +71,7 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
 
   const isAdmin = currentUser?.is_admin || false;
 
-  const submitVote = useCallback(async (participantId: string, barId: any, scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }) => {
+  const submitVote = useCallback(async (participantId: string, barId: any, scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }) => {
     if ('vibrate' in navigator) navigator.vibrate(50);
     return submitVoteRaw(participantId, String(barId), scores);
   }, [submitVoteRaw]);

@@ -196,6 +196,33 @@ export async function listPublicEventsWithBarCountApi(): Promise<(PlatformEvent 
   return enriched;
 }
 
+export async function listFeaturedEventsApi(limit = 3): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('visibility', 'public')
+    .order('start_date', { ascending: true, nullsFirst: false })
+    .order('event_date', { ascending: true, nullsFirst: false })
+    .limit(20);
+  if (error) throw error;
+
+  const events = (data || []).map(mapRow);
+  // Prioritize Comida di Buteco
+  const FEATURED_SLUG = 'comida-di-buteco-rj-2026';
+  const sorted = [
+    ...events.filter((e) => e.slug === FEATURED_SLUG),
+    ...events.filter((e) => e.slug !== FEATURED_SLUG),
+  ].slice(0, limit);
+
+  return Promise.all(
+    sorted.map(async (e) => ({
+      ...e,
+      barCount: await getEventBarCountApi(e.id),
+      memberCount: await getEventMemberCountApi(e.id),
+    }))
+  );
+}
+
 export async function isSuperAdminApi(userId: string) {
   const { data, error } = await supabase
     .from('platform_roles')

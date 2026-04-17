@@ -1,14 +1,26 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSeo } from '@/hooks/useSeo';
-import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight } from 'lucide-react';
+import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles } from 'lucide-react';
+import { listFeaturedEventsApi } from '@/lib/platformApi';
+import type { PlatformEvent } from '@/lib/platformEvents';
+import { FeaturedEventCard } from '@/components/FeaturedEventCard';
+
+type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 
 export default function Home() {
   useSeo(
     'Baratona — Crie sua rota de bares com os amigos',
     'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.'
   );
+
+  const [featured, setFeatured] = useState<FeaturedEvent[] | null>(null);
+  useEffect(() => {
+    listFeaturedEventsApi(3).then(setFeatured).catch(() => setFeatured([]));
+  }, []);
 
   const features = [
     {

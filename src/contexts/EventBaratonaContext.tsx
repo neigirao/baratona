@@ -18,10 +18,11 @@ interface EventParticipant {
 
 interface Props {
   eventId: string;
+  eventType?: 'open_baratona' | 'special_circuit';
   children: ReactNode;
 }
 
-export function EventBaratonaProvider({ eventId, children }: Props) {
+export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
   const { user } = usePlatformAuth();
 
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('baratona_lang') as Language) || 'pt');
@@ -102,7 +103,7 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
 
   const setCurrentUser = useCallback(() => {}, []);
 
-  const eventType = (appConfig as any)?.event_type as 'open_baratona' | 'special_circuit' | undefined;
+  // eventType comes from prop (event metadata)
 
   const value = useMemo(() => ({
     currentUser,

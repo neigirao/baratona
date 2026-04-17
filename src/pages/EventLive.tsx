@@ -97,7 +97,7 @@ export default function EventLive() {
   }
 
   return (
-    <EventBaratonaProvider eventId={event.id}>
+    <EventBaratonaProvider eventId={event.id} eventType={event.eventType}>
       <EventLiveInner event={event} />
     </EventBaratonaProvider>
   );

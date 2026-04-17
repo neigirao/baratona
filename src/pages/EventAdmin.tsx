@@ -277,7 +277,7 @@ export default function EventAdmin() {
   }
 
   return (
-    <EventBaratonaProvider eventId={event.id}>
+    <EventBaratonaProvider eventId={event.id} eventType={event.eventType}>
       <EventAdminInner event={event} slug={slug} />
     </EventBaratonaProvider>
   );

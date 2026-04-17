@@ -102,10 +102,13 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
 
   const setCurrentUser = useCallback(() => {}, []);
 
+  const eventType = (appConfig as any)?.event_type as 'open_baratona' | 'special_circuit' | undefined;
+
   const value = useMemo(() => ({
     currentUser,
     setCurrentUser,
     isAdmin,
+    eventType,
     language,
     setLanguage,
     t,
@@ -146,7 +149,7 @@ export function EventBaratonaProvider({ eventId, children }: Props) {
     totalDrinks, totalFood, consumption, consumptionLoading,
     submitVote, getBarVotes, getUserVoteForBar,
     getProjectedTime, getCurrentBar, getNextBar, currentBarId,
-    secondsAgo, isRefreshing, refreshAll,
+    secondsAgo, isRefreshing, refreshAll, eventType,
   ]);
 
   return (

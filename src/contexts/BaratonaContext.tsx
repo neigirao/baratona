@@ -61,6 +61,9 @@ interface BaratonaContextType {
   
   // Loading alias for general components
   loading: boolean;
+
+  // Event type (for multi-event platform). Defaults to 'open_baratona' for legacy.
+  eventType?: 'open_baratona' | 'special_circuit';
 }
 
 export const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);

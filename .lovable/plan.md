@@ -1,114 +1,99 @@
 
 
-O usuário quer integrar o Comida di Buteco como um evento especial pré-cadastrado na plataforma, usando os dados do site oficial (https://comidadibuteco.com.br/butecos/rio-de-janeiro/) que lista os bares participantes do Rio.
+# Plano: Eventos em Destaque + Mapa Multi-POI + Roadmap restante
 
-Vou usar o Firecrawl (já disponível como connector) para extrair os dados do site oficial, e criar um evento "Comida di Buteco - Rio 2026" como um circuito especial (`special_circuit`) na plataforma.
+## Parte 1 — Eventos em Destaque na Home
 
-# Plano: Integrar Comida di Buteco como Evento Especial
+Adicionar uma seção entre o Hero e Features na `Home.tsx`:
 
-## Visão geral
+- Buscar até 3 eventos públicos ordenados por `start_date`/`event_date`, priorizando o `comida-di-buteco-rj-2026`
+- Card grande com `cover_image_url` (fallback para gradiente Orbitron), nome, cidade, badge "Circuito Especial" ou "Baratona", contagem de participantes (via `event_members count`), datas, botão "Ver evento" → `/baratona/:slug`
+- Nova função `listFeaturedEventsApi(limit)` em `platformApi.ts` (consulta `events` + `event_members count` + opcional `event_bars count`)
+- Skeleton enquanto carrega; se vazio, esconder a seção
 
-Criar um evento pré-cadastrado "Comida di Buteco RJ" na plataforma usando os dados reais do site oficial. Diferente de uma baratona (sequência cronológica), o Comida di Buteco é um **circuito especial** — visitação livre dos bares ao longo de semanas, votação por petisco.
+## Parte 2 — `BaratonaMap` em modo circuito (multi-POI)
 
-## Etapas
+Refatorar `BaratonaMap.tsx` para detectar quando o evento é circuito:
 
-### 1. Coletar dados do site oficial
-- Habilitar conector Firecrawl
-- Criar edge function `scrape-comida-di-boteco` que faz scrape de https://comidadibuteco.com.br/butecos/rio-de-janeiro/
-- Extrair para cada bar: nome, endereço, bairro, nome do petisco, descrição, foto, telefone (se disponível)
-- Salvar em tabela auxiliar `external_bar_sources` para reaproveitar e versionar
+- Adicionar prop opcional `mode?: 'route' | 'circuit'` (default detectado pelo número de bares com lat/lng e ausência de `current_bar_id` cronológico)
+- **Modo circuit:** calcular bounding box (`minLat/maxLat/minLng/maxLng`) que englobe todos os bares com coordenadas, com padding de ~10%, e usar como `bbox` do iframe OSM (sem `marker` único)
+- Renderizar uma lista compacta abaixo com **todos os bares** (sem `<details>`, já expandida) com link Google Maps individual
+- Botão "Ver rota completa" no Google Maps gerado dinamicamente concatenando `name + address` de cada bar (substitui a URL hardcoded de 9 bares fixos)
+- Esconder badge "in_transit" e botão de rota cronológica em modo circuit
+- Como `BaratonaMap` é renderizado via `MainTabs` que vem de `useBaratona()`, o modo é detectado lendo um novo campo `eventType` no contexto (ou inferido: se `appConfig.status === 'at_bar'` sem `current_bar_id` E todos bares têm `featured_dish`, é circuito)
+- **Decisão técnica:** expor `eventType` em `EventBaratonaContext` value + adicionar opcional no tipo de `BaratonaContext` (default `'open_baratona'` no legado)
 
-### 2. Adaptar schema para circuito especial
-- Adicionar à tabela `events`:
-  - `event_type` já existe (`open_baratona` | `special_circuit`)
-  - Adicionar `start_date` e `end_date` (período do circuito)
-  - Adicionar `cover_image_url` e `external_source_url`
-- Adicionar à tabela `event_bars`:
-  - `featured_dish` (texto - nome do petisco)
-  - `dish_description` (texto)
-  - `dish_image_url` (texto)
-  - Tornar `scheduled_time` opcional (circuitos não têm horário fixo)
+## Parte 3 — Análise: O que ainda falta (roadmap consolidado)
 
-### 3. Adaptar UI para tipo "circuito especial"
-- `EventLanding`: quando for `special_circuit`, mostrar grid de bares com cards de petiscos (foto + descrição) em vez de timeline cronológica
-- `EventLive`: esconder componentes de logística de van (VanStatus, CountdownTimer); manter check-in, votação, mapa
-- `BaratonaMap`: mostrar todos os bares como pontos de interesse simultâneos (sem origem/destino)
-- `VoteForm`: adaptar para votar no petisco (categoria única) em vez de 4 dimensões
+### Bloqueadores funcionais
 
-### 4. Seed do evento Comida di Buteco
-- Migration que cria o evento "Comida di Buteco RJ 2026" como `special_circuit`, público, visibilidade `public`
-- Após scrape, popular `event_bars` com todos os bares retornados (estimativa: 40-80 bares)
-- Owner do evento: super_admin (Nei)
+| # | Item | Impacto |
+|---|------|---------|
+| B1 | **Geocoding do Comida di Buteco não validado** — depende do scrape rodar; se Nominatim falhar muito, mapa fica vazio | Alto |
+| B2 | **`VoteForm` não adaptado para circuito** — ainda pede 4 dimensões; deveria ser nota única no petisco para `special_circuit` | Alto |
+| B3 | **`event_votes` schema** — tem 4 colunas obrigatórias (drink/food/vibe/service); circuito precisa permitir voto único (NULL nas 3 outras + `dish_score`) | Alto |
+| B4 | **Hook `useEventCheckins` permite múltiplos check-ins** mas não há constraint UNIQUE `(event_id, user_id, bar_id)` em `event_checkins` | Médio |
+| B5 | **`event_consumption` sem UNIQUE** `(event_id, user_id, bar_id, type, subtype)` — pode duplicar registros | Médio |
 
-### 5. Destaque na Home e Explore
-- Seção "Eventos em destaque" na Home mostrando o card do Comida di Buteco
-- Filtro no Explore por `event_type` (Baratona vs Circuito Especial)
+### Funcionalidades planejadas não entregues
 
-## Detalhes técnicos
+| # | Item | Status |
+|---|------|--------|
+| F1 | Convite por código para eventos privados (UI gerar + UI digitar) | Tabela existe, UI zero |
+| F2 | Editar evento após criação (nome, descrição, bares) | Não existe |
+| F3 | Página "Minhas Baratonas" (histórico criadas + participadas) | Não existe |
+| F4 | Filtro por cidade no Explore | Só busca por texto e tipo |
+| F5 | Compartilhar evento via Web Share API com og:image | Botão existe, sem og tags |
+| F6 | Indicador visual "Modo Legado" no `/nei` | Não existe |
+| F7 | Inserir `super_admin` no `platform_roles` para o owner do Nei | Sem seed |
+| F8 | Remover `as any` do `platformApi.ts` agora que types existem | Pendente |
+| F9 | `BaratonaWrapped` adaptado para eventos novos (lê de `event_*`) | Só funciona no legado |
+| F10 | `AdminRetrospective` adaptado para eventos novos | Só funciona no legado |
+| F11 | Notificações push para broadcasts em eventos novos | Só legado |
+| F12 | `event_app_config` auto-criado na criação do evento (hoje só insere bares) | Bug latente |
 
-**Por que Firecrawl e não fetch direto?**  
-O site provavelmente tem proteção anti-bot e renderização JS. Firecrawl resolve com `formats: ['markdown', { type: 'json', schema }]` retornando dados estruturados.
+### Polimento e UX
 
-**Schema do JSON extraction:**
-```typescript
-{
-  bars: [{
-    name: string,
-    address: string,
-    neighborhood: string,
-    dish_name: string,
-    dish_description: string,
-    dish_image_url: string,
-    phone?: string,
-    instagram?: string
-  }]
-}
+| # | Item |
+|---|------|
+| P1 | Loading skeleton em `EventLanding` (hoje só "Carregando...") |
+| P2 | Empty state melhor no Explore (já tem mas pode incluir "Comida di Buteco" como sugestão fixa) |
+| P3 | Validação de input no wizard `CreateEvent` (slug duplicado, mínimo 1 bar) |
+| P4 | OG meta tags dinâmicas por evento (`useSeo` já existe, falta usar em `EventLanding`) |
+| P5 | Capa do evento upload (storage bucket + UI no admin) — hoje só URL externa |
+
+## Ordem de execução proposta
+
+```text
+AGORA (este ciclo):
+1. Eventos em Destaque na Home + listFeaturedEventsApi
+2. BaratonaMap modo circuit (bounding box + lista expandida + rota dinâmica)
+3. Auto-criar event_app_config na criação do evento (F12, fix rápido)
+
+PRÓXIMO CICLO (alta prioridade):
+4. Adaptar VoteForm + event_votes schema para voto único de circuito (B2, B3)
+5. Constraints UNIQUE em event_checkins e event_consumption (B4, B5)
+6. Validar scrape Comida di Buteco end-to-end (B1)
+
+CICLO 3 (features):
+7. Convite por código (F1) + Página Minhas Baratonas (F3)
+8. Editar evento (F2) + filtro cidade (F4)
+
+CICLO 4 (polimento):
+9. Wrapped + Retrospective multi-evento (F9, F10)
+10. Remover `as any`, OG tags, validações (F8, P3, P4)
+11. Storage bucket de capa (P5)
 ```
 
-**Edge function (Deno) chama Firecrawl REST v2:**
-- Endpoint: `POST /scrape` com `formats: [{ type: 'json', schema }]`
-- Retorna lista normalizada de bares
-- Insere/atualiza `event_bars` para o evento `comida-di-boteco-rj-2026`
-- Re-executável (idempotente via `external_id` único)
+## Arquivos afetados neste ciclo
 
-**Geocoding dos endereços:**  
-Para o mapa funcionar, precisamos de lat/lng. Opções:
-- (a) Usar Nominatim (OpenStreetMap, gratuito) na própria edge function
-- (b) Deixar lat/lng nulo e mapa abrir no Google Maps com endereço como query
+**Modificar:**
+- `src/pages/Home.tsx` — nova seção entre Hero e Features
+- `src/lib/platformApi.ts` — `listFeaturedEventsApi`
+- `src/components/BaratonaMap.tsx` — modo circuit + bounding box + rota dinâmica
+- `src/contexts/EventBaratonaContext.tsx` — expor `eventType` no value
+- `src/contexts/BaratonaContext.tsx` — adicionar `eventType?: string` no tipo (default `'open_baratona'`)
 
-Recomendo **(a)** com fallback para (b).
+**Criar:**
+- `src/components/FeaturedEventCard.tsx` — card visual reutilizável
 
-## Perguntas antes de executar
-
-Preciso confirmar 3 pontos antes de começar:
-<lov-tool-use id="toolu_vrtx_01MHcefpyoaGhMXcfffS6EFr" name="questions--ask_questions" requires-approval="true" integration-id="questions" data="{\"questions\": [{\"header\":\"Escopo do scrape\",\"question\":\"O Comida di Buteco tem várias edições por ano e cidade. Quero confirmar o escopo inicial:\",\"options\":[{\"label\":\"Só Rio de Janeiro, edição atual\",\"description\":\"Apenas a página do RJ, criar 1 evento único\"},{\"label\":\"Rio + outras capitais\",\"description\":\"Scrape de várias cidades, criar 1 evento por cidade\"},{\"label\":\"Só Rio + permitir clonar\",\"description\":\"Começar com RJ, mas deixar função pronta para outras cidades\"}],\"multiSelect\":false},{\"header\":\"Votação no circuito\",\"question\":\"No Comida di Buteco oficial, vota-se no petisco (uma nota geral). Como adaptar nosso sistema de votação?\",\"options\":[{\"label\":\"Voto único no petisco (1-5)\",\"description\":\"Simplificar: uma nota geral por bar, igual ao oficial\"},{\"label\":\"Manter 4 dimensões (bebida, comida, ambiente, atendimento)\",\"description\":\"Reutilizar o sistema atual sem mudança\"},{\"label\":\"Híbrido: petisco em destaque + 3 outras\",\"description\":\"Petisco vira a nota principal, mantém ambiente e atendimento\"}],\"multiSelect\":false},{\"header\":\"Quem cria\",\"question\":\"Quem deve ser o dono (owner) deste evento Comida di Buteco?\",\"options\":[{\"label\":\"Super admin (Nei)\",\"description\":\"Evento oficial da plataforma, gerenciado pelo admin geral\"},{\"label\":\"Conta institucional 'Comida di Buteco'\",\"description\":\"Criar um perfil específico para eventos parceiros\"},{\"label\":\"Qualquer admin pode clonar\",\"description\":\"Template público que qualquer organizador pode usar como base\"}],\"multiSelect\":false}]}">
-</lov-tool-use>
-<lov-plan>
-
-# Plano: Integrar Comida di Buteco como Evento Especial
-
-## Contexto
-
-O usuário quer que o evento **Comida di Buteco - Rio de Janeiro** (https://comidadibuteco.com.br/butecos/rio-de-janeiro/) seja um evento pré-cadastrado na plataforma, do tipo **circuito especial** (visitação livre, votação por petisco), reutilizando todas as funcionalidades já criadas.
-
-## Visão geral
-
-1. **Scrape** do site oficial para extrair os bares participantes e seus petiscos
-2. **Adaptar** o schema e a UI para suportar circuitos especiais (sem cronograma de van)
-3. **Seed** do evento "Comida di Buteco RJ" pronto para uso
-4. **Destacar** o evento na Home e Explore
-
-## Etapas
-
-### 1. Coletar dados do site (Firecrawl)
-- Habilitar o conector **Firecrawl**
-- Edge function `scrape-comida-di-boteco` faz scrape de https://comidadibuteco.com.br/butecos/rio-de-janeiro/ usando `formats: [{ type: 'json', schema }]`
-- Para cada bar extrai: `name`, `address`, `neighborhood`, `dish_name`, `dish_description`, `dish_image_url`, `phone`, `instagram`
-- Geocoding via Nominatim (OSM, gratuito) para obter `lat`/`lng`
-- Insere/atualiza em `event_bars` (idempotente via `external_id`)
-
-### 2. Adaptar schema
-**`events`:** adicionar `start_date`, `end_date`, `cover_image_url`, `external_source_url`  
-**`event_bars`:** adicionar `featured_dish`, `dish_description`, `dish_image_url`, `external_id`; tornar `scheduled_time` opcional
-
-### 3. Adaptar UI para

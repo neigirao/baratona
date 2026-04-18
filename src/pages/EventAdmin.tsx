@@ -167,6 +167,47 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
           </Card>
         )}
 
+        {isPrivate && (
+          <Card className="border-primary/30">
+            <CardContent className="py-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-primary" /> Convites
+                </h3>
+                <Button onClick={handleCreateInvite} disabled={creatingInvite} size="sm" variant="outline">
+                  {creatingInvite ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Gerar código'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Compartilhe o link para que pessoas entrem no evento privado.
+              </p>
+              {invites.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhum código ainda.</p>
+              ) : (
+                <div className="space-y-2">
+                  {invites.map((inv) => {
+                    const exhausted = inv.maxUses != null && inv.usedCount >= inv.maxUses;
+                    return (
+                      <div key={inv.id} className="flex items-center gap-2 bg-muted/40 rounded-md p-2">
+                        <code className="font-mono font-bold text-base tracking-wider flex-1">{inv.code}</code>
+                        <span className={`text-[10px] ${exhausted ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {inv.usedCount}/{inv.maxUses ?? '∞'}
+                        </span>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyInvite(inv.code)} title="Copiar link">
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDeleteInvite(inv.id)} title="Revogar">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">

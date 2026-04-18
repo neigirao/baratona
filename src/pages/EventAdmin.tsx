@@ -11,10 +11,11 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2 } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2, KeyRound, Copy, Trash2 } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
 
 function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
   const {
@@ -26,8 +27,46 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [activeTab, setActiveTab] = useState('status');
   const [scraping, setScraping] = useState(false);
+  const [invites, setInvites] = useState<EventInvite[]>([]);
+  const [creatingInvite, setCreatingInvite] = useState(false);
   const isCircuit = event.eventType === 'special_circuit';
   const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+  const isPrivate = event.visibility === 'private';
+
+  useEffect(() => {
+    if (isPrivate) {
+      listInvitesApi(event.id).then(setInvites).catch(() => setInvites([]));
+    }
+  }, [event.id, isPrivate]);
+
+  const handleCreateInvite = async () => {
+    setCreatingInvite(true);
+    try {
+      const inv = await createInviteApi(event.id, { maxUses: 50 });
+      setInvites((prev) => [inv, ...prev]);
+      toast({ title: `Código gerado: ${inv.code}` });
+    } catch {
+      toast({ title: 'Erro ao gerar código', variant: 'destructive' });
+    } finally {
+      setCreatingInvite(false);
+    }
+  };
+
+  const handleCopyInvite = (code: string) => {
+    const url = `${window.location.origin}/baratona/${event.slug}?invite=${code}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Link copiado!' });
+  };
+
+  const handleDeleteInvite = async (id: string) => {
+    try {
+      await deleteInviteApi(id);
+      setInvites((prev) => prev.filter((i) => i.id !== id));
+      toast({ title: 'Código revogado' });
+    } catch {
+      toast({ title: 'Erro ao revogar', variant: 'destructive' });
+    }
+  };
 
   const handleScrape = async () => {
     setScraping(true);
@@ -124,6 +163,47 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
               <Button onClick={handleScrape} disabled={scraping} size="sm" variant="secondary" className="w-full">
                 {scraping ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</> : 'Importar / Atualizar butecos'}
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {isPrivate && (
+          <Card className="border-primary/30">
+            <CardContent className="py-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-primary" /> Convites
+                </h3>
+                <Button onClick={handleCreateInvite} disabled={creatingInvite} size="sm" variant="outline">
+                  {creatingInvite ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Gerar código'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Compartilhe o link para que pessoas entrem no evento privado.
+              </p>
+              {invites.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhum código ainda.</p>
+              ) : (
+                <div className="space-y-2">
+                  {invites.map((inv) => {
+                    const exhausted = inv.maxUses != null && inv.usedCount >= inv.maxUses;
+                    return (
+                      <div key={inv.id} className="flex items-center gap-2 bg-muted/40 rounded-md p-2">
+                        <code className="font-mono font-bold text-base tracking-wider flex-1">{inv.code}</code>
+                        <span className={`text-[10px] ${exhausted ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {inv.usedCount}/{inv.maxUses ?? '∞'}
+                        </span>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyInvite(inv.code)} title="Copiar link">
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDeleteInvite(inv.id)} title="Revogar">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

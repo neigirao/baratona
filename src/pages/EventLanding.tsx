@@ -1,18 +1,20 @@
-import { Link, Navigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSeo } from '@/hooks/useSeo';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import NotFound from './NotFound';
-import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, type EventBar } from '@/lib/platformApi';
+import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, redeemInviteApi, type EventBar } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
   const { user } = usePlatformAuth();
   const [event, setEvent] = useState<PlatformEvent | null>(null);
   const [bars, setBars] = useState<EventBar[]>([]);
@@ -20,6 +22,8 @@ export default function EventLanding() {
   const [error, setError] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
   const [joining, setJoining] = useState(false);
+  const inviteCode = params.get('invite');
+  const redeemAttempted = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -42,6 +46,24 @@ export default function EventLanding() {
     }
     load();
   }, [slug, user]);
+
+  useEffect(() => {
+    if (!user || !event || isMember || !inviteCode || redeemAttempted.current) return;
+    redeemAttempted.current = true;
+    redeemInviteApi(inviteCode, user.user_metadata?.full_name || user.email || 'Participante')
+      .then(() => {
+        setIsMember(true);
+        toast({ title: 'Você entrou na baratona! 🎉' });
+        navigate(`/baratona/${slug}`, { replace: true });
+      })
+      .catch((err) => {
+        toast({
+          title: 'Convite inválido',
+          description: err instanceof Error ? err.message : 'Tente novamente',
+          variant: 'destructive',
+        });
+      });
+  }, [user, event, isMember, inviteCode, navigate, slug]);
 
   useSeo(
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',

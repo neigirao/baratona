@@ -767,7 +767,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      redeem_event_invite: {
+        Args: { _code: string; _display_name: string }
+        Returns: {
+          event_id: string
+          slug: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

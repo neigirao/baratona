@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import FAQ from './pages/FAQ';
 import Explore from './pages/Explore';
 import CreateEvent from './pages/CreateEvent';
+import JoinByInvite from './pages/JoinByInvite';
 import EventLanding from './pages/EventLanding';
 import EventLive from './pages/EventLive';
 import EventAdmin from './pages/EventAdmin';
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/explorar" element={<Explore />} />
             <Route path="/criar" element={<CreateEvent />} />
+            <Route path="/entrar" element={<JoinByInvite />} />
             <Route path="/baratona/:slug" element={<EventLanding />} />
             <Route path="/baratona/:slug/live" element={<EventLive />} />
             <Route path="/baratona/:slug/admin" element={<EventAdmin />} />

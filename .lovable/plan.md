@@ -1,99 +1,121 @@
+# Status Geral do Projeto e Pendências
+
+## 1. Comida di Buteco — Está pronta?
+
+**Resposta curta:** A infraestrutura está pronta, mas o evento ainda precisa ser populado com dados reais.
+
+### O que já existe
+
+- Evento `comida-di-buteco-rj-2026` criado no banco (seed via migration)
+- Schema adaptado: `event_bars` com `featured_dish`, `dish_description`, `dish_image_url`, `external_id`, `neighborhood`, `phone`, `instagram`
+- Edge function `scrape-comida-di-boteco` pronta (Firecrawl + geocoding Nominatim)
+- UI `SpecialCircuitLanding` renderizando grid de petiscos
+- `EventLanding` faz branch automático para circuito
+- Mapa adaptado para modo circuito (bounding box multi-POI)
+- Voto único por petisco (`dish_score`) implementado
+- Botão "Importar / Atualizar butecos" no `EventAdmin`
+- Card aparece em "Eventos em destaque" na Home
+
+### O que falta para estar 100%
+
+- **Rodar o scrape** (botão no admin) — sem isso `event_bars` está vazio e a página fica sem bares
+- Validar que Firecrawl extraiu ≥30 bares e que Nominatim geocodou ≥80%
+- QA visual: abrir `/baratona/comida-di-buteco-rj-2026` e conferir grid de petiscos + mapa
+- Logs da edge function estão vazios → função nunca foi executada ainda
+
+## 2. Roadmap consolidado — O que falta
+
+### Bloqueadores (alta prioridade)
 
 
-# Plano: Eventos em Destaque + Mapa Multi-POI + Roadmap restante
+| #   | Item                                                     | Status      |
+| --- | -------------------------------------------------------- | ----------- |
+| B1  | Executar e validar scrape do Comida di Buteco end-to-end | Não rodado  |
+| B6  | Seed `super_admin` em `platform_roles` para owner do Nei | Pendente    |
+| B7  | Edge function logs vazios — confirmar deploy ativo       | A verificar |
 
-## Parte 1 — Eventos em Destaque na Home
 
-Adicionar uma seção entre o Hero e Features na `Home.tsx`:
+### Funcionalidades pendentes do plano original
 
-- Buscar até 3 eventos públicos ordenados por `start_date`/`event_date`, priorizando o `comida-di-buteco-rj-2026`
-- Card grande com `cover_image_url` (fallback para gradiente Orbitron), nome, cidade, badge "Circuito Especial" ou "Baratona", contagem de participantes (via `event_members count`), datas, botão "Ver evento" → `/baratona/:slug`
-- Nova função `listFeaturedEventsApi(limit)` em `platformApi.ts` (consulta `events` + `event_members count` + opcional `event_bars count`)
-- Skeleton enquanto carrega; se vazio, esconder a seção
 
-## Parte 2 — `BaratonaMap` em modo circuito (multi-POI)
+| #   | Item                                                                         | Estado                                 |
+| --- | ---------------------------------------------------------------------------- | -------------------------------------- |
+| F1  | **Convite por código** (gerar no admin + tela de entrada)                    | Tabela `event_invites` existe, UI zero |
+| F2  | **Editar evento** após criação (nome, bares, datas)                          | Não existe                             |
+| F3  | **Página "Minhas Baratonas"** (criadas + participadas)                       | Não existe                             |
+| F4  | **Filtro por cidade** no Explore                                             | Só busca texto + tipo                  |
+| F5  | **Web Share + og:image dinâmico** por evento                                 | Botão sem og tags                      |
+| F6  | **Indicador "Modo Legado"** no `/nei`                                        | Não existe                             |
+| F8  | Remover `as any` do `platformApi.ts`                                         | Pendente                               |
+| F9  | `BaratonaWrapped` ler de `event_*` (multi-evento)                            | Só funciona no `/nei`                  |
+| F10 | `AdminRetrospective` multi-evento (com ranking de petiscos via `dish_score`) | Só legado                              |
+| F11 | Notificações push para broadcasts em eventos novos                           | Só legado                              |
 
-Refatorar `BaratonaMap.tsx` para detectar quando o evento é circuito:
-
-- Adicionar prop opcional `mode?: 'route' | 'circuit'` (default detectado pelo número de bares com lat/lng e ausência de `current_bar_id` cronológico)
-- **Modo circuit:** calcular bounding box (`minLat/maxLat/minLng/maxLng`) que englobe todos os bares com coordenadas, com padding de ~10%, e usar como `bbox` do iframe OSM (sem `marker` único)
-- Renderizar uma lista compacta abaixo com **todos os bares** (sem `<details>`, já expandida) com link Google Maps individual
-- Botão "Ver rota completa" no Google Maps gerado dinamicamente concatenando `name + address` de cada bar (substitui a URL hardcoded de 9 bares fixos)
-- Esconder badge "in_transit" e botão de rota cronológica em modo circuit
-- Como `BaratonaMap` é renderizado via `MainTabs` que vem de `useBaratona()`, o modo é detectado lendo um novo campo `eventType` no contexto (ou inferido: se `appConfig.status === 'at_bar'` sem `current_bar_id` E todos bares têm `featured_dish`, é circuito)
-- **Decisão técnica:** expor `eventType` em `EventBaratonaContext` value + adicionar opcional no tipo de `BaratonaContext` (default `'open_baratona'` no legado)
-
-## Parte 3 — Análise: O que ainda falta (roadmap consolidado)
-
-### Bloqueadores funcionais
-
-| # | Item | Impacto |
-|---|------|---------|
-| B1 | **Geocoding do Comida di Buteco não validado** — depende do scrape rodar; se Nominatim falhar muito, mapa fica vazio | Alto |
-| B2 | **`VoteForm` não adaptado para circuito** — ainda pede 4 dimensões; deveria ser nota única no petisco para `special_circuit` | Alto |
-| B3 | **`event_votes` schema** — tem 4 colunas obrigatórias (drink/food/vibe/service); circuito precisa permitir voto único (NULL nas 3 outras + `dish_score`) | Alto |
-| B4 | **Hook `useEventCheckins` permite múltiplos check-ins** mas não há constraint UNIQUE `(event_id, user_id, bar_id)` em `event_checkins` | Médio |
-| B5 | **`event_consumption` sem UNIQUE** `(event_id, user_id, bar_id, type, subtype)` — pode duplicar registros | Médio |
-
-### Funcionalidades planejadas não entregues
-
-| # | Item | Status |
-|---|------|--------|
-| F1 | Convite por código para eventos privados (UI gerar + UI digitar) | Tabela existe, UI zero |
-| F2 | Editar evento após criação (nome, descrição, bares) | Não existe |
-| F3 | Página "Minhas Baratonas" (histórico criadas + participadas) | Não existe |
-| F4 | Filtro por cidade no Explore | Só busca por texto e tipo |
-| F5 | Compartilhar evento via Web Share API com og:image | Botão existe, sem og tags |
-| F6 | Indicador visual "Modo Legado" no `/nei` | Não existe |
-| F7 | Inserir `super_admin` no `platform_roles` para o owner do Nei | Sem seed |
-| F8 | Remover `as any` do `platformApi.ts` agora que types existem | Pendente |
-| F9 | `BaratonaWrapped` adaptado para eventos novos (lê de `event_*`) | Só funciona no legado |
-| F10 | `AdminRetrospective` adaptado para eventos novos | Só funciona no legado |
-| F11 | Notificações push para broadcasts em eventos novos | Só legado |
-| F12 | `event_app_config` auto-criado na criação do evento (hoje só insere bares) | Bug latente |
 
 ### Polimento e UX
 
-| # | Item |
-|---|------|
-| P1 | Loading skeleton em `EventLanding` (hoje só "Carregando...") |
-| P2 | Empty state melhor no Explore (já tem mas pode incluir "Comida di Buteco" como sugestão fixa) |
-| P3 | Validação de input no wizard `CreateEvent` (slug duplicado, mínimo 1 bar) |
-| P4 | OG meta tags dinâmicas por evento (`useSeo` já existe, falta usar em `EventLanding`) |
-| P5 | Capa do evento upload (storage bucket + UI no admin) — hoje só URL externa |
 
-## Ordem de execução proposta
+| #   | Item                                                                       |
+| --- | -------------------------------------------------------------------------- |
+| P1  | Loading skeleton em `EventLanding` (hoje só "Carregando...")               |
+| P3  | Validação de slug duplicado + mínimo 1 bar no `CreateEvent`                |
+| P4  | OG meta tags dinâmicas via `useSeo` no `EventLanding`                      |
+| P5  | Upload de capa do evento (storage bucket + UI admin) — hoje só URL externa |
+| P6  | Empty state no Explore destacando o Comida di Buteco como sugestão fixa    |
+
+
+### Já entregues (limpando o roadmap)
+
+- ✅ B2/B3 — VoteForm + `event_votes` adaptados (voto único `dish_score`)
+- ✅ B4/B5 — UNIQUE constraints em `event_checkins` e `event_consumption`
+- ✅ F12 — `event_app_config` auto-criado no `createEventApi`
+- ✅ Eventos em destaque na Home
+- ✅ Mapa modo circuito (bounding box + rota dinâmica)
+- ✅ Filtro por tipo (Baratona / Circuito) no Explore
+
+## 3. Análise crítica adicional (não estava no roadmap original)
+
+
+| #   | Item                                                                                                                     | Por quê importa                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| N1  | **Ranking de petiscos no `SpecialCircuitLanding**` — agregar `dish_score` médio + nº de votos por bar                    | Hoje os petiscos não mostram nota; é o coração do Comida di Buteco |
+| N2  | **Ordenação dos cards no circuito** — atualmente por `bar_order`; deveria oferecer "melhor avaliados" e "mais visitados" | UX de descoberta                                                   |
+| N3  | `**event_invites` sem RLS de DELETE/UPDATE** — owner não consegue revogar código                                         | Segurança                                                          |
+| N4  | **Página de busca de bar individual** dentro do circuito (filtro por bairro)                                             | 40-80 bares ficam difíceis de navegar sem filtro                   |
+| N5  | **Compartilhar petisco específico** (deep link `?bar=<id>`)                                                              | Viralização                                                        |
+| N6  | `**useSeo` não usado em `EventLanding**` — sem título/descrição dinâmicos no browser                                     | SEO + share                                                        |
+
+
+## 4. Ordem de execução proposta para os próximos ciclos
 
 ```text
-AGORA (este ciclo):
-1. Eventos em Destaque na Home + listFeaturedEventsApi
-2. BaratonaMap modo circuit (bounding box + lista expandida + rota dinâmica)
-3. Auto-criar event_app_config na criação do evento (F12, fix rápido)
+CICLO ATUAL (próximo):
+1. Executar scrape do Comida di Buteco e validar dados (B1, B7)
+2. Ranking de petiscos no SpecialCircuitLanding (N1) — média de dish_score + nº votos
+3. Filtro por bairro no circuito (N4)
 
-PRÓXIMO CICLO (alta prioridade):
-4. Adaptar VoteForm + event_votes schema para voto único de circuito (B2, B3)
-5. Constraints UNIQUE em event_checkins e event_consumption (B4, B5)
-6. Validar scrape Comida di Buteco end-to-end (B1)
+CICLO SEGUINTE:
+4. Convite por código (F1) — gerar no admin + tela de entrada
+5. Página "Minhas Baratonas" (F3)
+6. Editar evento (F2) + filtro cidade no Explore (F4)
 
-CICLO 3 (features):
-7. Convite por código (F1) + Página Minhas Baratonas (F3)
-8. Editar evento (F2) + filtro cidade (F4)
+CICLO 3:
+7. OG tags dinâmicas + Web Share (F5, P4, useSeo no EventLanding)
+8. Wrapped + Retrospective multi-evento com ranking de petiscos (F9, F10)
+9. Loading skeletons + validações (P1, P3)
 
 CICLO 4 (polimento):
-9. Wrapped + Retrospective multi-evento (F9, F10)
-10. Remover `as any`, OG tags, validações (F8, P3, P4)
-11. Storage bucket de capa (P5)
+10. Upload de capa via storage bucket (P5)
+11. Notificações push multi-evento (F11)
+12. Limpeza: remover `as any`, indicador legado, seed super_admin (F8, F6, B6)
 ```
 
-## Arquivos afetados neste ciclo
+## 5. Ação recomendada agora
 
-**Modificar:**
-- `src/pages/Home.tsx` — nova seção entre Hero e Features
-- `src/lib/platformApi.ts` — `listFeaturedEventsApi`
-- `src/components/BaratonaMap.tsx` — modo circuit + bounding box + rota dinâmica
-- `src/contexts/EventBaratonaContext.tsx` — expor `eventType` no value
-- `src/contexts/BaratonaContext.tsx` — adicionar `eventType?: string` no tipo (default `'open_baratona'`)
+**Sugiro começar pelo ciclo atual:**
 
-**Criar:**
-- `src/components/FeaturedEventCard.tsx` — card visual reutilizável
+1. Rodar por script dessa vezimportação do Comida di Buteco (sem a necessidade de clicar no botão "Importar / Atualizar butecos" em `/baratona/comida-di-buteco-rj-2026/admin`)
+2. Validar resultado (quantos bares vieram, quantos geocodaram)
+3. Implementar ranking de petiscos por `dish_score` no grid
 
+Quer que eu já implemente o **ranking de petiscos + filtro por bairro** enquanto você roda o scrape, ou prefere validar o scrape primeiro?

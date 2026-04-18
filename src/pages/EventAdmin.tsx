@@ -11,10 +11,11 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2 } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2, KeyRound, Copy, Trash2 } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
 
 function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
   const {
@@ -26,8 +27,46 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [activeTab, setActiveTab] = useState('status');
   const [scraping, setScraping] = useState(false);
+  const [invites, setInvites] = useState<EventInvite[]>([]);
+  const [creatingInvite, setCreatingInvite] = useState(false);
   const isCircuit = event.eventType === 'special_circuit';
   const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+  const isPrivate = event.visibility === 'private';
+
+  useEffect(() => {
+    if (isPrivate) {
+      listInvitesApi(event.id).then(setInvites).catch(() => setInvites([]));
+    }
+  }, [event.id, isPrivate]);
+
+  const handleCreateInvite = async () => {
+    setCreatingInvite(true);
+    try {
+      const inv = await createInviteApi(event.id, { maxUses: 50 });
+      setInvites((prev) => [inv, ...prev]);
+      toast({ title: `Código gerado: ${inv.code}` });
+    } catch {
+      toast({ title: 'Erro ao gerar código', variant: 'destructive' });
+    } finally {
+      setCreatingInvite(false);
+    }
+  };
+
+  const handleCopyInvite = (code: string) => {
+    const url = `${window.location.origin}/baratona/${event.slug}?invite=${code}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Link copiado!' });
+  };
+
+  const handleDeleteInvite = async (id: string) => {
+    try {
+      await deleteInviteApi(id);
+      setInvites((prev) => prev.filter((i) => i.id !== id));
+      toast({ title: 'Código revogado' });
+    } catch {
+      toast({ title: 'Erro ao revogar', variant: 'destructive' });
+    }
+  };
 
   const handleScrape = async () => {
     setScraping(true);

@@ -1,6 +1,6 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Globe, Settings, PartyPopper } from 'lucide-react';
+import { Globe, Settings, PartyPopper, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 

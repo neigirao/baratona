@@ -40,6 +40,13 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
             </Button>
           )}
           
+          {/* Join with code */}
+          <Link to="/entrar" title="Entrar com código">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary">
+              <KeyRound className="h-4 w-4" />
+            </Button>
+          </Link>
+
           {/* Language Toggle */}
           <Button
             variant="outline"

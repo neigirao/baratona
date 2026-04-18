@@ -1,13 +1,13 @@
-import { Link, Navigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSeo } from '@/hooks/useSeo';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import NotFound from './NotFound';
-import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, type EventBar } from '@/lib/platformApi';
+import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, redeemInviteApi, type EventBar } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 

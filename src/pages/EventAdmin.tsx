@@ -11,11 +11,13 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2, KeyRound, Copy, Trash2 } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
+import { EventRetrospective } from '@/components/EventRetrospective';
+import { EventWrapped } from '@/components/EventWrapped';
 
 function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
   const {
@@ -29,6 +31,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
   const [scraping, setScraping] = useState(false);
   const [invites, setInvites] = useState<EventInvite[]>([]);
   const [creatingInvite, setCreatingInvite] = useState(false);
+  const [showWrapped, setShowWrapped] = useState(false);
   const isCircuit = event.eventType === 'special_circuit';
   const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
   const isPrivate = event.visibility === 'private';
@@ -210,10 +213,11 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="status">Controle</TabsTrigger>
             <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
             <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
+            <TabsTrigger value="retro"><BarChart3 className="w-3.5 h-3.5" /></TabsTrigger>
           </TabsList>
 
           {/* Control tab */}
@@ -318,8 +322,24 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
               );
             })}
           </TabsContent>
+
+          {/* Retrospective tab */}
+          <TabsContent value="retro" className="space-y-3 mt-4">
+            <Button onClick={() => setShowWrapped(true)} variant="secondary" className="w-full">
+              <PartyPopper className="w-4 h-4 mr-2" /> Abrir Wrapped do evento
+            </Button>
+            <EventRetrospective isCircuit={isCircuit} />
+          </TabsContent>
         </Tabs>
       </div>
+
+      {showWrapped && (
+        <EventWrapped
+          eventName={event.name}
+          isCircuit={isCircuit}
+          onClose={() => setShowWrapped(false)}
+        />
+      )}
     </div>
   );
 }

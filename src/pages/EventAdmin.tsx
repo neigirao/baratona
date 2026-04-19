@@ -31,6 +31,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
   const [scraping, setScraping] = useState(false);
   const [invites, setInvites] = useState<EventInvite[]>([]);
   const [creatingInvite, setCreatingInvite] = useState(false);
+  const [showWrapped, setShowWrapped] = useState(false);
   const isCircuit = event.eventType === 'special_circuit';
   const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
   const isPrivate = event.visibility === 'private';
@@ -212,10 +213,11 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="status">Controle</TabsTrigger>
             <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
             <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
+            <TabsTrigger value="retro"><BarChart3 className="w-3.5 h-3.5" /></TabsTrigger>
           </TabsList>
 
           {/* Control tab */}

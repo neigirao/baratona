@@ -194,10 +194,12 @@ export default function Home() {
       <footer className="border-t border-border/50 py-8">
         <div className="container max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p style={{ fontFamily: 'Orbitron, sans-serif' }} className="font-bold text-foreground">BARATONA</p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap justify-center">
             <Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
             <Link to="/explorar" className="hover:text-foreground transition-colors">Explorar</Link>
             <Link to="/criar" className="hover:text-foreground transition-colors">Criar</Link>
+            <Link to="/minhas-baratonas" className="hover:text-foreground transition-colors">Minhas baratonas</Link>
+            <Link to="/entrar" className="hover:text-foreground transition-colors">Entrar com código</Link>
           </div>
         </div>
       </footer>

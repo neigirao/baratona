@@ -350,6 +350,56 @@ export async function redeemInviteApi(code: string, displayName: string): Promis
   return { slug: (row as any).slug, eventId: (row as any).event_id };
 }
 
+export async function listEventsByOwnerApi(userId: string): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('owner_user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const events = (data || []).map(mapRow);
+  return Promise.all(
+    events.map(async (e) => ({
+      ...e,
+      barCount: await getEventBarCountApi(e.id),
+      memberCount: await getEventMemberCountApi(e.id),
+    }))
+  );
+}
+
+export async function listEventsJoinedByUserApi(
+  userId: string
+): Promise<(PlatformEvent & { barCount: number; memberCount: number; role: string })[]> {
+  const { data: members, error: mErr } = await supabase
+    .from('event_members')
+    .select('event_id, role, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (mErr) throw mErr;
+  const ids = Array.from(new Set((members || []).map((m: any) => m.event_id)));
+  if (ids.length === 0) return [];
+  const { data: events, error: eErr } = await supabase
+    .from('events')
+    .select('*')
+    .in('id', ids);
+  if (eErr) throw eErr;
+  const roleById: Record<string, string> = {};
+  (members || []).forEach((m: any) => { roleById[m.event_id] = m.role; });
+  const mapped = (events || []).map(mapRow);
+  // Preserve ordering by member.created_at desc
+  const orderIndex: Record<string, number> = {};
+  ids.forEach((id, i) => { orderIndex[id] = i; });
+  mapped.sort((a, b) => (orderIndex[a.id] ?? 0) - (orderIndex[b.id] ?? 0));
+  return Promise.all(
+    mapped.map(async (e) => ({
+      ...e,
+      barCount: await getEventBarCountApi(e.id),
+      memberCount: await getEventMemberCountApi(e.id),
+      role: roleById[e.id] || 'participant',
+    }))
+  );
+}
+
 export async function isEventMemberApi(eventId: string, userId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from('event_members')

@@ -65,9 +65,15 @@ export default function EventLanding() {
       });
   }, [user, event, isMember, inviteCode, navigate, slug]);
 
+  const shareUrl = event ? `${window.location.origin}/baratona/${event.slug}` : undefined;
+  const seoDescription = event
+    ? event.description ||
+      `${event.eventType === 'special_circuit' ? 'Circuito de butecos' : 'Baratona'} em ${event.city} com ${bars.length} ${bars.length === 1 ? 'parada' : 'paradas'}.`
+    : 'Baratona na plataforma Baratona';
   useSeo(
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',
-    event?.description || 'Baratona na plataforma Baratona'
+    seoDescription,
+    { image: event?.coverImageUrl, url: shareUrl, type: 'article' }
   );
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;
@@ -92,13 +98,25 @@ export default function EventLanding() {
     }
   };
 
-  const handleShare = () => {
-    const url = `${window.location.origin}/baratona/${event.slug}`;
-    if (navigator.share) {
-      navigator.share({ title: event.name, text: event.description, url });
-    } else {
-      navigator.clipboard.writeText(url);
-      toast({ title: 'Link copiado!' });
+  const handleShare = async () => {
+    if (!event) return;
+    const url = shareUrl!;
+    const shareText = `${event.name} — ${event.city}${event.description ? ` · ${event.description.slice(0, 120)}` : ''}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.name, text: shareText, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'Link copiado!', description: url });
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Link copiado!', description: url });
+      } catch {
+        toast({ title: 'Não foi possível compartilhar', variant: 'destructive' });
+      }
     }
   };
 

@@ -91,6 +91,13 @@ export default function Home() {
             <Button asChild variant="outline" size="lg" className="text-base border-muted-foreground/30">
               <Link to="/explorar">Explorar baratonas</Link>
             </Button>
+            {user && (
+              <Button asChild variant="ghost" size="lg" className="text-base">
+                <Link to="/minhas-baratonas">
+                  <ListChecks className="w-5 h-5 mr-1" /> Minhas baratonas
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>

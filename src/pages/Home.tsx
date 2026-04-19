@@ -18,6 +18,7 @@ export default function Home() {
     'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.'
   );
 
+  const { user } = usePlatformAuth();
   const [featured, setFeatured] = useState<FeaturedEvent[] | null>(null);
   useEffect(() => {
     listFeaturedEventsApi(3).then(setFeatured).catch(() => setFeatured([]));

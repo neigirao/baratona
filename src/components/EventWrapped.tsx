@@ -87,7 +87,7 @@ export function EventWrapped({ eventName, isCircuit = false, onClose }: Props) {
         bestAvg = avg; bestId = bar.id; bestVotes = relevantVotes;
       }
     });
-    const bar = bars.find((b: any) => b.id === bestId);
+    const bar = bars.find((b: any) => b.id === bestId) as any;
     if (!bar) return null;
     return { name: bar.name, dish: bar.featured_dish, rating: bestAvg.toFixed(1), votes: bestVotes };
   }, [bars, getBarVotes, isCircuit]);

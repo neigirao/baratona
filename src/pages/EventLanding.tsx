@@ -98,13 +98,25 @@ export default function EventLanding() {
     }
   };
 
-  const handleShare = () => {
-    const url = `${window.location.origin}/baratona/${event.slug}`;
-    if (navigator.share) {
-      navigator.share({ title: event.name, text: event.description, url });
-    } else {
-      navigator.clipboard.writeText(url);
-      toast({ title: 'Link copiado!' });
+  const handleShare = async () => {
+    if (!event) return;
+    const url = shareUrl!;
+    const shareText = `${event.name} — ${event.city}${event.description ? ` · ${event.description.slice(0, 120)}` : ''}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.name, text: shareText, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'Link copiado!', description: url });
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Link copiado!', description: url });
+      } catch {
+        toast({ title: 'Não foi possível compartilhar', variant: 'destructive' });
+      }
     }
   };
 

@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSeo } from '@/hooks/useSeo';
-import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles } from 'lucide-react';
+import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles, ListChecks } from 'lucide-react';
 import { listFeaturedEventsApi } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { FeaturedEventCard } from '@/components/FeaturedEventCard';
+import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 
 type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 

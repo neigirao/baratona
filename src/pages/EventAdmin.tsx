@@ -322,8 +322,24 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
               );
             })}
           </TabsContent>
+
+          {/* Retrospective tab */}
+          <TabsContent value="retro" className="space-y-3 mt-4">
+            <Button onClick={() => setShowWrapped(true)} variant="secondary" className="w-full">
+              <PartyPopper className="w-4 h-4 mr-2" /> Abrir Wrapped do evento
+            </Button>
+            <EventRetrospective isCircuit={isCircuit} />
+          </TabsContent>
         </Tabs>
       </div>
+
+      {showWrapped && (
+        <EventWrapped
+          eventName={event.name}
+          isCircuit={isCircuit}
+          onClose={() => setShowWrapped(false)}
+        />
+      )}
     </div>
   );
 }

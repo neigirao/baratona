@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { findEventBySlugApi, getEventBarsApi, isEventMemberApi, joinEventApi } from '@/lib/platformApi';
+import { findEventBySlugApi } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
@@ -11,13 +11,17 @@ import { SyncIndicator } from '@/components/SyncIndicator';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { QuickAddFAB } from '@/components/QuickAddFAB';
 import { useBaratona } from '@/contexts/BaratonaContext';
+import { EventWrapped } from '@/components/EventWrapped';
 import NotFound from './NotFound';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { LogIn, Beer } from 'lucide-react';
+import { LogIn, Beer, PartyPopper } from 'lucide-react';
 
 function EventLiveInner({ event }: { event: PlatformEvent }) {
-  const { currentUser, secondsAgo, isRefreshing, refreshAll } = useBaratona();
+  const { currentUser, secondsAgo, isRefreshing, refreshAll, appConfig } = useBaratona();
+  const [showWrapped, setShowWrapped] = useState(false);
+  const isCircuit = event.eventType === 'special_circuit';
+  const isFinished = appConfig?.status === 'finished';
 
   // If no currentUser (not a member), show join prompt
   if (!currentUser) {
@@ -43,15 +47,30 @@ function EventLiveInner({ event }: { event: PlatformEvent }) {
     <>
       <OfflineIndicator />
       <PullToRefresh onRefresh={refreshAll} className="min-h-screen bg-background">
-        <Header />
+        <Header onShowWrapped={() => setShowWrapped(true)} />
         <main className="container max-w-lg mx-auto px-4 py-4 pb-24">
           <div className="flex justify-center mb-3">
             <SyncIndicator secondsAgo={secondsAgo} isRefreshing={isRefreshing} />
           </div>
+          {isFinished && (
+            <div className="mb-4">
+              <Button onClick={() => setShowWrapped(true)} variant="secondary" className="w-full font-bold">
+                <PartyPopper className="w-4 h-4 mr-2" />
+                Ver retrospectiva do evento
+              </Button>
+            </div>
+          )}
           <MainTabs />
         </main>
       </PullToRefresh>
       <QuickAddFAB />
+      {showWrapped && (
+        <EventWrapped
+          eventName={event.name}
+          isCircuit={isCircuit}
+          onClose={() => setShowWrapped(false)}
+        />
+      )}
     </>
   );
 }

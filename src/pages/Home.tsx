@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSeo } from '@/hooks/useSeo';
-import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles } from 'lucide-react';
+import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles, ListChecks } from 'lucide-react';
 import { listFeaturedEventsApi } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { FeaturedEventCard } from '@/components/FeaturedEventCard';
+import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 
 type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 
@@ -17,6 +18,7 @@ export default function Home() {
     'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.'
   );
 
+  const { user } = usePlatformAuth();
   const [featured, setFeatured] = useState<FeaturedEvent[] | null>(null);
   useEffect(() => {
     listFeaturedEventsApi(3).then(setFeatured).catch(() => setFeatured([]));
@@ -89,6 +91,13 @@ export default function Home() {
             <Button asChild variant="outline" size="lg" className="text-base border-muted-foreground/30">
               <Link to="/explorar">Explorar baratonas</Link>
             </Button>
+            {user && (
+              <Button asChild variant="ghost" size="lg" className="text-base">
+                <Link to="/minhas-baratonas">
+                  <ListChecks className="w-5 h-5 mr-1" /> Minhas baratonas
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -185,10 +194,12 @@ export default function Home() {
       <footer className="border-t border-border/50 py-8">
         <div className="container max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p style={{ fontFamily: 'Orbitron, sans-serif' }} className="font-bold text-foreground">BARATONA</p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap justify-center">
             <Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
             <Link to="/explorar" className="hover:text-foreground transition-colors">Explorar</Link>
             <Link to="/criar" className="hover:text-foreground transition-colors">Criar</Link>
+            <Link to="/minhas-baratonas" className="hover:text-foreground transition-colors">Minhas baratonas</Link>
+            <Link to="/entrar" className="hover:text-foreground transition-colors">Entrar com código</Link>
           </div>
         </div>
       </footer>

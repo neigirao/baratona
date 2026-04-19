@@ -43,7 +43,10 @@ export default function Explore() {
           <Button variant="ghost" size="icon" asChild>
             <Link to="/"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <h1 className="text-3xl font-bold">Explorar</h1>
+          <h1 className="text-3xl font-bold flex-1">Explorar</h1>
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link to="/minhas-baratonas">Minhas baratonas</Link>
+          </Button>
         </div>
 
         <div className="relative">

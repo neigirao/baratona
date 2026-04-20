@@ -251,26 +251,29 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // 2. Discover ALL listing pages via map (site uses /butecos/<city>/page/N pagination)
-    console.log(`Mapping ${listUrl}...`);
+    // 2. Discover ALL listing pages: try map on root + brute-force /page/2..15
+    console.log(`Discovering listing pages from ${listUrl}...`);
     let allLinks: string[] = [];
     try {
-      allLinks = await firecrawlMap(listUrl, apiKey);
+      allLinks = await firecrawlMap('https://comidadibuteco.com.br', apiKey, 'rio de janeiro');
     } catch (e) {
-      console.warn('Map call failed, will scrape only page 1:', e);
+      console.warn('Map call failed:', e);
     }
 
-    // Find pagination links: /butecos/rio-de-janeiro/page/N
     const baseListing = listUrl.replace(/\/$/, '');
+    const basePath = new URL(baseListing).pathname.toLowerCase();
     const pageUrls = new Set<string>([listUrl]);
     for (const link of allLinks) {
       try {
         const u = new URL(link);
-        if (u.pathname.toLowerCase().startsWith(new URL(baseListing).pathname.toLowerCase()) &&
-            /\/page\/\d+\/?$/.test(u.pathname)) {
+        if (u.pathname.toLowerCase().startsWith(basePath) && /\/page\/\d+\/?$/.test(u.pathname)) {
           pageUrls.add(u.toString());
         }
       } catch { /* ignore */ }
+    }
+    // Brute-force pages 2..15 in case map missed any (404s will simply return zero bars)
+    for (let p = 2; p <= 15; p++) {
+      pageUrls.add(`${baseListing}/page/${p}`);
     }
     const pages = Array.from(pageUrls);
     console.log(`Will scrape ${pages.length} listing pages`);

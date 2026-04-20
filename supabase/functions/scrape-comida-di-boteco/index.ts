@@ -251,43 +251,48 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // 2. Discover bar URLs via map
+    // 2. Discover ALL listing pages via map (site uses /butecos/<city>/page/N pagination)
     console.log(`Mapping ${listUrl}...`);
     let allLinks: string[] = [];
     try {
-      allLinks = await firecrawlMap('https://comidadibuteco.com.br', apiKey, 'rio de janeiro buteco');
+      allLinks = await firecrawlMap(listUrl, apiKey);
     } catch (e) {
-      console.warn('Map call failed, will fallback to listing scrape:', e);
+      console.warn('Map call failed, will scrape only page 1:', e);
     }
 
-    let barUrls = Array.from(new Set(allLinks.filter(isBarUrl)));
-    // Filter to RJ bars when possible (URL containing rj/rio context — most bar pages don't, so keep all)
-    console.log(`Map returned ${allLinks.length} links, ${barUrls.length} look like bar pages`);
-
-    // 3. Scrape each bar in parallel (with concurrency)
-    let bars: ScrapedBar[] = [];
-    if (barUrls.length > 0) {
-      barUrls = barUrls.slice(0, maxBars);
-      console.log(`Scraping ${barUrls.length} bar pages with concurrency ${concurrency}...`);
-      const scraped = await mapWithConcurrency(barUrls, concurrency, async (url) => {
-        const r = await firecrawlScrapeBar(url, apiKey);
-        return r;
-      });
-      bars = scraped.filter((b): b is ScrapedBar => Boolean(b && b.name));
-    }
-
-    // 4. Fallback: scrape listing page directly if map didn't yield enough
-    if (bars.length < 10) {
-      console.log(`Only ${bars.length} bars from map mode, falling back to listing scrape`);
-      const listingBars = await firecrawlScrapeListing(listUrl, apiKey);
-      // Merge by name
-      const seen = new Set(bars.map((b) => slugify(b.name)));
-      for (const b of listingBars) {
-        if (!seen.has(slugify(b.name))) {
-          bars.push(b);
-          seen.add(slugify(b.name));
+    // Find pagination links: /butecos/rio-de-janeiro/page/N
+    const baseListing = listUrl.replace(/\/$/, '');
+    const pageUrls = new Set<string>([listUrl]);
+    for (const link of allLinks) {
+      try {
+        const u = new URL(link);
+        if (u.pathname.toLowerCase().startsWith(new URL(baseListing).pathname.toLowerCase()) &&
+            /\/page\/\d+\/?$/.test(u.pathname)) {
+          pageUrls.add(u.toString());
         }
+      } catch { /* ignore */ }
+    }
+    const pages = Array.from(pageUrls);
+    console.log(`Will scrape ${pages.length} listing pages`);
+
+    // 3. Scrape each listing page in parallel and merge bars
+    const bars: ScrapedBar[] = [];
+    const seenNames = new Set<string>();
+    const pageResults = await mapWithConcurrency(pages, Math.min(concurrency, 4), async (pageUrl) => {
+      const list = await firecrawlScrapeListing(pageUrl, apiKey);
+      console.log(`Page ${pageUrl} returned ${list.length} bars`);
+      return list;
+    });
+    for (const list of pageResults) {
+      for (const b of list || []) {
+        if (!b?.name) continue;
+        const key = slugify(b.name);
+        if (seenNames.has(key)) continue;
+        seenNames.add(key);
+        bars.push(b);
+        if (bars.length >= maxBars) break;
       }
+      if (bars.length >= maxBars) break;
     }
 
     console.log(`Total bars to upsert: ${bars.length}`);

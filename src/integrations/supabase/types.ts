@@ -306,6 +306,45 @@ export type Database = {
           },
         ]
       }
+      event_bar_favorites: {
+        Row: {
+          bar_id: string
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bar_id: string
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bar_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bar_favorites_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "event_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_bar_favorites_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_bars: {
         Row: {
           address: string
@@ -767,6 +806,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_baratona_from_favorites: {
+        Args: { _bar_ids: string[]; _name: string; _source_event_id: string }
+        Returns: {
+          event_id: string
+          slug: string
+        }[]
+      }
       redeem_event_invite: {
         Args: { _code: string; _display_name: string }
         Returns: {
@@ -774,6 +820,7 @@ export type Database = {
           slug: string
         }[]
       }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

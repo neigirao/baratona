@@ -1,4 +1,4 @@
-// Edge function: scrape Comida di Buteco RJ via Firecrawl and populate event_bars
+// Edge function: scrape Comida di Buteco RJ via Firecrawl (map + batch scrape) and populate event_bars
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -8,7 +8,8 @@ const corsHeaders = {
 };
 
 const DEFAULT_SLUG = 'comida-di-buteco-rj-2026';
-const DEFAULT_URL = 'https://comidadibuteco.com.br/butecos/rio-de-janeiro/';
+const DEFAULT_LIST_URL = 'https://comidadibuteco.com.br/butecos/rio-de-janeiro/';
+const FIRECRAWL_BASE = 'https://api.firecrawl.dev/v2';
 
 interface ScrapedBar {
   name: string;
@@ -20,71 +21,101 @@ interface ScrapedBar {
   phone?: string;
   instagram?: string;
   external_id?: string;
+  source_url?: string;
 }
 
-async function firecrawlScrape(url: string, apiKey: string) {
-  const schema = {
-    type: 'object',
-    properties: {
-      bars: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            name: { type: 'string', description: 'Nome do buteco/bar participante' },
-            address: { type: 'string', description: 'Endereço completo (rua, número)' },
-            neighborhood: { type: 'string', description: 'Bairro do bar no Rio de Janeiro' },
-            dish_name: { type: 'string', description: 'Nome do petisco em concurso' },
-            dish_description: { type: 'string', description: 'Descrição/ingredientes do petisco' },
-            dish_image_url: { type: 'string', description: 'URL absoluta da foto do petisco' },
-            phone: { type: 'string', description: 'Telefone com DDD' },
-            instagram: { type: 'string', description: 'Handle do Instagram (@xxx) ou URL' },
-            external_id: { type: 'string', description: 'Identificador único do bar (slug ou ID na URL)' },
-          },
-          required: ['name'],
-        },
-      },
-    },
-    required: ['bars'],
-  };
+const BAR_SCHEMA = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', description: 'Nome do buteco/bar' },
+    address: { type: 'string', description: 'Endereço completo (rua, número, bairro)' },
+    neighborhood: { type: 'string', description: 'Bairro' },
+    dish_name: { type: 'string', description: 'Nome do petisco em concurso' },
+    dish_description: { type: 'string', description: 'Descrição/ingredientes do petisco' },
+    dish_image_url: { type: 'string', description: 'URL absoluta da foto do petisco' },
+    phone: { type: 'string', description: 'Telefone com DDD' },
+    instagram: { type: 'string', description: 'Handle do Instagram (@xxx) ou URL completa' },
+  },
+  required: ['name'],
+};
 
-  const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
+// === Firecrawl helpers ===
+
+async function firecrawlMap(url: string, apiKey: string, search?: string): Promise<string[]> {
+  const res = await fetch(`${FIRECRAWL_BASE}/map`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, search, limit: 500, includeSubdomains: false }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`Firecrawl map ${res.status}: ${JSON.stringify(data)}`);
+  return Array.isArray(data?.links) ? data.links : (Array.isArray(data?.data?.links) ? data.data.links : []);
+}
+
+async function firecrawlScrapeBar(url: string, apiKey: string): Promise<ScrapedBar | null> {
+  const res = await fetch(`${FIRECRAWL_BASE}/scrape`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       url,
       formats: [
         {
           type: 'json',
-          schema,
+          schema: BAR_SCHEMA,
           prompt:
-            'Extraia todos os butecos/bares participantes listados na página. Para cada um, capture nome, endereço completo, bairro, nome do petisco em concurso, descrição do petisco, URL absoluta da foto do petisco, telefone e Instagram. Use o slug da URL do bar como external_id.',
+            'Extraia os dados do buteco/bar nesta página. Capture nome do bar, endereço completo, bairro, nome e descrição do petisco em concurso, URL absoluta da foto do petisco, telefone com DDD e Instagram.',
         },
       ],
       onlyMainContent: true,
-      waitFor: 2500,
+      waitFor: 1500,
     }),
   });
-
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(`Firecrawl error ${res.status}: ${JSON.stringify(data)}`);
+    console.warn(`scrape ${url} failed: ${res.status}`, data);
+    return null;
   }
-  // Firecrawl v2 returns either { data: { json: {...} } } or { json: {...} }
-  const json = data?.data?.json ?? data?.json ?? data?.data ?? {};
-  const bars: ScrapedBar[] = Array.isArray(json?.bars) ? json.bars : [];
-  return bars;
+  const json = data?.data?.json ?? data?.json ?? null;
+  if (!json || !json.name) return null;
+  return { ...json, source_url: url } as ScrapedBar;
 }
 
-async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+async function firecrawlScrapeListing(url: string, apiKey: string): Promise<ScrapedBar[]> {
+  // Fallback: extract a list of bars directly from the listing page
+  const res = await fetch(`${FIRECRAWL_BASE}/scrape`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url,
+      formats: [
+        {
+          type: 'json',
+          schema: { type: 'object', properties: { bars: { type: 'array', items: BAR_SCHEMA } }, required: ['bars'] },
+          prompt:
+            'Extraia TODOS os butecos/bares participantes listados na página (não apenas alguns). Para cada um capture nome, endereço completo, bairro, nome e descrição do petisco, URL absoluta da foto, telefone e Instagram.',
+        },
+      ],
+      onlyMainContent: true,
+      waitFor: 3000,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    console.warn('listing scrape failed', data);
+    return [];
+  }
+  const json = data?.data?.json ?? data?.json ?? {};
+  return Array.isArray(json?.bars) ? json.bars : [];
+}
+
+// === Geocoding ===
+
+async function geocodeOnce(query: string): Promise<{ lat: number; lng: number } | null> {
   try {
-    const q = encodeURIComponent(`${address}, Rio de Janeiro, Brasil`);
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`, {
-      headers: { 'User-Agent': 'Baratona/1.0 (contact@baratona.app)' },
-    });
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,
+      { headers: { 'User-Agent': 'Baratona/1.0 (contact@baratona.app)' } }
+    );
     if (!res.ok) return null;
     const arr = await res.json();
     if (!Array.isArray(arr) || arr.length === 0) return null;
@@ -93,6 +124,20 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
     return null;
   }
 }
+
+async function geocode(address: string, neighborhood?: string | null): Promise<{ lat: number; lng: number } | null> {
+  const tries: string[] = [];
+  if (address) tries.push(`${address}, Rio de Janeiro, Brasil`);
+  if (neighborhood) tries.push(`${neighborhood}, Rio de Janeiro, Brasil`);
+  for (const q of tries) {
+    const r = await geocodeOnce(q);
+    if (r) return r;
+    await new Promise((r) => setTimeout(r, 1100)); // Nominatim 1 req/s
+  }
+  return null;
+}
+
+// === Utils ===
 
 function slugify(s: string) {
   return s
@@ -104,6 +149,49 @@ function slugify(s: string) {
     .replace(/(^-|-$)/g, '');
 }
 
+function isBarUrl(url: string): boolean {
+  // Patterns observed: /buteco/<slug>/ or /butecos/<city>/<slug>/
+  // Avoid: city listings, /votar, /sobre, /regulamento, etc.
+  try {
+    const u = new URL(url);
+    const path = u.pathname.toLowerCase();
+    if (!u.hostname.includes('comidadibuteco.com.br')) return false;
+    if (/\/(votar|sobre|regulamento|contato|imprensa|blog|noticias|ranking|vencedores|edicao)/.test(path)) return false;
+    // Match individual bar pages
+    if (/^\/buteco\/[a-z0-9-]+\/?$/.test(path)) return true;
+    // Some sites use /butecos/<city>/<bar-slug>
+    if (/^\/butecos\/[a-z0-9-]+\/[a-z0-9-]+\/?$/.test(path)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (true) {
+      const idx = next++;
+      if (idx >= items.length) return;
+      try {
+        results[idx] = await fn(items[idx], idx);
+      } catch (e) {
+        console.warn(`worker error at ${idx}:`, e);
+        results[idx] = undefined as any;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
+
+// === Main handler ===
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -111,73 +199,122 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) throw new Error('FIRECRAWL_API_KEY not configured');
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, serviceRole);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    let body: { slug?: string; url?: string; geocode?: boolean } = {};
-    try {
-      body = await req.json();
-    } catch {
-      // empty body is fine
-    }
+    let body: {
+      slug?: string;
+      url?: string;
+      geocode?: boolean;
+      onlyMissingGeo?: boolean;
+      maxBars?: number;
+      concurrency?: number;
+    } = {};
+    try { body = await req.json(); } catch { /* empty body */ }
+
     const slug = body.slug ?? DEFAULT_SLUG;
-    const url = body.url ?? DEFAULT_URL;
+    const listUrl = body.url ?? DEFAULT_LIST_URL;
     const doGeocode = body.geocode !== false;
+    const maxBars = body.maxBars ?? 100;
+    const concurrency = Math.min(body.concurrency ?? 4, 8);
 
     // 1. Find event
     const { data: event, error: eventErr } = await supabase
-      .from('events')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle();
+      .from('events').select('id').eq('slug', slug).maybeSingle();
     if (eventErr) throw eventErr;
     if (!event) {
-      return new Response(
-        JSON.stringify({ success: false, error: `Event '${slug}' not found. Run seed migration first.` }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ success: false, error: `Event '${slug}' not found.` }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // 2. Scrape
-    console.log(`Scraping ${url}...`);
-    const bars = await firecrawlScrape(url, apiKey);
-    console.log(`Found ${bars.length} bars`);
+    // === Mode: re-geocode existing bars only ===
+    if (body.onlyMissingGeo) {
+      const { data: missing, error } = await supabase
+        .from('event_bars').select('id, name, address, neighborhood')
+        .eq('event_id', event.id).is('latitude', null);
+      if (error) throw error;
+      console.log(`Re-geocoding ${missing?.length || 0} bars`);
+      const results: any[] = [];
+      for (const bar of missing || []) {
+        const geo = await geocode(bar.address || '', bar.neighborhood);
+        if (geo) {
+          await supabase.from('event_bars')
+            .update({ latitude: geo.lat, longitude: geo.lng }).eq('id', bar.id);
+          results.push({ name: bar.name, status: 'geocoded', ...geo });
+        } else {
+          results.push({ name: bar.name, status: 'failed' });
+        }
+      }
+      return new Response(JSON.stringify({ success: true, mode: 'geocode-only', results }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 2. Discover bar URLs via map
+    console.log(`Mapping ${listUrl}...`);
+    let allLinks: string[] = [];
+    try {
+      allLinks = await firecrawlMap('https://comidadibuteco.com.br', apiKey, 'rio de janeiro buteco');
+    } catch (e) {
+      console.warn('Map call failed, will fallback to listing scrape:', e);
+    }
+
+    let barUrls = Array.from(new Set(allLinks.filter(isBarUrl)));
+    // Filter to RJ bars when possible (URL containing rj/rio context — most bar pages don't, so keep all)
+    console.log(`Map returned ${allLinks.length} links, ${barUrls.length} look like bar pages`);
+
+    // 3. Scrape each bar in parallel (with concurrency)
+    let bars: ScrapedBar[] = [];
+    if (barUrls.length > 0) {
+      barUrls = barUrls.slice(0, maxBars);
+      console.log(`Scraping ${barUrls.length} bar pages with concurrency ${concurrency}...`);
+      const scraped = await mapWithConcurrency(barUrls, concurrency, async (url) => {
+        const r = await firecrawlScrapeBar(url, apiKey);
+        return r;
+      });
+      bars = scraped.filter((b): b is ScrapedBar => Boolean(b && b.name));
+    }
+
+    // 4. Fallback: scrape listing page directly if map didn't yield enough
+    if (bars.length < 10) {
+      console.log(`Only ${bars.length} bars from map mode, falling back to listing scrape`);
+      const listingBars = await firecrawlScrapeListing(listUrl, apiKey);
+      // Merge by name
+      const seen = new Set(bars.map((b) => slugify(b.name)));
+      for (const b of listingBars) {
+        if (!seen.has(slugify(b.name))) {
+          bars.push(b);
+          seen.add(slugify(b.name));
+        }
+      }
+    }
+
+    console.log(`Total bars to upsert: ${bars.length}`);
 
     if (bars.length === 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'No bars extracted from page', raw: bars }),
-        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ success: false, error: 'No bars extracted' }),
+        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // 3. Upsert each bar
+    // 5. Upsert each bar (geocoding sequentially due to Nominatim 1req/s)
     const results: Array<{ name: string; status: string; error?: string }> = [];
     let order = 1;
     for (const bar of bars) {
       try {
-        const externalId = bar.external_id || slugify(bar.name);
+        const externalId = bar.external_id || (bar.source_url ? slugify(new URL(bar.source_url).pathname) : slugify(bar.name));
         let lat: number | null = null;
         let lng: number | null = null;
-        if (doGeocode && bar.address) {
-          const geo = await geocode(`${bar.address}${bar.neighborhood ? ', ' + bar.neighborhood : ''}`);
-          if (geo) {
-            lat = geo.lat;
-            lng = geo.lng;
-          }
-          // Nominatim rate limit: 1 req/s
-          await new Promise((r) => setTimeout(r, 1100));
+        if (doGeocode && (bar.address || bar.neighborhood)) {
+          const geo = await geocode(bar.address || '', bar.neighborhood);
+          if (geo) { lat = geo.lat; lng = geo.lng; }
         }
 
-        // Check if exists
         const { data: existing } = await supabase
-          .from('event_bars')
-          .select('id')
-          .eq('event_id', event.id)
-          .eq('external_id', externalId)
-          .maybeSingle();
+          .from('event_bars').select('id, latitude, longitude')
+          .eq('event_id', event.id).eq('external_id', externalId).maybeSingle();
 
-        const payload = {
+        const payload: any = {
           event_id: event.id,
           name: bar.name,
           address: bar.address || '',
@@ -188,11 +325,11 @@ Deno.serve(async (req) => {
           phone: bar.phone || null,
           instagram: bar.instagram || null,
           external_id: externalId,
-          latitude: lat,
-          longitude: lng,
           bar_order: order,
           scheduled_time: null,
         };
+        // Only set coords if we got them; preserve existing on update
+        if (lat !== null) { payload.latitude = lat; payload.longitude = lng; }
 
         if (existing) {
           const { error } = await supabase.from('event_bars').update(payload).eq('id', existing.id);
@@ -206,20 +343,23 @@ Deno.serve(async (req) => {
         order++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
+        console.error('upsert error', bar.name, msg);
         results.push({ name: bar.name, status: 'error', error: msg });
       }
     }
 
+    const inserted = results.filter((r) => r.status === 'inserted').length;
+    const updated = results.filter((r) => r.status === 'updated').length;
+    const errored = results.filter((r) => r.status === 'error').length;
+
     return new Response(
-      JSON.stringify({ success: true, count: bars.length, results }),
+      JSON.stringify({ success: true, count: bars.length, inserted, updated, errored, results }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('scrape-comida-di-boteco error:', msg);
-    return new Response(
-      JSON.stringify({ success: false, error: msg }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ success: false, error: msg }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

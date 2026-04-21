@@ -232,11 +232,12 @@ Deno.serve(async (req) => {
 
     // === Mode: re-geocode existing bars only ===
     if (body.onlyMissingGeo) {
+      const limit = Math.max(1, Math.min(body.geoLimit ?? 40, 120));
       const { data: missing, error } = await supabase
         .from('event_bars').select('id, name, address, neighborhood')
-        .eq('event_id', event.id).is('latitude', null);
+        .eq('event_id', event.id).is('latitude', null).limit(limit);
       if (error) throw error;
-      console.log(`Re-geocoding ${missing?.length || 0} bars`);
+      console.log(`Re-geocoding ${missing?.length || 0} bars (limit=${limit})`);
       const results: any[] = [];
       for (const bar of missing || []) {
         const geo = await geocode(bar.address || '', bar.neighborhood);
@@ -248,7 +249,8 @@ Deno.serve(async (req) => {
           results.push({ name: bar.name, status: 'failed' });
         }
       }
-      return new Response(JSON.stringify({ success: true, mode: 'geocode-only', results }),
+      const ok = results.filter(r => r.status === 'geocoded').length;
+      return new Response(JSON.stringify({ success: true, mode: 'geocode-only', processed: results.length, geocoded: ok, results }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

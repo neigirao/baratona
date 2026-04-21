@@ -211,6 +211,7 @@ Deno.serve(async (req) => {
       onlyMissingGeo?: boolean;
       maxBars?: number;
       concurrency?: number;
+      geoLimit?: number;
     } = {};
     try { body = await req.json(); } catch { /* empty body */ }
 

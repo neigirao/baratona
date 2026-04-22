@@ -10,6 +10,7 @@ import type { PlatformEvent } from '@/lib/platformEvents';
 import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
+import { BaratonaHero } from '@/components/BaratonaHero';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();
@@ -140,26 +141,25 @@ export default function EventLanding() {
 
   return (
     <div className="min-h-screen bg-background">
-      {event.coverImageUrl && (
-        <div className="w-full h-48 sm:h-64 overflow-hidden bg-muted">
-          <img src={event.coverImageUrl} alt={event.name} className="w-full h-full object-cover" />
-        </div>
-      )}
+      <BaratonaHero
+        title={event.name}
+        subtitle={event.description ? undefined : (isCircuit ? 'Circuito Especial' : 'Baratona')}
+        imageUrl={event.coverImageUrl}
+        height="lg"
+        asH1
+      />
       <div className="container max-w-3xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/explorar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold">{event.name}</h1>
-              {isCircuit && (
-                <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-xs font-bold uppercase">
-                  Circuito Especial
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1 flex-wrap">
+            {isCircuit && (
+              <span className="inline-block px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-xs font-bold uppercase mb-1">
+                Circuito Especial
+              </span>
+            )}
+            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
               <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {bars.length} {isCircuit ? 'butecos' : 'bares'}</span>
               {dateLabel && (

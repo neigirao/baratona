@@ -3,7 +3,7 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Loader2, Search, X } from 'lucide-react';
-import baratonaBanner from '@/assets/baratona-banner.jpeg';
+import { BaratonaHero } from '@/components/BaratonaHero';
 
 export function ParticipantSelector() {
   const { setCurrentUser, participants, participantsLoading, t } = useBaratona();
@@ -54,20 +54,12 @@ export function ParticipantSelector() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Banner */}
-      <div className="relative w-full h-48 overflow-hidden">
-        <img 
-          src={baratonaBanner} 
-          alt="Baratona 2026" 
-          className="w-full h-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <h1 className="font-display text-3xl font-black text-gradient-yellow">
-            BARATONA 2026
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">07/02 - Sábado</p>
-        </div>
-      </div>
+      <BaratonaHero
+        title="BARATONA 2026"
+        subtitle="07/02 - Sábado"
+        height="md"
+        asH1
+      />
       
       {/* Participant Selection */}
       <div className="flex-1 p-4 animate-slide-up">

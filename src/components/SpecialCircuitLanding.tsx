@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles } from 'lucide-react';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
+import { CircuitMap } from './CircuitMap';
 
 interface SpecialCircuitLandingProps {
   event: PlatformEvent;

@@ -9,6 +9,7 @@ import { listFeaturedEventsApi } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { FeaturedEventCard } from '@/components/FeaturedEventCard';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
+import { BaratonaHero } from '@/components/BaratonaHero';
 
 type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 
@@ -60,45 +61,36 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/10" />
-        <div className="absolute top-20 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
-
-        <div className="relative container max-w-5xl mx-auto px-4 py-20 md:py-32 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium">
-            <Beer className="w-4 h-4" />
-            <span>Gratuita na v1</span>
-          </div>
-
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-            <span className="text-primary">BARA</span>
-            <span className="text-secondary">TONA</span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Crie roteiros de bares com seus amigos. Ranking, votação, check-in, mapa, conquistas e 
-            retrospectiva — tudo num app que funciona até com sinal ruim.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
-            <Button asChild size="lg" className="text-base font-bold px-8 shadow-lg shadow-primary/30">
-              <Link to="/criar">
-                Criar minha Baratona
-                <ChevronRight className="w-5 h-5 ml-1" />
+      <BaratonaHero
+        title="BARATONA"
+        subtitle="Crie sua rota de bares com os amigos. Ranking, votação, check-in, mapa, conquistas e retrospectiva — tudo num app que funciona até com sinal ruim."
+        height="xl"
+        asH1
+      />
+      <section className="container max-w-5xl mx-auto px-4 -mt-6 pb-10 relative z-10">
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
+          <Button asChild size="lg" className="text-base font-bold px-8 shadow-lg shadow-primary/30">
+            <Link to="/criar">
+              Criar minha Baratona
+              <ChevronRight className="w-5 h-5 ml-1" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="text-base border-muted-foreground/30">
+            <Link to="/explorar">Explorar baratonas</Link>
+          </Button>
+          {user && (
+            <Button asChild variant="ghost" size="lg" className="text-base">
+              <Link to="/minhas-baratonas">
+                <ListChecks className="w-5 h-5 mr-1" /> Minhas baratonas
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="text-base border-muted-foreground/30">
-              <Link to="/explorar">Explorar baratonas</Link>
-            </Button>
-            {user && (
-              <Button asChild variant="ghost" size="lg" className="text-base">
-                <Link to="/minhas-baratonas">
-                  <ListChecks className="w-5 h-5 mr-1" /> Minhas baratonas
-                </Link>
-              </Button>
-            )}
-          </div>
+          )}
+        </div>
+        <div className="flex justify-center mt-4">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium">
+            <Beer className="w-4 h-4" />
+            Gratuita na v1
+          </span>
         </div>
       </section>
 

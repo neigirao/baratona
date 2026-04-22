@@ -1,138 +1,86 @@
 
 
-## O que falta para a página do Comida di Buteco ficar 100%
+## Plano: Hero Banner unificado + roadmap restante do Comida di Buteco
 
-### Diagnóstico atual
+### Parte 1 — Reaproveitar o hero do Nei como banner padrão da plataforma
 
-**Estado real do banco** (slug `comida-di-buteco-rj-2026`):
-- 12 bares importados (oficial RJ tem ~80 — Firecrawl pegou só a primeira página)
-- 10/12 geocodados, 12/12 com foto, 11/12 com petisco
-- 2 bares sem coordenadas (Bar da Áurea, Bar da Tati) — não aparecem no mapa
-- 1 bar sem petisco (Bar do David)
+**Problema:** O banner icônico (`src/assets/baratona-banner.jpeg` + título Orbitron com `text-gradient-yellow`) só aparece no `ParticipantSelector` do `/nei`. As outras páginas (Home, EventLanding) usam um hero genérico ou só a `coverImageUrl` do evento.
 
-**O que já existe e funciona:**
-- `SpecialCircuitLanding` com busca, filtro por bairro, ordenação por nota
-- Mapa modo circuito com bounding box
-- Voto único `dish_score` por petisco
-- Botão "Importar / Atualizar" no admin
+**Solução:** Extrair o hero num componente reutilizável e aplicá-lo em 3 pontos.
 
-**O que está faltando (gap analysis):**
+**Novo componente:** `src/components/BaratonaHero.tsx`
+- Props: `title`, `subtitle?`, `imageUrl?` (default = banner do Nei), `height?` (`sm` 32 / `md` 48 / `lg` 64), `overlayChildren?` (botões/badges opcionais)
+- Mantém: imagem com `opacity-60`, gradiente preto descendo, título Orbitron com `text-gradient-yellow`
+- Quando o evento tem `coverImageUrl`, usa a do evento como background; senão, fallback para o banner do Nei (assim todo evento ganha um visual coeso)
 
-| Eixo | Lacuna | Impacto |
-|---|---|---|
-| **Engenharia** | Scrape pega só 1 página → 12/80 bares | Crítico — produto incompleto |
-| **Engenharia** | 2 bares sem geocoding (timeout Nominatim) | Médio — somem do mapa |
-| **Arquitetura** | Não existe schema para "lista pessoal de bares favoritos" dentro de um circuito | Bloqueia feature pedida |
-| **Produto** | Não existe "criar minha baratona a partir de N bares marcados" | Feature core do pedido |
-| **UX** | Sem botão "marcar/desmarcar" nos cards de petisco | Falta affordance |
-| **UX** | Mapa não destaca bares marcados vs não-marcados | Sem feedback visual |
-| **Design** | Cards iguais para marcados/não-marcados | Sem hierarquia |
+**Aplicação:**
+1. `Home.tsx` — substituir o hero atual (gradiente sintético) pelo `BaratonaHero` com título "BARATONA" e subtítulo "Crie sua rota com os amigos". Mantém os CTAs sobrepostos.
+2. `EventLanding.tsx` — trocar o `<img>` cru no topo pelo `BaratonaHero` (altura `lg`), passando `coverImageUrl` do evento e o nome como título. O metadata (cidade, contagem, data) continua abaixo.
+3. `ParticipantSelector.tsx` — refatorar para usar o mesmo componente (sem regressão visual).
+
+**Resultado:** identidade visual consistente em toda a plataforma com o banner que o usuário gosta.
 
 ---
 
-### Plano de execução (3 frentes paralelas)
+### Parte 2 — O que ainda falta para o Comida di Buteco ficar 100%
 
-#### Frente 1 — Completar dados (Engenharia + Produto)
+**Estado atual confirmado no banco:**
+- ✅ 120 bares importados (meta 60+ batida)
+- ✅ 114/120 com coordenadas (95%)
+- ✅ 118/120 com nome do petisco
+- ✅ 120/120 com foto
+- ✅ Marcar bares + criar baratona derivada funcionando
+- ✅ Mapa com pins customizados destacando favoritos
 
-**1.1** Refatorar `scrape-comida-di-boteco` para paginação:
-- Site usa filtro por região/página. Estratégia: `firecrawl map` para descobrir todas URLs de butecos `/buteco/<slug>/`, depois `scrape` em lote (ou usar `crawl` com `includePaths: ['/buteco/']`)
-- Fallback: scrape direto da listagem com `waitFor: 5000` + scroll infinito (Firecrawl `actions`)
-- Meta: ≥60 bares importados
+**Gaps remanescentes (em ordem de impacto):**
 
-**1.2** Reprocessar geocoding dos 2 faltantes:
-- Adicionar parâmetro `?onlyMissingGeo=true` na edge function
-- Retry com endereço alternativo (só bairro + cidade) quando endereço completo falha
+| # | Gap | Esforço | Por quê importa |
+|---|-----|---------|-----------------|
+| 1 | **6 bares sem coordenadas** somem do mapa | XS | Polish — completar 100% geo |
+| 2 | **2 bares sem petisco** (Bar do David e mais 1) | XS | Dados oficiais incompletos |
+| 3 | **Sem contador social** "X pessoas marcaram este bar" | S | Prova social aumenta engajamento |
+| 4 | **Sem deep-link de compartilhamento de favoritos** (não dá pra mandar a rota antes de criar a baratona) | S | Fricção pra grupos decidirem juntos |
+| 5 | **Sem filtro por região da cidade** (Zona Sul / Norte / Centro / Oeste) — só por bairro | S | Bairros são muitos (~30); região agruparia melhor |
+| 6 | **Sem indicador de distância** entre bares marcados (rota total km / tempo a pé) | M | Ajuda a decidir se a rota é viável |
+| 7 | **CircuitMap usa SVG sobreposto a iframe OSM** — pins podem desalinhar em alguns níveis de zoom | M | Risco de UX ruim em mobile pequeno |
+| 8 | **Sem página de detalhe do buteco** (modal/drawer com endereço completo, telefone, IG, descrição completa do petisco) | M | Hoje tudo está cru no card |
 
-**1.3** QA: validar que ≥90% têm coordenadas e ≥95% têm petisco+foto
-
-#### Frente 2 — Feature "Marcar bares e criar baratona derivada" (Arquitetura + Produto + UX)
-
-**2.1 Schema novo** (migration):
-```sql
--- Lista de bares marcados pelo usuário dentro de um circuito
-CREATE TABLE event_bar_favorites (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id uuid NOT NULL,
-  user_id uuid NOT NULL,
-  bar_id uuid NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (event_id, user_id, bar_id)
-);
--- RLS: user lê/escreve só os próprios; SELECT público para contar "X pessoas marcaram"
-```
-
-**2.2 RPC nova**: `create_baratona_from_favorites(_source_event_id, _name, _bar_ids[])`
-- Cria novo `events` (visibility=private, event_type=open_baratona) com owner = auth.uid()
-- Copia bares selecionados de `event_bars` do circuito original para o novo evento
-- Cria `event_app_config` automaticamente
-- Adiciona owner como `event_members` (organizer)
-- Retorna `{ event_id, slug }` para redirecionar
-
-**2.3 API** (`platformApi.ts`):
-- `toggleBarFavoriteApi(eventId, barId)`
-- `getBarFavoritesApi(eventId, userId)` → `Set<barId>`
-- `getBarFavoriteCountsApi(eventId)` → `Record<barId, number>` (social proof opcional)
-- `createBaratonaFromFavoritesApi(sourceEventId, name, barIds)`
-
-**2.4 UX nos cards** (`SpecialCircuitLanding`):
-- Heart/bookmark icon canto superior esquerdo do card (toggle)
-- Estado marcado: borda primary + checkbox preenchido
-- Filtro extra "Só marcados" nas chips
-- Contador fixo no topo: **"X bares marcados · [Criar minha baratona]"**
-
-**2.5 Modal "Criar baratona"**:
-- Input nome (default: "Minha rota Comida di Buteco")
-- Resumo: lista dos N bares selecionados (drag para reordenar)
-- Botão "Criar e abrir" → navega para `/baratona/<novo-slug>/admin`
-
-**2.6 Mapa adaptado** (`BaratonaMap`):
-- Quando há favoritos: bbox calculado só com favoritos + pins destacados
-- Toggle visual "Mostrar todos / Só marcados"
-
-#### Frente 3 — Login obrigatório fluido (UX)
-
-- Marcar bar sem login → toast "Faça login para salvar sua rota" + botão Google
-- Persistir intenção em `localStorage` e re-aplicar após login
-
----
-
-### Arquivos afetados
-
-**Novos:**
-- `supabase/migrations/<timestamp>_event_bar_favorites.sql` (tabela + RLS + RPC)
-- `src/components/CreateBaratonaFromFavoritesDialog.tsx`
-
-**Modificados:**
-- `supabase/functions/scrape-comida-di-boteco/index.ts` (paginação + retry geo)
-- `src/lib/platformApi.ts` (4 funções novas)
-- `src/components/SpecialCircuitLanding.tsx` (toggle favorito, filtro, CTA)
-- `src/components/BaratonaMap.tsx` (destacar favoritos)
-- `src/integrations/supabase/types.ts` (auto-regenerado)
-
----
-
-### Ordem de entrega proposta
+**Plano sugerido em sprints:**
 
 ```text
-SPRINT A (dados — 1 ciclo):
-  1. Refatorar scrape para múltiplas páginas/crawl
-  2. Re-rodar e validar ≥60 bares com geo
+SPRINT D (polish dados — 30 min):
+  • Geocoding manual dos 6 faltantes via Google Maps (lat/lng direto via SQL update)
+  • Buscar petisco dos 2 sem dish (scraping individual ou edição manual no admin)
 
-SPRINT B (feature de marcar — 1 ciclo):
-  3. Migration: event_bar_favorites + RPC create_baratona_from_favorites
-  4. API + UX de toggle nos cards + contador
-  5. Modal de criação + redirecionamento
+SPRINT E (engajamento social — 1 ciclo):
+  • RPC get_bar_favorite_counts(event_id) → Record<barId, count>
+  • Badge "🔖 N marcaram" no card quando count >= 3
+  • Compartilhar rota: gerar URL /baratona/<slug>?favs=id1,id2,id3 que pré-marca os bares ao abrir
 
-SPRINT C (polish — meio ciclo):
-  6. Mapa destacando favoritos
-  7. Fluxo de login intencional
-  8. QA end-to-end no /baratona/comida-di-buteco-rj-2026
+SPRINT F (descoberta — 1 ciclo):
+  • Coluna region em event_bars (derivada do bairro via mapa estático Zona Sul/Norte/Centro/Oeste/Niterói)
+  • Chips de região acima dos chips de bairro
+  • Modal/Drawer de detalhe ao clicar no card (foto grande, descrição completa, ações)
+
+SPRINT G (rota inteligente — 1 ciclo):
+  • Calcular distância total entre favoritos selecionados (Haversine)
+  • Exibir no header sticky: "5 bares · ~3.2 km · ~40min a pé"
+  • Sugerir ordem otimizada (nearest neighbor) no dialog de criação
 ```
 
-### Decisões pendentes (perguntar antes de codar?)
+---
 
-1. **Limite de bares por baratona derivada**: 3-15? (sugiro 3 mín / 12 máx para uma noite)
-2. **Visibilidade do evento derivado**: sempre privado com convite? Ou opção pública?
-3. **Contador social** ("X pessoas marcaram este bar"): mostrar agora ou deixar para depois?
-4. **Sprint A vs B primeiro**: começar pela frente de dados (sem ela a feature B parece pobre) ou pela feature de marcação (mais visível)?
+### Arquivos afetados (Parte 1 — único entregável desta rodada)
+
+**Novos:**
+- `src/components/BaratonaHero.tsx`
+
+**Modificados:**
+- `src/pages/Home.tsx` (substituir bloco hero)
+- `src/pages/EventLanding.tsx` (substituir bloco da imagem de capa)
+- `src/components/ParticipantSelector.tsx` (refatorar pra usar o componente)
+
+### Decisão pendente
+
+Qual sprint atacar depois do hero unificado? Recomendação: **Sprint D + E juntos** (dados 100% + prova social) — alto impacto visível com pouco código.
 

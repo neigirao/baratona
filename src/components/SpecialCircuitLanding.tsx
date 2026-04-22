@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles } from 'lucide-react';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
+import { CircuitMap } from './CircuitMap';
 
 interface SpecialCircuitLandingProps {
   event: PlatformEvent;
@@ -211,11 +212,19 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
           </Button>
         </div>
       )}
+
       {favCount > 0 && favCount < 3 && (
         <p className="text-xs text-muted-foreground -mt-1">
           Marque pelo menos {3 - favCount} {3 - favCount === 1 ? 'bar' : 'bares'} a mais para criar sua rota.
         </p>
       )}
+
+      <CircuitMap
+        bars={bars}
+        favorites={favorites}
+        onToggleFavorite={handleToggleFavorite}
+      />
+
 
       <div className="space-y-2">
         <div className="relative">

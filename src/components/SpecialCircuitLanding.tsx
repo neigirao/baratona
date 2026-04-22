@@ -212,7 +212,15 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
           </Button>
         </div>
       )}
-      {favCount > 0 && favCount < 3 && (
+
+      <CircuitMap
+        bars={bars}
+        favorites={favorites}
+        onToggleFavorite={handleToggleFavorite}
+      />
+
+      <div className="space-y-2">
+
         <p className="text-xs text-muted-foreground -mt-1">
           Marque pelo menos {3 - favCount} {3 - favCount === 1 ? 'bar' : 'bares'} a mais para criar sua rota.
         </p>

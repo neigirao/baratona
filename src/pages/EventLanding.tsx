@@ -143,24 +143,30 @@ export default function EventLanding() {
     <div className="min-h-screen bg-background">
       <BaratonaHero
         title={event.name}
-        subtitle={event.description ? undefined : (isCircuit ? 'Circuito Especial' : 'Baratona')}
+        subtitle={
+          event.description
+            ? undefined
+            : isCircuit
+              ? `Circuito Especial · ${event.city ?? ''}`.replace(/ · $/, '')
+              : 'Baratona'
+        }
         imageUrl={event.coverImageUrl}
         height="lg"
         asH1
       />
       <div className="container max-w-3xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/explorar"><ChevronLeft className="w-5 h-5" /></Link>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" asChild className="flex-shrink-0">
+            <Link to="/explorar" aria-label="Voltar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <div className="flex-1 min-w-0">
-            {isCircuit && (
-              <span className="inline-block px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-xs font-bold uppercase mb-1">
-                Circuito Especial
-              </span>
-            )}
-            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
+          <div className="flex-1 min-w-0 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/50 text-xs sm:text-sm text-muted-foreground flex-wrap justify-center">
+              {isCircuit && (
+                <span className="text-secondary font-bold uppercase tracking-wide">Circuito</span>
+              )}
+              {event.city && (
+                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
+              )}
               <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {bars.length} {isCircuit ? 'butecos' : 'bares'}</span>
               {dateLabel && (
                 <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {dateLabel}</span>
@@ -228,20 +234,21 @@ export default function EventLanding() {
           )
         )}
 
-        <Card className="bg-card/60">
-          <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
-            <p><strong className="text-foreground">Organizador:</strong> {event.ownerName}</p>
-            <p><strong className="text-foreground">Tipo:</strong> {isCircuit ? 'Circuito especial (visitação livre)' : 'Baratona aberta'}</p>
-            {event.externalSourceUrl && (
-              <p>
-                <strong className="text-foreground">Fonte oficial:</strong>{' '}
-                <a href={event.externalSourceUrl} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 underline">
-                  {new URL(event.externalSourceUrl).hostname} <ExternalLink className="w-3 h-3" />
-                </a>
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <footer className="pt-6 mt-2 border-t border-border/40 text-xs text-muted-foreground space-y-1">
+          <p>
+            <span className="text-foreground/80">Organizador:</span> {event.ownerName} ·{' '}
+            <span className="text-foreground/80">Tipo:</span>{' '}
+            {isCircuit ? 'Circuito especial (visitação livre)' : 'Baratona aberta'}
+          </p>
+          {event.externalSourceUrl && (
+            <p>
+              <span className="text-foreground/80">Fonte oficial:</span>{' '}
+              <a href={event.externalSourceUrl} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 underline">
+                {new URL(event.externalSourceUrl).hostname} <ExternalLink className="w-3 h-3" />
+              </a>
+            </p>
+          )}
+        </footer>
       </div>
     </div>
   );

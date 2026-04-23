@@ -237,13 +237,13 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
           />
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <div className="flex gap-1 flex-wrap flex-1">
+        <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+          <div className="flex gap-1 w-max pb-1">
             <Button
               variant={neighborhood === 'all' && !onlyFavorites ? 'default' : 'outline'}
               size="sm"
               onClick={() => { setNeighborhood('all'); setOnlyFavorites(false); }}
-              className="h-7 text-xs"
+              className="h-7 text-xs flex-shrink-0"
             >
               Todos
             </Button>
@@ -252,7 +252,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                 variant={onlyFavorites ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setOnlyFavorites((v) => !v)}
-                className="h-7 text-xs gap-1"
+                className="h-7 text-xs gap-1 flex-shrink-0"
               >
                 <Bookmark className="w-3 h-3" />
                 Marcados ({favCount})
@@ -264,7 +264,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                 variant={neighborhood === n ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setNeighborhood(n)}
-                className="h-7 text-xs"
+                className="h-7 text-xs flex-shrink-0"
               >
                 {n}
               </Button>

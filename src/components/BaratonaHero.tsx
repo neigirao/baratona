@@ -10,6 +10,22 @@ const heightClasses: Record<HeroHeight, string> = {
   xl: 'h-72 sm:h-96',
 };
 
+/** When showing a logo (no big Orbitron title), use a more compact height
+ *  so the brand mark doesn't push the rest of the page below the fold on mobile. */
+const logoHeightClasses: Record<HeroHeight, string> = {
+  sm: 'h-24',
+  md: 'h-32 sm:h-40',
+  lg: 'h-40 sm:h-56',
+  xl: 'h-48 sm:h-64',
+};
+
+const logoSizeClasses: Record<HeroHeight, string> = {
+  sm: 'max-h-12 sm:max-h-16',
+  md: 'max-h-16 sm:max-h-24',
+  lg: 'max-h-20 sm:max-h-28',
+  xl: 'max-h-24 sm:max-h-32',
+};
+
 interface BaratonaHeroProps {
   title: string;
   subtitle?: string;
@@ -51,8 +67,11 @@ export function BaratonaHero({
   const resolvedImage = resolvedLogo ? null : (imageUrl || baratonaBanner);
   const TitleTag = asH1 ? 'h1' : 'div';
 
+  const containerHeight = resolvedLogo ? logoHeightClasses[height] : heightClasses[height];
+  const logoSize = logoSizeClasses[height];
+
   return (
-    <div className={`relative w-full overflow-hidden ${heightClasses[height]} ${className}`}>
+    <div className={`relative w-full overflow-hidden ${containerHeight} ${className}`}>
       {resolvedImage && (
         <>
           <img
@@ -67,13 +86,13 @@ export function BaratonaHero({
       {!resolvedImage && (
         <div className="absolute inset-0 bg-gradient-to-b from-card via-background to-background" />
       )}
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-3 text-center gap-1 sm:gap-2">
         {resolvedLogo ? (
           <>
             <img
               src={resolvedLogo}
               alt={title}
-              className="max-h-24 sm:max-h-32 w-auto object-contain"
+              className={`${logoSize} w-auto object-contain`}
               loading="eager"
             />
             {asH1 && <h1 className="sr-only">{title}</h1>}
@@ -86,11 +105,11 @@ export function BaratonaHero({
           </TitleTag>
         )}
         {subtitle && (
-          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2 max-w-2xl">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl line-clamp-2">
             {subtitle}
           </p>
         )}
-        {overlayChildren && <div className="mt-4 w-full">{overlayChildren}</div>}
+        {overlayChildren && <div className="mt-2 sm:mt-3 w-full">{overlayChildren}</div>}
       </div>
     </div>
   );

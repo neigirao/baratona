@@ -813,6 +813,34 @@ export type Database = {
           slug: string
         }[]
       }
+      get_public_events_with_counts: {
+        Args: never
+        Returns: {
+          bar_count: number
+          city: string
+          cover_image_url: string
+          created_at: string
+          description: string
+          end_date: string
+          event_date: string
+          event_type: string
+          external_source_url: string
+          id: string
+          member_count: number
+          name: string
+          owner_name: string
+          owner_user_id: string
+          slug: string
+          start_date: string
+          status: string
+          updated_at: string
+          visibility: string
+        }[]
+      }
+      has_platform_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: boolean
+      }
       redeem_event_invite: {
         Args: { _code: string; _display_name: string }
         Returns: {

@@ -10,6 +10,22 @@ const heightClasses: Record<HeroHeight, string> = {
   xl: 'h-72 sm:h-96',
 };
 
+/** When showing a logo (no big Orbitron title), use a more compact height
+ *  so the brand mark doesn't push the rest of the page below the fold on mobile. */
+const logoHeightClasses: Record<HeroHeight, string> = {
+  sm: 'h-24',
+  md: 'h-32 sm:h-40',
+  lg: 'h-40 sm:h-56',
+  xl: 'h-48 sm:h-64',
+};
+
+const logoSizeClasses: Record<HeroHeight, string> = {
+  sm: 'max-h-12 sm:max-h-16',
+  md: 'max-h-16 sm:max-h-24',
+  lg: 'max-h-20 sm:max-h-28',
+  xl: 'max-h-24 sm:max-h-32',
+};
+
 interface BaratonaHeroProps {
   title: string;
   subtitle?: string;

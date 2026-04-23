@@ -234,20 +234,21 @@ export default function EventLanding() {
           )
         )}
 
-        <Card className="bg-card/60">
-          <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
-            <p><strong className="text-foreground">Organizador:</strong> {event.ownerName}</p>
-            <p><strong className="text-foreground">Tipo:</strong> {isCircuit ? 'Circuito especial (visitação livre)' : 'Baratona aberta'}</p>
-            {event.externalSourceUrl && (
-              <p>
-                <strong className="text-foreground">Fonte oficial:</strong>{' '}
-                <a href={event.externalSourceUrl} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 underline">
-                  {new URL(event.externalSourceUrl).hostname} <ExternalLink className="w-3 h-3" />
-                </a>
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <footer className="pt-6 mt-2 border-t border-border/40 text-xs text-muted-foreground space-y-1">
+          <p>
+            <span className="text-foreground/80">Organizador:</span> {event.ownerName} ·{' '}
+            <span className="text-foreground/80">Tipo:</span>{' '}
+            {isCircuit ? 'Circuito especial (visitação livre)' : 'Baratona aberta'}
+          </p>
+          {event.externalSourceUrl && (
+            <p>
+              <span className="text-foreground/80">Fonte oficial:</span>{' '}
+              <a href={event.externalSourceUrl} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 underline">
+                {new URL(event.externalSourceUrl).hostname} <ExternalLink className="w-3 h-3" />
+              </a>
+            </p>
+          )}
+        </footer>
       </div>
     </div>
   );

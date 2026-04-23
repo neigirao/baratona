@@ -184,43 +184,29 @@ export async function getEventMemberCountApi(eventId: string): Promise<number> {
   return count || 0;
 }
 
+function mapEnrichedRow(row: any): PlatformEvent & { barCount: number; memberCount: number } {
+  return {
+    ...mapRow(row),
+    barCount: Number(row.bar_count ?? 0),
+    memberCount: Number(row.member_count ?? 0),
+  };
+}
+
 export async function listPublicEventsWithBarCountApi(): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
-  const events = await listPublicEventsApi();
-  const enriched = await Promise.all(
-    events.map(async (e) => ({
-      ...e,
-      barCount: await getEventBarCountApi(e.id),
-      memberCount: await getEventMemberCountApi(e.id),
-    }))
-  );
-  return enriched;
+  // Single RPC call instead of N+1 (was: 1 + 2N requests)
+  const { data, error } = await (supabase as any).rpc('get_public_events_with_counts');
+  if (error) throw error;
+  return (data || []).map(mapEnrichedRow);
 }
 
 export async function listFeaturedEventsApi(limit = 3): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('visibility', 'public')
-    .order('start_date', { ascending: true, nullsFirst: false })
-    .order('event_date', { ascending: true, nullsFirst: false })
-    .limit(20);
-  if (error) throw error;
-
-  const events = (data || []).map(mapRow);
-  // Prioritize Comida di Buteco
+  const all = await listPublicEventsWithBarCountApi();
   const FEATURED_SLUG = 'comida-di-buteco-rj-2026';
   const sorted = [
-    ...events.filter((e) => e.slug === FEATURED_SLUG),
-    ...events.filter((e) => e.slug !== FEATURED_SLUG),
-  ].slice(0, limit);
-
-  return Promise.all(
-    sorted.map(async (e) => ({
-      ...e,
-      barCount: await getEventBarCountApi(e.id),
-      memberCount: await getEventMemberCountApi(e.id),
-    }))
-  );
+    ...all.filter((e) => e.slug === FEATURED_SLUG),
+    ...all.filter((e) => e.slug !== FEATURED_SLUG),
+  ];
+  return sorted.slice(0, limit);
 }
 
 export interface DishRating {

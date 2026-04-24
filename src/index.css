@@ -68,6 +68,39 @@
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 197 100% 47%;
   }
+
+  /* High contrast mode — for sunny patios, dim bars, tipsy thumbs.
+     Boosts borders, foregrounds, and primary accents while keeping the brand. */
+  .contrast-boost {
+    --foreground: 0 0% 100%;
+    --muted-foreground: 0 0% 85%;
+    --border: 0 0% 45%;
+    --input: 0 0% 30%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 12%;
+    --primary: 197 100% 60%;
+    --secondary: 45 100% 60%;
+    --accent: 45 100% 60%;
+    --ring: 197 100% 70%;
+  }
+  .contrast-boost body {
+    text-shadow: 0 0 1px hsl(var(--background));
+  }
+  .contrast-boost .text-muted-foreground {
+    color: hsl(0 0% 88%);
+  }
+  .contrast-boost button,
+  .contrast-boost [role="button"],
+  .contrast-boost a {
+    font-weight: 600;
+  }
+  .contrast-boost .border,
+  .contrast-boost .border-border,
+  .contrast-boost .border-b,
+  .contrast-boost .border-t {
+    border-color: hsl(0 0% 50%);
+  }
 }
 
 @layer base {

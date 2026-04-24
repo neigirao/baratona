@@ -419,10 +419,21 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                 )}
               </div>
               <CardContent className="py-4 space-y-2 flex-1 flex flex-col">
-                <div>
-                  <p className="font-semibold leading-tight">{bar.name}</p>
-                  {bar.neighborhood && (
-                    <p className="text-xs text-muted-foreground">{bar.neighborhood}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold leading-tight">{bar.name}</p>
+                    {bar.neighborhood && (
+                      <p className="text-xs text-muted-foreground">{bar.neighborhood}</p>
+                    )}
+                  </div>
+                  {(favCounts[bar.id || ''] || 0) > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary flex-shrink-0"
+                      title={`${favCounts[bar.id || '']} pessoa(s) marcaram este buteco`}
+                    >
+                      <Users className="w-3 h-3" />
+                      {favCounts[bar.id || '']}
+                    </span>
                   )}
                 </div>
 

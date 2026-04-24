@@ -272,15 +272,25 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
               {favCount} {favCount === 1 ? 'bar marcado' : 'bares marcados'}
             </span>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setCreateOpen(true)}
-            disabled={favCount < 3}
-            className="flex-shrink-0"
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            Criar minha baratona
-          </Button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleShareFavorites}
+              aria-label="Compartilhar rota"
+              className="h-9 w-9 p-0"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => { track('create_baratona_dialog_opened', { event: event.slug, count: favCount }); setCreateOpen(true); }}
+              disabled={favCount < 3}
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              Criar minha baratona
+            </Button>
+          </div>
         </div>
       )}
 

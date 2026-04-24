@@ -398,6 +398,16 @@ export async function getBarFavoritesApi(eventId: string, userId: string): Promi
   return new Set((data || []).map((r: any) => r.bar_id as string));
 }
 
+export async function getBarFavoriteCountsApi(eventId: string): Promise<Record<string, number>> {
+  const { data, error } = await (supabase as any).rpc('get_bar_favorite_counts', { _event_id: eventId });
+  if (error) return {};
+  const out: Record<string, number> = {};
+  for (const row of (data || []) as Array<{ bar_id: string; fav_count: number }>) {
+    out[row.bar_id] = Number(row.fav_count) || 0;
+  }
+  return out;
+}
+
 export async function toggleBarFavoriteApi(
   eventId: string,
   userId: string,

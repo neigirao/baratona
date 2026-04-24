@@ -1,13 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { EventBar, DishRating } from '@/lib/platformApi';
-import { getDishRatingsApi, getBarFavoritesApi, toggleBarFavoriteApi } from '@/lib/platformApi';
+import {
+  getDishRatingsApi,
+  getBarFavoritesApi,
+  toggleBarFavoriteApi,
+  getBarFavoriteCountsApi,
+} from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles } from 'lucide-react';
+import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2 } from 'lucide-react';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
 import { CircuitMap } from './CircuitMap';
 
@@ -33,29 +40,66 @@ function instagramUrl(handle: string) {
 export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProps) {
   const { user, signInWithGoogle } = usePlatformAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [ratings, setRatings] = useState<Record<string, DishRating>>({});
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [favOrder, setFavOrder] = useState<string[]>([]); // explicit ordering for derived event
+  const [favOrder, setFavOrder] = useState<string[]>([]);
+  const [favCounts, setFavCounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [neighborhood, setNeighborhood] = useState<string>('all');
   const [sort, setSort] = useState<SortMode>('order');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const sharedFavsApplied = useRef(false);
 
   useEffect(() => {
     getDishRatingsApi(event.id).then(setRatings).catch(() => {});
+    getBarFavoriteCountsApi(event.id).then(setFavCounts).catch(() => {});
   }, [event.id]);
+
+  // Apply ?favs=id1,id2 once on load (works for anyone, even logged out)
+  useEffect(() => {
+    if (sharedFavsApplied.current) return;
+    const raw = searchParams.get('favs');
+    if (!raw) return;
+    const validIds = new Set(bars.map((b) => b.id).filter(Boolean) as string[]);
+    const ids = raw.split(',').map((s) => s.trim()).filter((id) => validIds.has(id));
+    if (ids.length === 0) return;
+    sharedFavsApplied.current = true;
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+    setFavOrder((prev) => {
+      const merged = [...prev];
+      ids.forEach((id) => { if (!merged.includes(id)) merged.push(id); });
+      return merged;
+    });
+    track('shared_favorites_opened', { event: event.slug, count: ids.length });
+    toast({
+      title: `${ids.length} ${ids.length === 1 ? 'bar carregado' : 'bares carregados'} do link`,
+      description: user ? 'Marque pra salvar na sua conta.' : 'Faça login pra salvar.',
+    });
+    // strip from URL to avoid re-applying on refresh
+    const next = new URLSearchParams(searchParams);
+    next.delete('favs');
+    setSearchParams(next, { replace: true });
+  }, [bars, searchParams, setSearchParams, event.slug, toast, user]);
 
   useEffect(() => {
     if (!user) {
-      setFavorites(new Set());
-      setFavOrder([]);
+      // keep any locally-loaded shared favorites; just don't fetch server set
       return;
     }
     getBarFavoritesApi(event.id, user.id).then((set) => {
-      setFavorites(set);
+      setFavorites((prev) => {
+        const merged = new Set(prev);
+        set.forEach((id) => merged.add(id));
+        return merged;
+      });
       setFavOrder((prev) => {
-        const merged = prev.filter((id) => set.has(id));
+        const merged = [...prev];
         set.forEach((id) => { if (!merged.includes(id)) merged.push(id); });
         return merged;
       });
@@ -89,6 +133,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
   async function handleToggleFavorite(barId: string) {
     if (!user) {
       localStorage.setItem(PENDING_FAV_KEY, JSON.stringify({ eventId: event.id, barId }));
+      track('favorite_blocked_login', { event: event.slug, bar: barId });
       toast({
         title: 'Faça login para salvar sua rota',
         description: 'Entre com Google e continuamos de onde você parou.',
@@ -106,6 +151,8 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
       return next;
     });
     setFavOrder((prev) => (isFav ? prev.filter((id) => id !== barId) : [...prev, barId]));
+    setFavCounts((prev) => ({ ...prev, [barId]: Math.max(0, (prev[barId] || 0) + (isFav ? -1 : 1)) }));
+    track(isFav ? 'bar_unfavorited' : 'bar_favorited', { event: event.slug, bar: barId });
     try {
       await toggleBarFavoriteApi(event.id, user.id, barId, !isFav);
     } catch (e: any) {
@@ -115,7 +162,31 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         if (isFav) next.add(barId); else next.delete(barId);
         return next;
       });
+      setFavCounts((prev) => ({ ...prev, [barId]: Math.max(0, (prev[barId] || 0) + (isFav ? 1 : -1)) }));
       toast({ title: 'Erro', description: e.message || 'Tente novamente', variant: 'destructive' });
+    }
+  }
+
+  async function handleShareFavorites() {
+    if (favOrder.length === 0) return;
+    const url = `${window.location.origin}/baratona/${event.slug}?favs=${favOrder.join(',')}`;
+    const text = `Olha minha rota no ${event.name} (${favOrder.length} ${favOrder.length === 1 ? 'buteco' : 'butecos'})`;
+    track('favorites_shared', { event: event.slug, count: favOrder.length });
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'Link copiado!', description: 'Mande pros amigos.' });
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Link copiado!' });
+      } catch {
+        toast({ title: 'Não foi possível compartilhar', variant: 'destructive' });
+      }
     }
   }
 
@@ -201,15 +272,25 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
               {favCount} {favCount === 1 ? 'bar marcado' : 'bares marcados'}
             </span>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setCreateOpen(true)}
-            disabled={favCount < 3}
-            className="flex-shrink-0"
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            Criar minha baratona
-          </Button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleShareFavorites}
+              aria-label="Compartilhar rota"
+              className="h-9 w-9 p-0"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => { track('create_baratona_dialog_opened', { event: event.slug, count: favCount }); setCreateOpen(true); }}
+              disabled={favCount < 3}
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              Criar minha baratona
+            </Button>
+          </div>
         </div>
       )}
 
@@ -338,10 +419,21 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                 )}
               </div>
               <CardContent className="py-4 space-y-2 flex-1 flex flex-col">
-                <div>
-                  <p className="font-semibold leading-tight">{bar.name}</p>
-                  {bar.neighborhood && (
-                    <p className="text-xs text-muted-foreground">{bar.neighborhood}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold leading-tight">{bar.name}</p>
+                    {bar.neighborhood && (
+                      <p className="text-xs text-muted-foreground">{bar.neighborhood}</p>
+                    )}
+                  </div>
+                  {(favCounts[bar.id || ''] || 0) > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary flex-shrink-0"
+                      title={`${favCounts[bar.id || '']} pessoa(s) marcaram este buteco`}
+                    >
+                      <Users className="w-3 h-3" />
+                      {favCounts[bar.id || '']}
+                    </span>
                   )}
                 </div>
 

@@ -40,29 +40,66 @@ function instagramUrl(handle: string) {
 export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProps) {
   const { user, signInWithGoogle } = usePlatformAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [ratings, setRatings] = useState<Record<string, DishRating>>({});
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [favOrder, setFavOrder] = useState<string[]>([]); // explicit ordering for derived event
+  const [favOrder, setFavOrder] = useState<string[]>([]);
+  const [favCounts, setFavCounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [neighborhood, setNeighborhood] = useState<string>('all');
   const [sort, setSort] = useState<SortMode>('order');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const sharedFavsApplied = useRef(false);
 
   useEffect(() => {
     getDishRatingsApi(event.id).then(setRatings).catch(() => {});
+    getBarFavoriteCountsApi(event.id).then(setFavCounts).catch(() => {});
   }, [event.id]);
+
+  // Apply ?favs=id1,id2 once on load (works for anyone, even logged out)
+  useEffect(() => {
+    if (sharedFavsApplied.current) return;
+    const raw = searchParams.get('favs');
+    if (!raw) return;
+    const validIds = new Set(bars.map((b) => b.id).filter(Boolean) as string[]);
+    const ids = raw.split(',').map((s) => s.trim()).filter((id) => validIds.has(id));
+    if (ids.length === 0) return;
+    sharedFavsApplied.current = true;
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+    setFavOrder((prev) => {
+      const merged = [...prev];
+      ids.forEach((id) => { if (!merged.includes(id)) merged.push(id); });
+      return merged;
+    });
+    track('shared_favorites_opened', { event: event.slug, count: ids.length });
+    toast({
+      title: `${ids.length} ${ids.length === 1 ? 'bar carregado' : 'bares carregados'} do link`,
+      description: user ? 'Marque pra salvar na sua conta.' : 'Faça login pra salvar.',
+    });
+    // strip from URL to avoid re-applying on refresh
+    const next = new URLSearchParams(searchParams);
+    next.delete('favs');
+    setSearchParams(next, { replace: true });
+  }, [bars, searchParams, setSearchParams, event.slug, toast, user]);
 
   useEffect(() => {
     if (!user) {
-      setFavorites(new Set());
-      setFavOrder([]);
+      // keep any locally-loaded shared favorites; just don't fetch server set
       return;
     }
     getBarFavoritesApi(event.id, user.id).then((set) => {
-      setFavorites(set);
+      setFavorites((prev) => {
+        const merged = new Set(prev);
+        set.forEach((id) => merged.add(id));
+        return merged;
+      });
       setFavOrder((prev) => {
-        const merged = prev.filter((id) => set.has(id));
+        const merged = [...prev];
         set.forEach((id) => { if (!merged.includes(id)) merged.push(id); });
         return merged;
       });

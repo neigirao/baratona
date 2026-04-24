@@ -394,9 +394,19 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
           return (
             <Card
               key={bar.id}
-              className={`bg-card/60 overflow-hidden flex flex-col transition-all ${
+              className={`bg-card/60 overflow-hidden flex flex-col transition-all cursor-pointer hover:ring-1 hover:ring-border ${
                 isFav ? 'ring-2 ring-primary shadow-lg shadow-primary/20' : ''
               }`}
+              onClick={() => bar.id && setActiveBarId(bar.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && bar.id) {
+                  e.preventDefault();
+                  setActiveBarId(bar.id);
+                }
+              }}
+              aria-label={`Ver detalhes de ${bar.name}`}
             >
               <div className="aspect-[4/3] bg-muted overflow-hidden relative">
                 {bar.dishImageUrl && (
@@ -413,7 +423,10 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                 {/* Favorite toggle */}
                 <button
                   type="button"
-                  onClick={() => bar.id && handleToggleFavorite(bar.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (bar.id) handleToggleFavorite(bar.id);
+                  }}
                   className={`absolute top-2 left-2 w-9 h-9 rounded-full backdrop-blur flex items-center justify-center transition-all ${
                     isFav
                       ? 'bg-primary text-primary-foreground scale-110'
@@ -462,36 +475,9 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
-                  {bar.address && (
-                    <a
-                      href={googleMapsUrl(`${bar.name} ${bar.address}`)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/70"
-                    >
-                      <MapPin className="w-3 h-3" /> Mapa
-                    </a>
-                  )}
-                  {bar.phone && (
-                    <a
-                      href={`tel:${bar.phone.replace(/\D/g, '')}`}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/70"
-                    >
-                      <Phone className="w-3 h-3" /> Ligar
-                    </a>
-                  )}
-                  {bar.instagram && (
-                    <a
-                      href={instagramUrl(bar.instagram)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/70"
-                    >
-                      <Instagram className="w-3 h-3" /> Instagram
-                    </a>
-                  )}
-                </div>
+                <p className="text-xs text-primary mt-auto pt-1 font-medium">
+                  Ver detalhes →
+                </p>
               </CardContent>
             </Card>
           );

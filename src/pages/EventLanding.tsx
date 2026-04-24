@@ -192,6 +192,7 @@ export default function EventLanding() {
               )}
             </div>
           </div>
+          <HighContrastToggle className="flex-shrink-0" />
         </div>
 
         {event.description && (

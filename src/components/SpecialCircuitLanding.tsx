@@ -29,15 +29,7 @@ type SortMode = 'order' | 'rating' | 'name';
 
 const PENDING_FAV_KEY = 'baratona:pending-favorite';
 
-function googleMapsUrl(query: string) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-}
-
-function instagramUrl(handle: string) {
-  if (handle.startsWith('http')) return handle;
-  const clean = handle.replace(/^@/, '');
-  return `https://instagram.com/${clean}`;
-}
+// (URL helpers moved into BarDetailDrawer)
 
 export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProps) {
   const { user, signInWithGoogle } = usePlatformAuth();
@@ -495,6 +487,17 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         }}
         onReorder={(ids) => setFavOrder(ids)}
         defaultName={`Minha rota ${event.name}`}
+      />
+
+      <BarDetailDrawer
+        bar={bars.find((b) => b.id === activeBarId) ?? null}
+        open={Boolean(activeBarId)}
+        onOpenChange={(o) => { if (!o) setActiveBarId(null); }}
+        rating={activeBarId ? ratings[activeBarId] : undefined}
+        favoriteCount={activeBarId ? favCounts[activeBarId] || 0 : 0}
+        isFavorite={activeBarId ? favorites.has(activeBarId) : false}
+        onToggleFavorite={handleToggleFavorite}
+        eventSlug={event.slug}
       />
     </section>
   );

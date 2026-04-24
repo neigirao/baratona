@@ -813,6 +813,13 @@ export type Database = {
           slug: string
         }[]
       }
+      get_bar_favorite_counts: {
+        Args: { _event_id: string }
+        Returns: {
+          bar_id: string
+          fav_count: number
+        }[]
+      }
       get_public_events_with_counts: {
         Args: never
         Returns: {

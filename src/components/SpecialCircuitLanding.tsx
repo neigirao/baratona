@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import type { EventBar, DishRating } from '@/lib/platformApi';
 import {
   getDishRatingsApi,
@@ -14,9 +15,10 @@ import { track } from '@/lib/analytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2 } from 'lucide-react';
+import { Utensils, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2 } from 'lucide-react';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
 import { CircuitMap } from './CircuitMap';
+import { BarDetailDrawer } from './BarDetailDrawer';
 
 interface SpecialCircuitLandingProps {
   event: PlatformEvent;
@@ -41,7 +43,6 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
   const { user, signInWithGoogle } = usePlatformAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [ratings, setRatings] = useState<Record<string, DishRating>>({});
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [favOrder, setFavOrder] = useState<string[]>([]);
   const [favCounts, setFavCounts] = useState<Record<string, number>>({});
@@ -50,12 +51,25 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
   const [sort, setSort] = useState<SortMode>('order');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [activeBarId, setActiveBarId] = useState<string | null>(null);
   const sharedFavsApplied = useRef(false);
 
+  // Cached ratings + counts via React Query (shared across remounts)
+  const ratingsQuery = useQuery({
+    queryKey: ['dish-ratings', event.id],
+    queryFn: () => getDishRatingsApi(event.id),
+    staleTime: 60_000,
+  });
+  const ratings: Record<string, DishRating> = ratingsQuery.data ?? {};
+
+  const countsQuery = useQuery({
+    queryKey: ['bar-fav-counts', event.id],
+    queryFn: () => getBarFavoriteCountsApi(event.id),
+    staleTime: 30_000,
+  });
   useEffect(() => {
-    getDishRatingsApi(event.id).then(setRatings).catch(() => {});
-    getBarFavoriteCountsApi(event.id).then(setFavCounts).catch(() => {});
-  }, [event.id]);
+    if (countsQuery.data) setFavCounts(countsQuery.data);
+  }, [countsQuery.data]);
 
   // Apply ?favs=id1,id2 once on load (works for anyone, even logged out)
   useEffect(() => {

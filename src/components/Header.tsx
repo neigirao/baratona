@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Globe, Settings, PartyPopper, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
+import { HighContrastToggle } from '@/components/HighContrastToggle';
 
 export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
   const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
@@ -57,7 +58,10 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
             <Globe className="h-3.5 w-3.5" />
             <span className="uppercase">{language}</span>
           </Button>
-          
+
+          {/* High contrast */}
+          <HighContrastToggle />
+
           {/* Admin Button */}
           {isAdmin && (
             <Link to="/admin">

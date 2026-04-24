@@ -1,16 +1,17 @@
 import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSeo } from '@/hooks/useSeo';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import NotFound from './NotFound';
-import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, redeemInviteApi, type EventBar } from '@/lib/platformApi';
-import type { PlatformEvent } from '@/lib/platformEvents';
+import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, redeemInviteApi } from '@/lib/platformApi';
 import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 import { BaratonaHero } from '@/components/BaratonaHero';
+import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { track } from '@/lib/analytics';
 
 export default function EventLanding() {
@@ -18,44 +19,54 @@ export default function EventLanding() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { user } = usePlatformAuth();
-  const [event, setEvent] = useState<PlatformEvent | null>(null);
-  const [bars, setBars] = useState<EventBar[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [isMember, setIsMember] = useState(false);
   const [joining, setJoining] = useState(false);
   const inviteCode = params.get('invite');
   const redeemAttempted = useRef(false);
+  const viewTracked = useRef(false);
+
+  const eventQuery = useQuery({
+    queryKey: ['event', slug],
+    queryFn: () => findEventBySlugApi(slug),
+    enabled: Boolean(slug),
+    staleTime: 60_000,
+  });
+  const event = eventQuery.data ?? null;
+
+  const barsQuery = useQuery({
+    queryKey: ['event-bars', event?.id],
+    queryFn: () => getEventBarsApi(event!.id),
+    enabled: Boolean(event?.id),
+    staleTime: 60_000,
+  });
+  const bars = barsQuery.data ?? [];
+
+  const memberQuery = useQuery({
+    queryKey: ['event-member', event?.id, user?.id],
+    queryFn: () => isEventMemberApi(event!.id, user!.id),
+    enabled: Boolean(event?.id && user?.id),
+    staleTime: 30_000,
+  });
+  useEffect(() => {
+    if (memberQuery.data !== undefined) setIsMember(memberQuery.data);
+  }, [memberQuery.data]);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const ev = await findEventBySlugApi(slug);
-        setEvent(ev);
-        if (ev) {
-          track('event_viewed', { event: ev.slug, type: ev.eventType });
-          const eventBars = await getEventBarsApi(ev.id);
-          setBars(eventBars);
-          if (user) {
-            const member = await isEventMemberApi(ev.id, user.id);
-            setIsMember(member);
-          }
-        }
-      } catch {
-        setError('Erro ao carregar evento.');
-      } finally {
-        setLoading(false);
-      }
+    if (event && !viewTracked.current) {
+      viewTracked.current = true;
+      track('event_viewed', { event: event.slug, type: event.eventType });
     }
-    load();
-  }, [slug, user]);
+  }, [event]);
 
+  // Auto-redeem invite code from URL once user is logged in
   useEffect(() => {
     if (!user || !event || isMember || !inviteCode || redeemAttempted.current) return;
     redeemAttempted.current = true;
     redeemInviteApi(inviteCode, user.user_metadata?.full_name || user.email || 'Participante')
       .then(() => {
         setIsMember(true);
+        queryClient.invalidateQueries({ queryKey: ['event-member', event.id, user.id] });
         toast({ title: 'Você entrou na baratona! 🎉' });
         navigate(`/baratona/${slug}`, { replace: true });
       })
@@ -66,7 +77,10 @@ export default function EventLanding() {
           variant: 'destructive',
         });
       });
-  }, [user, event, isMember, inviteCode, navigate, slug]);
+  }, [user, event, isMember, inviteCode, navigate, slug, queryClient]);
+
+  const loading = eventQuery.isLoading || (Boolean(event) && barsQuery.isLoading);
+  const error = eventQuery.isError ? 'Erro ao carregar evento.' : null;
 
   const shareUrl = event ? `${window.location.origin}/baratona/${event.slug}` : undefined;
   const seoDescription = event
@@ -94,6 +108,7 @@ export default function EventLanding() {
     try {
       await joinEventApi(event.id, user.id, user.user_metadata?.full_name || user.email || 'Participante');
       setIsMember(true);
+      queryClient.invalidateQueries({ queryKey: ['event-member', event.id, user.id] });
       track('event_joined', { event: event.slug, type: event.eventType });
       toast({ title: 'Você entrou na baratona! 🎉' });
     } catch {
@@ -177,6 +192,7 @@ export default function EventLanding() {
               )}
             </div>
           </div>
+          <HighContrastToggle className="flex-shrink-0" />
         </div>
 
         {event.description && (

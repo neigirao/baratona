@@ -133,6 +133,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
   async function handleToggleFavorite(barId: string) {
     if (!user) {
       localStorage.setItem(PENDING_FAV_KEY, JSON.stringify({ eventId: event.id, barId }));
+      track('favorite_blocked_login', { event: event.slug, bar: barId });
       toast({
         title: 'Faça login para salvar sua rota',
         description: 'Entre com Google e continuamos de onde você parou.',
@@ -150,6 +151,8 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
       return next;
     });
     setFavOrder((prev) => (isFav ? prev.filter((id) => id !== barId) : [...prev, barId]));
+    setFavCounts((prev) => ({ ...prev, [barId]: Math.max(0, (prev[barId] || 0) + (isFav ? -1 : 1)) }));
+    track(isFav ? 'bar_unfavorited' : 'bar_favorited', { event: event.slug, bar: barId });
     try {
       await toggleBarFavoriteApi(event.id, user.id, barId, !isFav);
     } catch (e: any) {
@@ -159,7 +162,31 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         if (isFav) next.add(barId); else next.delete(barId);
         return next;
       });
+      setFavCounts((prev) => ({ ...prev, [barId]: Math.max(0, (prev[barId] || 0) + (isFav ? 1 : -1)) }));
       toast({ title: 'Erro', description: e.message || 'Tente novamente', variant: 'destructive' });
+    }
+  }
+
+  async function handleShareFavorites() {
+    if (favOrder.length === 0) return;
+    const url = `${window.location.origin}/baratona/${event.slug}?favs=${favOrder.join(',')}`;
+    const text = `Olha minha rota no ${event.name} (${favOrder.length} ${favOrder.length === 1 ? 'buteco' : 'butecos'})`;
+    track('favorites_shared', { event: event.slug, count: favOrder.length });
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'Link copiado!', description: 'Mande pros amigos.' });
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Link copiado!' });
+      } catch {
+        toast({ title: 'Não foi possível compartilhar', variant: 'destructive' });
+      }
     }
   }
 

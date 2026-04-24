@@ -11,6 +11,7 @@ import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 import { BaratonaHero } from '@/components/BaratonaHero';
+import { track } from '@/lib/analytics';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();
@@ -32,6 +33,7 @@ export default function EventLanding() {
         const ev = await findEventBySlugApi(slug);
         setEvent(ev);
         if (ev) {
+          track('event_viewed', { event: ev.slug, type: ev.eventType });
           const eventBars = await getEventBarsApi(ev.id);
           setBars(eventBars);
           if (user) {
@@ -84,6 +86,7 @@ export default function EventLanding() {
 
   const handleJoin = async () => {
     if (!user) {
+      track('join_blocked_login', { event: event?.slug });
       toast({ title: 'Faça login para participar', variant: 'destructive' });
       return;
     }
@@ -91,6 +94,7 @@ export default function EventLanding() {
     try {
       await joinEventApi(event.id, user.id, user.user_metadata?.full_name || user.email || 'Participante');
       setIsMember(true);
+      track('event_joined', { event: event.slug, type: event.eventType });
       toast({ title: 'Você entrou na baratona! 🎉' });
     } catch {
       toast({ title: 'Erro ao entrar no evento', variant: 'destructive' });

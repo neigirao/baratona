@@ -1,13 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { EventBar, DishRating } from '@/lib/platformApi';
-import { getDishRatingsApi, getBarFavoritesApi, toggleBarFavoriteApi } from '@/lib/platformApi';
+import {
+  getDishRatingsApi,
+  getBarFavoritesApi,
+  toggleBarFavoriteApi,
+  getBarFavoriteCountsApi,
+} from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles } from 'lucide-react';
+import { MapPin, Utensils, Phone, Instagram, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2 } from 'lucide-react';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
 import { CircuitMap } from './CircuitMap';
 

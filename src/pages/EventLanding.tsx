@@ -59,6 +59,26 @@ export default function EventLanding() {
     }
   }, [event]);
 
+  // Auto-redeem invite code from URL once user is logged in
+  useEffect(() => {
+    if (!user || !event || isMember || !inviteCode || redeemAttempted.current) return;
+    redeemAttempted.current = true;
+    redeemInviteApi(inviteCode, user.user_metadata?.full_name || user.email || 'Participante')
+      .then(() => {
+        setIsMember(true);
+        queryClient.invalidateQueries({ queryKey: ['event-member', event.id, user.id] });
+        toast({ title: 'Você entrou na baratona! 🎉' });
+        navigate(`/baratona/${slug}`, { replace: true });
+      })
+      .catch((err) => {
+        toast({
+          title: 'Convite inválido',
+          description: err instanceof Error ? err.message : 'Tente novamente',
+          variant: 'destructive',
+        });
+      });
+  }, [user, event, isMember, inviteCode, navigate, slug, queryClient]);
+
   const loading = eventQuery.isLoading || (Boolean(event) && barsQuery.isLoading);
   const error = eventQuery.isError ? 'Erro ao carregar evento.' : null;
 
@@ -88,6 +108,7 @@ export default function EventLanding() {
     try {
       await joinEventApi(event.id, user.id, user.user_metadata?.full_name || user.email || 'Participante');
       setIsMember(true);
+      queryClient.invalidateQueries({ queryKey: ['event-member', event.id, user.id] });
       track('event_joined', { event: event.slug, type: event.eventType });
       toast({ title: 'Você entrou na baratona! 🎉' });
     } catch {

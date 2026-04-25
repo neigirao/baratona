@@ -19,6 +19,7 @@ import { Utensils, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
 import { CircuitMap } from './CircuitMap';
 import { BarDetailDrawer } from './BarDetailDrawer';
+import { LoadError } from '@/components/ui/load-error';
 
 interface SpecialCircuitLandingProps {
   event: PlatformEvent;

@@ -91,7 +91,14 @@ export default function MyBaratonas() {
           </Button>
         </div>
 
-        {error && <p className="text-destructive">{error}</p>}
+        {hasError && (
+          <LoadError
+            title="Não foi possível carregar suas baratonas"
+            onRetry={refetchAll}
+            retrying={refetching}
+            compact
+          />
+        )}
 
         <Section
           title="Que você criou"

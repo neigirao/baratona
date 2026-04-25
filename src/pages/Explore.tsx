@@ -78,19 +78,16 @@ export default function Explore() {
           ))}
         </div>
 
-        {loading && (
-          <div className="grid md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i}><CardContent className="pt-6 space-y-3">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent></Card>
-            ))}
-          </div>
-        )}
+        {loading && <EventCardSkeletonGrid count={4} />}
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <LoadError
+            title="Não foi possível carregar as baratonas"
+            message="Verifique sua conexão e tente novamente."
+            onRetry={() => eventsQuery.refetch()}
+            retrying={eventsQuery.isFetching}
+          />
+        )}
 
         {!loading && !error && filtered.length === 0 && (
           <div className="text-center py-16 space-y-4">

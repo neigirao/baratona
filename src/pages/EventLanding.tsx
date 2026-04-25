@@ -13,6 +13,8 @@ import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 import { BaratonaHero } from '@/components/BaratonaHero';
 import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { track } from '@/lib/analytics';
+import { LoadError } from '@/components/ui/load-error';
+import { EventLandingSkeleton } from '@/components/ui/list-skeletons';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();
@@ -94,8 +96,26 @@ export default function EventLanding() {
   );
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;
-  if (loading) return <div className="p-8">Carregando...</div>;
-  if (error) return <div className="p-8 text-destructive">{error}</div>;
+  if (loading) return <EventLandingSkeleton />;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <LoadError
+            title="Não foi possível carregar este evento"
+            message="Pode ser uma instabilidade temporária da rede."
+            onRetry={() => eventQuery.refetch()}
+            retrying={eventQuery.isFetching}
+          />
+          <div className="mt-4 text-center">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/explorar"><ChevronLeft className="w-4 h-4 mr-1" /> Voltar para explorar</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!event) return <NotFound />;
 
   const handleJoin = async () => {

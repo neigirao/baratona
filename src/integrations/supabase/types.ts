@@ -820,6 +820,7 @@ export type Database = {
           fav_count: number
         }[]
       }
+      get_event_member_count: { Args: { _event_id: string }; Returns: number }
       get_public_events_with_counts: {
         Args: never
         Returns: {

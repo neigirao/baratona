@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { BaratonaProvider } from '@/contexts/BaratonaContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { BackendHealthBanner } from '@/components/BackendHealthBanner';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 
@@ -49,6 +50,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <BackendHealthBanner />
         <BrowserRouter>
           <Suspense fallback={<RouteFallback />}>
             <Routes>

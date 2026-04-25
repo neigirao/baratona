@@ -19,6 +19,7 @@ import { Utensils, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
 import { CircuitMap } from './CircuitMap';
 import { BarDetailDrawer } from './BarDetailDrawer';
+import { LoadError } from '@/components/ui/load-error';
 
 interface SpecialCircuitLandingProps {
   event: PlatformEvent;
@@ -304,6 +305,19 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         <p className="text-xs text-muted-foreground -mt-1">
           Marque pelo menos {3 - favCount} {3 - favCount === 1 ? 'bar' : 'bares'} a mais para criar sua rota.
         </p>
+      )}
+
+      {(ratingsQuery.isError || countsQuery.isError) && (
+        <LoadError
+          compact
+          title="Avaliações indisponíveis"
+          message="Os bares estão visíveis, mas notas e marcações não carregaram."
+          onRetry={() => {
+            ratingsQuery.refetch();
+            countsQuery.refetch();
+          }}
+          retrying={ratingsQuery.isFetching || countsQuery.isFetching}
+        />
       )}
 
       <CircuitMap

@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LoadError } from '@/components/ui/load-error';
 import { useSeo } from '@/hooks/useSeo';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { listEventsByOwnerApi, listEventsJoinedByUserApi } from '@/lib/platformApi';
@@ -16,24 +18,34 @@ export default function MyBaratonas() {
   const { user, loading: authLoading, signInWithGoogle } = usePlatformAuth();
   useSeo('Minhas baratonas | Baratona', 'Eventos que você criou e baratonas em que está participando.');
 
-  const [owned, setOwned] = useState<EnrichedOwned[] | null>(null);
-  const [joined, setJoined] = useState<EnrichedJoined[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const ownedQuery = useQuery({
+    queryKey: ['my-events-owned', user?.id],
+    queryFn: () => listEventsByOwnerApi(user!.id),
+    enabled: Boolean(user),
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const joinedQuery = useQuery({
+    queryKey: ['my-events-joined', user?.id],
+    queryFn: () => listEventsJoinedByUserApi(user!.id),
+    enabled: Boolean(user),
+    staleTime: 30_000,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      listEventsByOwnerApi(user.id),
-      listEventsJoinedByUserApi(user.id),
-    ])
-      .then(([o, j]) => {
-        setOwned(o);
-        // Filter out events that the user owns from "joined" to avoid duplication
-        const ownedIds = new Set(o.map((e) => e.id));
-        setJoined(j.filter((e) => !ownedIds.has(e.id)));
-      })
-      .catch(() => setError('Não foi possível carregar suas baratonas.'));
-  }, [user]);
+  const owned: EnrichedOwned[] | null = ownedQuery.data ?? null;
+  const joined = useMemo<EnrichedJoined[] | null>(() => {
+    if (!joinedQuery.data) return null;
+    const ownedIds = new Set((owned ?? []).map((e) => e.id));
+    return joinedQuery.data.filter((e) => !ownedIds.has(e.id));
+  }, [joinedQuery.data, owned]);
+
+  const hasError = ownedQuery.isError || joinedQuery.isError;
+  const refetching = ownedQuery.isFetching || joinedQuery.isFetching;
+  const refetchAll = () => {
+    ownedQuery.refetch();
+    joinedQuery.refetch();
+  };
 
   if (authLoading) return <div className="p-8 text-muted-foreground">Carregando...</div>;
 
@@ -79,7 +91,14 @@ export default function MyBaratonas() {
           </Button>
         </div>
 
-        {error && <p className="text-destructive">{error}</p>}
+        {hasError && (
+          <LoadError
+            title="Não foi possível carregar suas baratonas"
+            onRetry={refetchAll}
+            retrying={refetching}
+            compact
+          />
+        )}
 
         <Section
           title="Que você criou"

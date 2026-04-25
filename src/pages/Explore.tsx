@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadError } from '@/components/ui/load-error';
+import { EventCardSkeletonGrid } from '@/components/ui/list-skeletons';
 import { type PlatformEvent } from '@/lib/platformEvents';
 import { listPublicEventsWithBarCountApi } from '@/lib/platformApi';
 import { useSeo } from '@/hooks/useSeo';
@@ -16,16 +18,16 @@ export default function Explore() {
   useSeo('Explorar baratonas | Baratona Platform', 'Encontre baratonas e circuitos especiais por nome, cidade e tipo.');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
-  const [events, setEvents] = useState<EnrichedEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    listPublicEventsWithBarCountApi()
-      .then(setEvents)
-      .catch(() => setError('Não foi possível carregar as baratonas.'))
-      .finally(() => setLoading(false));
-  }, []);
+  const eventsQuery = useQuery({
+    queryKey: ['public-events'],
+    queryFn: listPublicEventsWithBarCountApi,
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const events: EnrichedEvent[] = eventsQuery.data ?? [];
+  const loading = eventsQuery.isLoading;
+  const error = eventsQuery.isError;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -76,19 +78,16 @@ export default function Explore() {
           ))}
         </div>
 
-        {loading && (
-          <div className="grid md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i}><CardContent className="pt-6 space-y-3">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent></Card>
-            ))}
-          </div>
-        )}
+        {loading && <EventCardSkeletonGrid count={4} />}
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <LoadError
+            title="Não foi possível carregar as baratonas"
+            message="Verifique sua conexão e tente novamente."
+            onRetry={() => eventsQuery.refetch()}
+            retrying={eventsQuery.isFetching}
+          />
+        )}
 
         {!loading && !error && filtered.length === 0 && (
           <div className="text-center py-16 space-y-4">

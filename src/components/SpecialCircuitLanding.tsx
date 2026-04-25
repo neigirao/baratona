@@ -307,6 +307,19 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         </p>
       )}
 
+      {(ratingsQuery.isError || countsQuery.isError) && (
+        <LoadError
+          compact
+          title="Avaliações indisponíveis"
+          message="Os bares estão visíveis, mas notas e marcações não carregaram."
+          onRetry={() => {
+            ratingsQuery.refetch();
+            countsQuery.refetch();
+          }}
+          retrying={ratingsQuery.isFetching || countsQuery.isFetching}
+        />
+      )}
+
       <CircuitMap
         bars={bars}
         favorites={favorites}

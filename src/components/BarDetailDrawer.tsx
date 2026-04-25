@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -7,6 +8,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   MapPin,
   Phone,
@@ -16,6 +18,7 @@ import {
   Users,
   Clock,
   Utensils,
+  ImageOff,
 } from 'lucide-react';
 import type { EventBar, DishRating } from '@/lib/platformApi';
 import { track } from '@/lib/analytics';

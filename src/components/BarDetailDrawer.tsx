@@ -53,6 +53,12 @@ export function BarDetailDrawer({
   onToggleFavorite,
   eventSlug,
 }: Props) {
+  const imgUrl = bar?.dishImageUrl;
+  const [imgState, setImgState] = useState<'loading' | 'loaded' | 'error'>('loading');
+  useEffect(() => {
+    setImgState(imgUrl ? 'loading' : 'loaded');
+  }, [imgUrl, bar?.id]);
+
   if (!bar) return null;
 
   const handleAction = (kind: string, href: string) => {
@@ -69,17 +75,28 @@ export function BarDetailDrawer({
       }}
     >
       <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto p-0 rounded-t-2xl">
-        {bar.dishImageUrl && (
-          <div className="aspect-[16/10] bg-muted overflow-hidden">
-            <img
-              src={bar.dishImageUrl}
-              alt={bar.featuredDish || bar.name}
-              loading="lazy"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLElement).style.display = 'none';
-              }}
-            />
+        {imgUrl && (
+          <div className="aspect-[16/10] bg-muted overflow-hidden relative">
+            {imgState === 'loading' && (
+              <Skeleton className="absolute inset-0 rounded-none" />
+            )}
+            {imgState === 'error' ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <ImageOff className="w-8 h-8 opacity-60" />
+                <span className="text-xs">Imagem indisponível</span>
+              </div>
+            ) : (
+              <img
+                src={imgUrl}
+                alt={bar.featuredDish || bar.name}
+                loading="lazy"
+                className={`w-full h-full object-cover transition-opacity ${
+                  imgState === 'loaded' ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setImgState('loaded')}
+                onError={() => setImgState('error')}
+              />
+            )}
           </div>
         )}
 

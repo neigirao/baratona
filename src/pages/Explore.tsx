@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadError } from '@/components/ui/load-error';
+import { EventCardSkeletonGrid } from '@/components/ui/list-skeletons';
 import { type PlatformEvent } from '@/lib/platformEvents';
 import { listPublicEventsWithBarCountApi } from '@/lib/platformApi';
 import { useSeo } from '@/hooks/useSeo';
@@ -16,16 +18,16 @@ export default function Explore() {
   useSeo('Explorar baratonas | Baratona Platform', 'Encontre baratonas e circuitos especiais por nome, cidade e tipo.');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
-  const [events, setEvents] = useState<EnrichedEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    listPublicEventsWithBarCountApi()
-      .then(setEvents)
-      .catch(() => setError('Não foi possível carregar as baratonas.'))
-      .finally(() => setLoading(false));
-  }, []);
+  const eventsQuery = useQuery({
+    queryKey: ['public-events'],
+    queryFn: listPublicEventsWithBarCountApi,
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const events: EnrichedEvent[] = eventsQuery.data ?? [];
+  const loading = eventsQuery.isLoading;
+  const error = eventsQuery.isError;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

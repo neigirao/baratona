@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
+import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,13 +12,15 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Clock, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper, Info, Pencil } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
 import { EventRetrospective } from '@/components/EventRetrospective';
 import { EventWrapped } from '@/components/EventWrapped';
+import { EventInfoEditor } from '@/components/admin/EventInfoEditor';
+import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
 
 function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
   const {

@@ -12,7 +12,7 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Clock, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper, Info, Pencil } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Clock, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper, Info, Pencil, BarChart3 } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';

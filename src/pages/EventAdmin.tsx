@@ -22,7 +22,7 @@ import { EventWrapped } from '@/components/EventWrapped';
 import { EventInfoEditor } from '@/components/admin/EventInfoEditor';
 import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
 
-function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
+function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; slug: string; isSuperAdmin: boolean }) {
   const {
     bars, appConfig, updateAppConfig, participants, getCurrentBar, getNextBar,
     currentBarId, getBarVotes,

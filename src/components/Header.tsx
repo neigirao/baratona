@@ -1,12 +1,14 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Globe, Settings, PartyPopper, KeyRound } from 'lucide-react';
+import { Globe, Settings, PartyPopper, KeyRound, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 import { HighContrastToggle } from '@/components/HighContrastToggle';
+import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 
 export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
   const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
+  const { isSuperAdmin } = usePlatformAdmin();
   
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -62,7 +64,16 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
           {/* High contrast */}
           <HighContrastToggle />
 
-          {/* Admin Button */}
+          {/* Platform super-admin shortcut */}
+          {isSuperAdmin && (
+            <Link to="/admin/plataforma" title="Admin da plataforma">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary">
+                <ShieldCheck className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+
+          {/* Admin Button (Nei legacy) */}
           {isAdmin && (
             <Link to="/admin">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">

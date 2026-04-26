@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
+import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,15 +12,17 @@ import { findEventBySlugApi, getEventBarsApi, type EventBar } from '@/lib/platfo
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, MessageSquare, MapPin, Clock, Megaphone, BarChart3, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Clock, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper, Info, Pencil, BarChart3 } from 'lucide-react';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
 import { EventRetrospective } from '@/components/EventRetrospective';
 import { EventWrapped } from '@/components/EventWrapped';
+import { EventInfoEditor } from '@/components/admin/EventInfoEditor';
+import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
 
-function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }) {
+function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; slug: string; isSuperAdmin: boolean }) {
   const {
     bars, appConfig, updateAppConfig, participants, getCurrentBar, getNextBar,
     currentBarId, getBarVotes,
@@ -213,12 +216,18 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="info"><Info className="w-3.5 h-3.5" /></TabsTrigger>
             <TabsTrigger value="status">Controle</TabsTrigger>
             <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
             <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
             <TabsTrigger value="retro"><BarChart3 className="w-3.5 h-3.5" /></TabsTrigger>
           </TabsList>
+
+          {/* Info tab — edit metadata */}
+          <TabsContent value="info" className="space-y-4 mt-4">
+            <EventInfoEditor event={event} isSuperAdmin={isSuperAdmin} />
+          </TabsContent>
 
           {/* Control tab */}
           <TabsContent value="status" className="space-y-4 mt-4">
@@ -298,29 +307,9 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
             </Card>
           </TabsContent>
 
-          {/* Bars tab */}
+          {/* Bars tab — full CRUD editor */}
           <TabsContent value="bars" className="space-y-2 mt-4">
-            {bars.map((bar) => {
-              const barVotes = getBarVotes(bar.id as any);
-              const avgScore = barVotes.length > 0
-                ? (barVotes.reduce((s: number, v: any) => s + v.drink_score + v.food_score + v.vibe_score + v.service_score, 0) / (barVotes.length * 4)).toFixed(1)
-                : '—';
-              return (
-                <Card key={bar.id} className="bg-card/60">
-                  <CardContent className="py-3 flex items-center gap-3">
-                    <span className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs">{bar.bar_order}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{bar.name}</p>
-                      <p className="text-xs text-muted-foreground">{bar.address}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {bar.scheduled_time}</p>
-                      <p className="text-xs font-semibold">⭐ {avgScore}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <EventBarsEditor eventId={event.id} />
           </TabsContent>
 
           {/* Retrospective tab */}
@@ -347,6 +336,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 export default function EventAdmin() {
   const { slug = '' } = useParams();
   const { user, loading } = usePlatformAuth();
+  const { isSuperAdmin, loading: adminLoading } = usePlatformAdmin();
   const [event, setEvent] = useState<PlatformEvent | null>(null);
   const [eventLoading, setEventLoading] = useState(true);
 
@@ -364,13 +354,14 @@ export default function EventAdmin() {
     load();
   }, [slug]);
 
-  if (loading || eventLoading) return <div className="p-8">Carregando...</div>;
+  if (loading || eventLoading || adminLoading) return <div className="p-8">Carregando...</div>;
   if (!event) return <NotFound />;
-  if (!user || event.ownerId !== user.id) {
+  const canEdit = !!user && (event.ownerId === user.id || isSuperAdmin);
+  if (!canEdit) {
     return (
       <div className="container max-w-xl mx-auto p-10 space-y-3">
         <h1 className="text-2xl font-bold">Acesso restrito</h1>
-        <p className="text-muted-foreground">Somente o organizador pode acessar esse painel.</p>
+        <p className="text-muted-foreground">Somente o organizador (ou super-admin) pode acessar esse painel.</p>
         <Button asChild variant="outline"><Link to={`/baratona/${slug}`}>Voltar ao evento</Link></Button>
       </div>
     );
@@ -378,7 +369,7 @@ export default function EventAdmin() {
 
   return (
     <EventBaratonaProvider eventId={event.id} eventType={event.eventType}>
-      <EventAdminInner event={event} slug={slug} />
+      <EventAdminInner event={event} slug={slug} isSuperAdmin={isSuperAdmin} />
     </EventBaratonaProvider>
   );
 }

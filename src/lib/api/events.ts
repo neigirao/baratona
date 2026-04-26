@@ -2,6 +2,57 @@ import { supabase } from './client';
 import { mapEventRow, mapEnrichedEventRow, type EventBar } from './mappers';
 import type { PlatformEvent } from '@/lib/platformEvents';
 
+export interface EventUpdateInput {
+  name?: string;
+  description?: string | null;
+  city?: string | null;
+  visibility?: 'public' | 'private';
+  eventType?: 'open_baratona' | 'special_circuit';
+  status?: string;
+  eventDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  coverImageUrl?: string | null;
+  externalSourceUrl?: string | null;
+  ownerName?: string | null;
+  slug?: string;
+}
+
+export async function updateEventApi(eventId: string, input: EventUpdateInput): Promise<PlatformEvent> {
+  const patch: Record<string, any> = {};
+  if (input.name !== undefined) patch.name = input.name;
+  if (input.description !== undefined) patch.description = input.description ?? '';
+  if (input.city !== undefined) patch.city = input.city;
+  if (input.visibility !== undefined) patch.visibility = input.visibility;
+  if (input.eventType !== undefined) patch.event_type = input.eventType;
+  if (input.status !== undefined) patch.status = input.status;
+  if (input.eventDate !== undefined) patch.event_date = input.eventDate;
+  if (input.startDate !== undefined) patch.start_date = input.startDate;
+  if (input.endDate !== undefined) patch.end_date = input.endDate;
+  if (input.coverImageUrl !== undefined) patch.cover_image_url = input.coverImageUrl;
+  if (input.externalSourceUrl !== undefined) patch.external_source_url = input.externalSourceUrl;
+  if (input.ownerName !== undefined) patch.owner_name = input.ownerName;
+  if (input.slug !== undefined) patch.slug = input.slug;
+  patch.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('events')
+    .update(patch)
+    .eq('id', eventId)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return mapEventRow(data);
+}
+
+export async function archiveEventApi(eventId: string): Promise<void> {
+  const { error } = await supabase
+    .from('events')
+    .update({ status: 'archived', updated_at: new Date().toISOString() })
+    .eq('id', eventId);
+  if (error) throw error;
+}
+
 export async function listPublicEventsApi(): Promise<PlatformEvent[]> {
   const { data, error } = await supabase
     .from('events')

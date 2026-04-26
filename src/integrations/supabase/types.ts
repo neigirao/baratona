@@ -806,6 +806,51 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_all_events: {
+        Args: never
+        Returns: {
+          bar_count: number
+          city: string
+          cover_image_url: string
+          created_at: string
+          description: string
+          end_date: string
+          event_date: string
+          event_type: string
+          external_source_url: string
+          id: string
+          member_count: number
+          name: string
+          owner_name: string
+          owner_user_id: string
+          slug: string
+          start_date: string
+          status: string
+          updated_at: string
+          visibility: string
+        }[]
+      }
+      admin_list_platform_roles: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          role: string
+          user_id: string
+        }[]
+      }
+      admin_remove_platform_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_platform_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_update_event_owner: {
+        Args: { _event_id: string; _new_owner: string }
+        Returns: undefined
+      }
       create_baratona_from_favorites: {
         Args: { _bar_ids: string[]; _name: string; _source_event_id: string }
         Returns: {

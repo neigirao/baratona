@@ -216,12 +216,18 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="info"><Info className="w-3.5 h-3.5" /></TabsTrigger>
             <TabsTrigger value="status">Controle</TabsTrigger>
             <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
             <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
             <TabsTrigger value="retro"><BarChart3 className="w-3.5 h-3.5" /></TabsTrigger>
           </TabsList>
+
+          {/* Info tab — edit metadata */}
+          <TabsContent value="info" className="space-y-4 mt-4">
+            <EventInfoEditor event={event} isSuperAdmin={false} />
+          </TabsContent>
 
           {/* Control tab */}
           <TabsContent value="status" className="space-y-4 mt-4">

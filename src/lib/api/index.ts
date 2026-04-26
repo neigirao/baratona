@@ -13,6 +13,9 @@ export {
   createEventApi,
   listEventsByOwnerApi,
   listEventsJoinedByUserApi,
+  updateEventApi,
+  archiveEventApi,
+  type EventUpdateInput,
 } from './events';
 export {
   getEventBarsApi,
@@ -21,7 +24,20 @@ export {
   getBarFavoriteCountsApi,
   toggleBarFavoriteApi,
   createBaratonaFromFavoritesApi,
+  createBarApi,
+  updateBarApi,
+  deleteBarApi,
+  reorderBarsApi,
+  type BarInput,
 } from './bars';
+export {
+  adminListAllEventsApi,
+  adminUpdateEventOwnerApi,
+  adminListPlatformRolesApi,
+  adminSetPlatformRoleApi,
+  adminRemovePlatformRoleApi,
+  type PlatformRoleRow,
+} from './admin';
 export {
   getEventMemberCountApi,
   joinEventApi,

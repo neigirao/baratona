@@ -226,7 +226,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
 
           {/* Info tab — edit metadata */}
           <TabsContent value="info" className="space-y-4 mt-4">
-            <EventInfoEditor event={event} isSuperAdmin={false} />
+            <EventInfoEditor event={event} isSuperAdmin={isSuperAdmin} />
           </TabsContent>
 
           {/* Control tab */}
@@ -369,7 +369,7 @@ export default function EventAdmin() {
 
   return (
     <EventBaratonaProvider eventId={event.id} eventType={event.eventType}>
-      <EventAdminInner event={event} slug={slug} />
+      <EventAdminInner event={event} slug={slug} isSuperAdmin={isSuperAdmin} />
     </EventBaratonaProvider>
   );
 }

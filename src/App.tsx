@@ -20,6 +20,7 @@ const EventLanding = lazy(() => import('./pages/EventLanding'));
 const EventLive = lazy(() => import('./pages/EventLive'));
 const EventAdmin = lazy(() => import('./pages/EventAdmin'));
 const Admin = lazy(() => import('./pages/Admin'));
+const PlatformAdmin = lazy(() => import('./pages/PlatformAdmin'));
 const NeiLegacy = lazy(() => import('./pages/NeiLegacy'));
 
 const queryClient = new QueryClient({
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/baratona/:slug" element={<EventLanding />} />
               <Route path="/baratona/:slug/live" element={<EventLive />} />
               <Route path="/baratona/:slug/admin" element={<EventAdmin />} />
+              <Route path="/admin/plataforma" element={<PlatformAdmin />} />
               <Route
                 path="/admin"
                 element={

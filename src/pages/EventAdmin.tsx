@@ -307,29 +307,9 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
             </Card>
           </TabsContent>
 
-          {/* Bars tab */}
+          {/* Bars tab — full CRUD editor */}
           <TabsContent value="bars" className="space-y-2 mt-4">
-            {bars.map((bar) => {
-              const barVotes = getBarVotes(bar.id as any);
-              const avgScore = barVotes.length > 0
-                ? (barVotes.reduce((s: number, v: any) => s + v.drink_score + v.food_score + v.vibe_score + v.service_score, 0) / (barVotes.length * 4)).toFixed(1)
-                : '—';
-              return (
-                <Card key={bar.id} className="bg-card/60">
-                  <CardContent className="py-3 flex items-center gap-3">
-                    <span className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs">{bar.bar_order}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{bar.name}</p>
-                      <p className="text-xs text-muted-foreground">{bar.address}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {bar.scheduled_time}</p>
-                      <p className="text-xs font-semibold">⭐ {avgScore}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <EventBarsEditor eventId={event.id} />
           </TabsContent>
 
           {/* Retrospective tab */}

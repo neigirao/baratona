@@ -336,6 +336,7 @@ function EventAdminInner({ event, slug }: { event: PlatformEvent; slug: string }
 export default function EventAdmin() {
   const { slug = '' } = useParams();
   const { user, loading } = usePlatformAuth();
+  const { isSuperAdmin, loading: adminLoading } = usePlatformAdmin();
   const [event, setEvent] = useState<PlatformEvent | null>(null);
   const [eventLoading, setEventLoading] = useState(true);
 
@@ -353,13 +354,14 @@ export default function EventAdmin() {
     load();
   }, [slug]);
 
-  if (loading || eventLoading) return <div className="p-8">Carregando...</div>;
+  if (loading || eventLoading || adminLoading) return <div className="p-8">Carregando...</div>;
   if (!event) return <NotFound />;
-  if (!user || event.ownerId !== user.id) {
+  const canEdit = !!user && (event.ownerId === user.id || isSuperAdmin);
+  if (!canEdit) {
     return (
       <div className="container max-w-xl mx-auto p-10 space-y-3">
         <h1 className="text-2xl font-bold">Acesso restrito</h1>
-        <p className="text-muted-foreground">Somente o organizador pode acessar esse painel.</p>
+        <p className="text-muted-foreground">Somente o organizador (ou super-admin) pode acessar esse painel.</p>
         <Button asChild variant="outline"><Link to={`/baratona/${slug}`}>Voltar ao evento</Link></Button>
       </div>
     );

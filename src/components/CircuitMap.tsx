@@ -7,6 +7,8 @@ interface CircuitMapProps {
   bars: EventBar[];
   favorites: Set<string>;
   onToggleFavorite?: (barId: string) => void;
+  hideViewToggle?: boolean;
+  totalCount?: number;
 }
 
 type ViewMode = 'all' | 'favorites';

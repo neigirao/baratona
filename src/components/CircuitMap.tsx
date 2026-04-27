@@ -7,6 +7,8 @@ interface CircuitMapProps {
   bars: EventBar[];
   favorites: Set<string>;
   onToggleFavorite?: (barId: string) => void;
+  hideViewToggle?: boolean;
+  totalCount?: number;
 }
 
 type ViewMode = 'all' | 'favorites';
@@ -29,7 +31,7 @@ function buildMultiStopUrl(bars: EventBar[]) {
   return `https://www.google.com/maps/dir/${stops}`;
 }
 
-export function CircuitMap({ bars, favorites, onToggleFavorite }: CircuitMapProps) {
+export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, totalCount }: CircuitMapProps) {
   const [view, setView] = useState<ViewMode>('all');
 
   const barsWithCoords = useMemo(
@@ -107,31 +109,37 @@ export function CircuitMap({ bars, favorites, onToggleFavorite }: CircuitMapProp
         <MapPin className="w-5 h-5 text-primary" />
         <h2 className="font-semibold">Mapa do circuito</h2>
         <span className="text-xs text-muted-foreground ml-auto">
-          {visibleBars.length} de {barsWithCoords.length} no mapa
+          {hideViewToggle
+            ? `${visibleBars.length} ${visibleBars.length === 1 ? 'bar' : 'bares'} no mapa${
+                typeof totalCount === 'number' && totalCount !== visibleBars.length ? ` (de ${totalCount})` : ''
+              }`
+            : `${visibleBars.length} de ${barsWithCoords.length} no mapa`}
         </span>
       </div>
 
-      <div className="flex gap-1.5 mb-3 flex-wrap">
-        <Button
-          size="sm"
-          variant={view === 'all' ? 'default' : 'outline'}
-          onClick={() => setView('all')}
-          className="h-8 text-xs"
-        >
-          <MapPin className="w-3.5 h-3.5 mr-1" />
-          Mostrar todos ({barsWithCoords.length})
-        </Button>
-        <Button
-          size="sm"
-          variant={view === 'favorites' ? 'default' : 'outline'}
-          onClick={() => setView('favorites')}
-          disabled={favCount === 0}
-          className="h-8 text-xs"
-        >
-          <Bookmark className={`w-3.5 h-3.5 mr-1 ${view === 'favorites' ? 'fill-current' : ''}`} />
-          Só marcados ({favCount})
-        </Button>
-      </div>
+      {!hideViewToggle && (
+        <div className="flex gap-1.5 mb-3 flex-wrap">
+          <Button
+            size="sm"
+            variant={view === 'all' ? 'default' : 'outline'}
+            onClick={() => setView('all')}
+            className="h-8 text-xs"
+          >
+            <MapPin className="w-3.5 h-3.5 mr-1" />
+            Mostrar todos ({barsWithCoords.length})
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'favorites' ? 'default' : 'outline'}
+            onClick={() => setView('favorites')}
+            disabled={favCount === 0}
+            className="h-8 text-xs"
+          >
+            <Bookmark className={`w-3.5 h-3.5 mr-1 ${view === 'favorites' ? 'fill-current' : ''}`} />
+            Só marcados ({favCount})
+          </Button>
+        </div>
+      )}
 
       <div className="rounded-lg overflow-hidden h-72 relative border border-border bg-muted">
         {embedUrl && (

@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Utensils, ExternalLink, Star, Search, Bookmark, Sparkles, Users, Share2 } from 'lucide-react';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
+import { SelectBarsForBaratonaDialog } from './SelectBarsForBaratonaDialog';
 import { CircuitMap } from './CircuitMap';
 import { BarDetailDrawer } from './BarDetailDrawer';
 import { LoadError } from '@/components/ui/load-error';
@@ -44,6 +45,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
   const [sort, setSort] = useState<SortMode>('order');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [selectOpen, setSelectOpen] = useState(false);
   const [activeBarId, setActiveBarId] = useState<string | null>(null);
   const sharedFavsApplied = useRef(false);
 
@@ -260,7 +262,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Utensils className="w-5 h-5 text-primary" />
           Petiscos em concurso
@@ -269,6 +271,18 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
           {filteredBars.length} de {bars.length}
         </span>
       </div>
+
+      <Button
+        onClick={() => {
+          track('create_baratona_select_dialog_opened', { event: event.slug, total: bars.length });
+          setSelectOpen(true);
+        }}
+        className="w-full"
+        size="lg"
+      >
+        <Sparkles className="w-4 h-4 mr-2" />
+        Crie sua baratona com esses bares
+      </Button>
 
       {/* Sticky favorites CTA */}
       {favCount > 0 && (
@@ -321,9 +335,11 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
       )}
 
       <CircuitMap
-        bars={bars}
+        bars={filteredBars}
         favorites={favorites}
         onToggleFavorite={handleToggleFavorite}
+        hideViewToggle
+        totalCount={bars.length}
       />
 
 

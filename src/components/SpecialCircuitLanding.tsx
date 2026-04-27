@@ -519,6 +519,16 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         defaultName={`Minha rota ${event.name}`}
       />
 
+      <SelectBarsForBaratonaDialog
+        open={selectOpen}
+        onOpenChange={setSelectOpen}
+        sourceEventId={event.id}
+        sourceEventSlug={event.slug}
+        bars={bars}
+        preselectedIds={favOrder}
+        defaultName={`Minha rota ${event.name}`}
+      />
+
       <BarDetailDrawer
         bar={bars.find((b) => b.id === activeBarId) ?? null}
         open={Boolean(activeBarId)}

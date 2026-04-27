@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createBaratonaFromFavoritesApi, type EventBar } from '@/lib/platformApi';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { track } from '@/lib/analytics';
-import { Search, Loader2, Sparkles } from 'lucide-react';
+import { Search, Loader2, Sparkles, RotateCcw } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -23,6 +23,41 @@ interface Props {
 
 const MIN_BARS = 3;
 const MAX_BARS = 15;
+const DRAFT_KEY_PREFIX = 'baratona:select-draft:';
+
+interface Draft {
+  name: string;
+  selected: string[];
+  updatedAt: number;
+}
+
+function loadDraft(eventId: string): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY_PREFIX + eventId);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Draft;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(eventId: string, draft: Draft) {
+  try {
+    localStorage.setItem(DRAFT_KEY_PREFIX + eventId, JSON.stringify(draft));
+  } catch {
+    /* quota / private mode — ignore */
+  }
+}
+
+function clearDraft(eventId: string) {
+  try {
+    localStorage.removeItem(DRAFT_KEY_PREFIX + eventId);
+  } catch {
+    /* ignore */
+  }
+}
 
 export function SelectBarsForBaratonaDialog({
   open,
@@ -42,17 +77,54 @@ export function SelectBarsForBaratonaDialog({
   const [search, setSearch] = useState('');
   const [neighborhood, setNeighborhood] = useState<string>('all');
   const [submitting, setSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [resumed, setResumed] = useState(false);
 
-  // Reset state on open
+  // On open: hydrate from draft if exists, otherwise use preselected/defaults
   useEffect(() => {
-    if (open) {
-      setSelected(new Set(preselectedIds));
-      setName(defaultName);
-      setSearch('');
-      setNeighborhood('all');
+    if (!open) {
+      setHydrated(false);
+      return;
     }
+    const draft = loadDraft(sourceEventId);
+    const validIds = new Set(bars.map((b) => b.id).filter(Boolean) as string[]);
+    if (draft && (draft.selected.length > 0 || (draft.name && draft.name !== defaultName))) {
+      const filteredSel = draft.selected.filter((id) => validIds.has(id));
+      setSelected(new Set(filteredSel));
+      setName(draft.name || defaultName);
+      setResumed(filteredSel.length > 0);
+    } else {
+      setSelected(new Set(preselectedIds.filter((id) => validIds.has(id))));
+      setName(defaultName);
+      setResumed(false);
+    }
+    setSearch('');
+    setNeighborhood('all');
+    setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, sourceEventId]);
+
+  // Persist draft on every change (after hydration), even with dialog closed if state lingers
+  useEffect(() => {
+    if (!hydrated) return;
+    const hasContent = selected.size > 0 || (name && name !== defaultName);
+    if (hasContent) {
+      saveDraft(sourceEventId, {
+        name,
+        selected: Array.from(selected),
+        updatedAt: Date.now(),
+      });
+    } else {
+      clearDraft(sourceEventId);
+    }
+  }, [hydrated, selected, name, sourceEventId, defaultName]);
+
+  function handleResetDraft() {
+    clearDraft(sourceEventId);
+    setSelected(new Set(preselectedIds));
+    setName(defaultName);
+    setResumed(false);
+  }
 
   const neighborhoods = useMemo(() => {
     const set = new Set<string>();

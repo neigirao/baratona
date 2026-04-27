@@ -31,7 +31,7 @@ function buildMultiStopUrl(bars: EventBar[]) {
   return `https://www.google.com/maps/dir/${stops}`;
 }
 
-export function CircuitMap({ bars, favorites, onToggleFavorite }: CircuitMapProps) {
+export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, totalCount }: CircuitMapProps) {
   const [view, setView] = useState<ViewMode>('all');
 
   const barsWithCoords = useMemo(

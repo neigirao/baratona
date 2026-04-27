@@ -216,12 +216,12 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="info"><Info className="w-3.5 h-3.5" /></TabsTrigger>
-            <TabsTrigger value="status">Controle</TabsTrigger>
-            <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
-            <TabsTrigger value="bars">{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
-            <TabsTrigger value="retro"><BarChart3 className="w-3.5 h-3.5" /></TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 h-auto">
+            <TabsTrigger value="info" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Info className="w-3.5 h-3.5" />Info</TabsTrigger>
+            <TabsTrigger value="status" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Radio className="w-3.5 h-3.5" />Controle</TabsTrigger>
+            <TabsTrigger value="broadcast" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Megaphone className="w-3.5 h-3.5" />Avisos</TabsTrigger>
+            <TabsTrigger value="bars" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Beer className="w-3.5 h-3.5" />{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
+            <TabsTrigger value="retro" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><BarChart3 className="w-3.5 h-3.5" />Retro</TabsTrigger>
           </TabsList>
 
           {/* Info tab — edit metadata */}

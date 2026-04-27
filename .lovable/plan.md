@@ -1,49 +1,43 @@
-## Sprint S8 — Super-admin global + Edição completa de eventos ✅
+# Mapa filtrado + Seleção explícita para criar baratona
 
-Entregue:
-- RLS estendida: dono ou super_admin podem editar `events`, `event_bars`, `event_app_config`, `event_invites`.
-- RPCs admin (SECURITY DEFINER): `admin_list_all_events`, `admin_update_event_owner`, `admin_set_platform_role`, `admin_remove_platform_role`, `admin_list_platform_roles`. Com guard de "último super_admin".
-- Buckets de Storage públicos `event-covers` e `bar-dishes` com policies de upload restritas a owner/super_admin.
-- Painel `/admin/plataforma`: listagem global com filtros, mudar status/visibilidade, transferir propriedade, arquivar; gestão de papéis (promover/remover super_admin).
-- `EventInfoEditor` (aba "Info" no `EventAdmin`): edita name, description, city, datas, capa (com upload), URL externa, owner_name, visibility, event_type. Slug editável só para super_admin.
-- `EventBarsEditor` (substitui aba "Bares"): CRUD completo, reordenação por setas, upload de foto do prato.
-- `usePlatformAdmin` hook + atalho `<ShieldCheck />` no Header para super_admins.
-- `EventAdmin` agora libera acesso a super_admin (não só owner).
+Na página do Comida di Boteco (e qualquer evento "especial"), dois ajustes:
 
-## O que ainda falta nos planos consolidados
+## 1. Filtros refletem no mapa
 
-### Sprint S5 — Discovery & SEO
-1. Sitemap + robots dinâmicos (`/sitemap.xml`).
-2. OpenGraph dinâmico por evento (Edge Function + canvas).
-3. Página `/circuitos` institucional.
-4. Páginas de cidade `/cidade/<slug>` para SEO local.
+Hoje o `CircuitMap` recebe a lista completa de bares (`bars`). Vamos passar `filteredBars`, para que busca, bairro e "só marcados" também filtrem os pinos no mapa.
 
-### Sprint S6 — Engajamento profundo
-1. Deep-link do `BarDetailDrawer` em `/baratona/:slug/bar/:id`.
-2. Comentários públicos por bar (moderados pelo dono).
-3. Push opt-in por evento via `useNotifications`.
-4. `EventWrapped` genérico para qualquer evento.
+- O componente `CircuitMap` já mostra contagem "X de Y" e tem o próprio toggle "Só marcados". Vamos:
+  - Passar `filteredBars` como prop (em vez de `bars`).
+  - Esconder o toggle interno "Mostrar todos / Só marcados" quando os filtros externos já estão aplicando o recorte (evita duplicar controles). O toggle de favoritos da página continua sendo a fonte de verdade.
+- Texto do botão "Abrir no Google Maps" passa a refletir os bares visíveis após filtro (já é o comportamento natural).
 
-### Sprint S7 — Confiabilidade
-1. Testes dos hooks `usePlatformAuth`, `useEventData` e funções críticas de `lib/api`.
-2. Error boundaries por rota com retry contextualizado.
-3. Logs estruturados em `scrape-comida-di-boteco`.
-4. Já entregue antes: `BackendHealthBanner` global.
+## 2. Botão "Criar minha baratona" com seleção explícita
 
-### Débitos pequenos
-- Split de `SpecialCircuitLanding.tsx` (>500 linhas) em `CircuitFilters`/`BarGrid`/`FavoritesStickyBar`.
-- Extrair `useEventMembership` em `EventLanding.tsx`.
-- Adaptar `OnboardingOverlay` para qualquer evento (hoje só Nei legado).
-- Meta tags PWA + manifest no `index.html` para "add to home screen".
-- Extrair camada de serviços de `BaratonaContext` (AGENTS.md item 7.3).
+Hoje só dá pra criar baratona depois de marcar favoritos (Bookmark). Vamos adicionar um fluxo direto:
 
-### Auditoria
-- Linter rodou na S8: warnings restantes são de tabelas legadas do Nei (intencionais) + buckets públicos com listing (esperado para imagens públicas). Nenhum issue novo crítico.
-- `security--run_security_scan` ainda não foi disparado pós-S8 — opcional rodar depois de S5/S6.
+- **Novo botão fixo no topo da página**: "Criar minha baratona" (sempre visível, não depende de ter favoritos).
+- Ao clicar, abre um **novo dialog `SelectBarsForBaratonaDialog`** com:
+  - Lista de todos os bares do evento (com busca e filtro por bairro).
+  - Checkbox por bar; pré-seleciona os favoritos atuais (se houver).
+  - Contador "X selecionados" + regras 3–15 bares (mesma regra do RPC `create_baratona_from_favorites`).
+  - Campo de nome da baratona.
+  - Botão "Criar e abrir" → chama `createBaratonaFromFavoritesApi(eventId, name, selectedIds)` e navega para `/baratona/{slug}/admin`.
+  - Se usuário não está logado, dispara `signInWithGoogle()` antes (mesmo padrão do favorito).
+- O botão antigo "Criar minha baratona" da barra de favoritos continua funcionando (atalho rápido para quem já marcou).
 
-## Fora de escopo (contratos de produto)
-- Reescrita do esquema legado do Nei (`mem://features/legacy-access-nei`).
-- Pagamentos / monetização.
+## Detalhes técnicos
 
-## Próximo passo sugerido
-P2 — Discovery & SEO (Sprint S5), começando por sitemap + OG dinâmico, ou P3 (deep-link do BarDrawer + Wrapped genérico).
+- **Arquivo novo**: `src/components/SelectBarsForBaratonaDialog.tsx` — reaproveita o RPC já existente (`create_baratona_from_favorites`), nenhuma migração necessária.
+- **Editar `src/components/SpecialCircuitLanding.tsx`**:
+  - Trocar `<CircuitMap bars={bars} ... />` por `<CircuitMap bars={filteredBars} ... />`.
+  - Adicionar botão "Criar minha baratona" no header da seção (ao lado de "Petiscos em concurso") ou como CTA dedicado acima do mapa.
+  - Estado `selectDialogOpen` + render do novo dialog.
+- **Editar `src/components/CircuitMap.tsx`**:
+  - Aceitar prop opcional `hideViewToggle?: boolean` para esconder os botões internos "Mostrar todos / Só marcados" quando os filtros externos já fazem o trabalho.
+  - Ajustar o texto da contagem para "X bares no mapa" quando filtrado externamente.
+- **Analytics**: novo evento `create_baratona_select_dialog_opened` e `create_baratona_created_from_select` para diferenciar do fluxo via favoritos.
+
+## Fora de escopo
+
+- Nenhuma mudança de schema, RLS ou edge functions.
+- Eventos públicos não-especiais (ex: open_baratona) não recebem o botão por ora — o fluxo "criar baseado em" faz mais sentido em circuitos grandes (Comida di Boteco). Pode ser estendido depois.

@@ -186,6 +186,8 @@ export function SelectBarsForBaratonaDialog({
         count: orderedIds.length,
       });
       toast({ title: 'Baratona criada!', description: `${count} bares prontos.` });
+      clearDraft(sourceEventId);
+      setResumed(false);
       onOpenChange(false);
       navigate(`/baratona/${slug}/admin`);
     } catch (e: any) {
@@ -207,6 +209,22 @@ export function SelectBarsForBaratonaDialog({
             Escolha de {MIN_BARS} a {MAX_BARS} bares para montar sua rota privada.
           </DialogDescription>
         </DialogHeader>
+
+        {resumed && (
+          <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="text-foreground">
+              Rascunho retomado — continuamos de onde você parou.
+            </span>
+            <button
+              type="button"
+              onClick={handleResetDraft}
+              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground underline whitespace-nowrap"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Recomeçar
+            </button>
+          </div>
+        )}
 
         <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
           <div className="space-y-2">

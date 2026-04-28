@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { withRetry } from '@/hooks/useRetry';
+import { isLegacyReadOnly } from '@/lib/legacyMode';
+import { toast } from 'sonner';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
 type Bar = Database['public']['Tables']['bars']['Row'];
@@ -119,6 +121,10 @@ export function useAppConfig() {
   }, [fetchConfig]);
 
   const updateConfig = useCallback(async (updates: Partial<Omit<AppConfig, 'id' | 'updated_at'>>) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     const { error } = await supabase
       .from('app_config')
       .update(updates)
@@ -172,6 +178,10 @@ export function useVotes() {
     barId: number,
     scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
   ) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     try {
       await withRetry(
         async () => {
@@ -260,6 +270,10 @@ export function useConsumption(currentBarId?: number | null) {
     barId?: number | null,
     subtype?: string
   ) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     const effectiveBarId = barId ?? null;
     
     // Use ref to get current consumption - match by bar_id if provided

@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry } from '@/hooks/useRetry';
+import { isLegacyReadOnly } from '@/lib/legacyMode';
+import { toast } from 'sonner';
 
 interface Checkin {
   id: string;
@@ -43,6 +45,10 @@ export function useCheckins() {
   }, [fetchCheckins]);
 
   const checkIn = useCallback(async (participantId: string, barId: number) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     // Optimistic update
     const optimisticCheckin: Checkin = {
       id: crypto.randomUUID(),
@@ -87,6 +93,10 @@ export function useCheckins() {
   }, [fetchCheckins]);
 
   const checkOut = useCallback(async (participantId: string, barId: number) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     // Optimistic update
     setCheckins(prev => prev.filter(c => 
       !(c.participant_id === participantId && c.bar_id === barId)

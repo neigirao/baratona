@@ -145,6 +145,7 @@ export function useAchievements(participantId: string | undefined) {
   // Unlock an achievement
   const unlockAchievement = useCallback(async (achievementKey: string, language: 'pt' | 'en' = 'pt') => {
     if (!participantId) return false;
+    if (isLegacyReadOnly()) return false;
 
     // Check if already unlocked
     if (unlockedAchievements.some(a => a.achievement_key === achievementKey)) {

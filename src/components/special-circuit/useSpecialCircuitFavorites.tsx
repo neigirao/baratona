@@ -12,7 +12,6 @@ import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { ToastAction } from '@/components/ui/toast';
-import { createElement } from 'react';
 
 const PENDING_FAV_KEY = 'baratona:pending-favorite';
 
@@ -117,7 +116,7 @@ export function useSpecialCircuitFavorites(event: PlatformEvent, bars: EventBar[
       toast({
         title: 'Faça login para salvar sua rota',
         description: 'Entre com Google e continuamos de onde você parou.',
-        action: createElement(ToastAction, { altText: 'Entrar', onClick: () => signInWithGoogle() }, 'Entrar'),
+        action: <ToastAction altText="Entrar" onClick={() => signInWithGoogle()}>Entrar</ToastAction>,
       });
       return;
     }

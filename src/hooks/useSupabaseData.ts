@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { withRetry } from '@/hooks/useRetry';
+import { isLegacyReadOnly } from '@/lib/legacyMode';
+import { toast } from 'sonner';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
 type Bar = Database['public']['Tables']['bars']['Row'];

@@ -178,6 +178,10 @@ export function useVotes() {
     barId: number,
     scores: { drinkScore: number; foodScore: number; vibeScore: number; serviceScore: number }
   ) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     try {
       await withRetry(
         async () => {

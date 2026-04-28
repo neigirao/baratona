@@ -93,6 +93,10 @@ export function useCheckins() {
   }, [fetchCheckins]);
 
   const checkOut = useCallback(async (participantId: string, barId: number) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     // Optimistic update
     setCheckins(prev => prev.filter(c => 
       !(c.participant_id === participantId && c.bar_id === barId)

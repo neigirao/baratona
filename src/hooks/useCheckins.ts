@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry } from '@/hooks/useRetry';
+import { isLegacyReadOnly } from '@/lib/legacyMode';
+import { toast } from 'sonner';
 
 interface Checkin {
   id: string;

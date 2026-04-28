@@ -45,6 +45,10 @@ export function useCheckins() {
   }, [fetchCheckins]);
 
   const checkIn = useCallback(async (participantId: string, barId: number) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     // Optimistic update
     const optimisticCheckin: Checkin = {
       id: crypto.randomUUID(),

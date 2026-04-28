@@ -270,6 +270,10 @@ export function useConsumption(currentBarId?: number | null) {
     barId?: number | null,
     subtype?: string
   ) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     const effectiveBarId = barId ?? null;
     
     // Use ref to get current consumption - match by bar_id if provided

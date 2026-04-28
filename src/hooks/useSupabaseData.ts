@@ -121,6 +121,10 @@ export function useAppConfig() {
   }, [fetchConfig]);
 
   const updateConfig = useCallback(async (updates: Partial<Omit<AppConfig, 'id' | 'updated_at'>>) => {
+    if (isLegacyReadOnly()) {
+      toast.info('Evento legado em modo somente leitura.');
+      return false;
+    }
     const { error } = await supabase
       .from('app_config')
       .update(updates)

@@ -23,4 +23,28 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Tighten the bundle: split heavy libs so first load doesn't pull
+    // charts/maps unless those routes are visited.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'tanstack': ['@tanstack/react-query'],
+          'charts': ['recharts'],
+          'supabase': ['@supabase/supabase-js'],
+          'radix-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-alert-dialog',
+          ],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 800,
+  },
 }));

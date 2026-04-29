@@ -4,7 +4,15 @@ interface SeoOptions {
   image?: string | null;
   url?: string | null;
   type?: string;
+  /** JSON-LD structured data (object or array). Replaces any existing baratona JSON-LD. */
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>> | null;
+  /** Optional locale (defaults to pt_BR). */
+  locale?: string;
+  /** Optional keywords meta. */
+  keywords?: string;
 }
+
+const JSONLD_SCRIPT_ID = 'baratona-jsonld';
 
 export function useSeo(title: string, description: string, options: SeoOptions = {}) {
   useEffect(() => {
@@ -34,9 +42,15 @@ export function useSeo(title: string, description: string, options: SeoOptions =
     ensureMeta('og:title', 'property').content = title;
     ensureMeta('og:description', 'property').content = description;
     ensureMeta('og:type', 'property').content = options.type || 'website';
+    ensureMeta('og:locale', 'property').content = options.locale || 'pt_BR';
+    ensureMeta('og:site_name', 'property').content = 'Baratona';
     ensureMeta('twitter:title', 'name').content = title;
     ensureMeta('twitter:description', 'name').content = description;
     ensureMeta('twitter:card', 'name').content = options.image ? 'summary_large_image' : 'summary';
+
+    if (options.keywords) {
+      ensureMeta('keywords', 'name').content = options.keywords;
+    }
 
     const url = options.url || window.location.href;
     ensureMeta('og:url', 'property').content = url;
@@ -46,5 +60,21 @@ export function useSeo(title: string, description: string, options: SeoOptions =
       ensureMeta('og:image', 'property').content = options.image;
       ensureMeta('twitter:image', 'name').content = options.image;
     }
-  }, [title, description, options.image, options.url, options.type]);
+
+    // JSON-LD: replace any previous baratona block
+    const existing = document.getElementById(JSONLD_SCRIPT_ID);
+    if (existing) existing.remove();
+    if (options.jsonLd) {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = JSONLD_SCRIPT_ID;
+      script.text = JSON.stringify(options.jsonLd);
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      const stale = document.getElementById(JSONLD_SCRIPT_ID);
+      if (stale) stale.remove();
+    };
+  }, [title, description, options.image, options.url, options.type, options.locale, options.keywords, options.jsonLd]);
 }

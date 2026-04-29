@@ -69,17 +69,26 @@ const faqItems = [
 ];
 
 export default function FAQ() {
-  useSeo('FAQ | Baratona', 'Perguntas frequentes sobre como criar, participar e organizar baratonas na plataforma.', {
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: faqItems.map(({ q, a }) => ({
-        '@type': 'Question',
-        name: q,
-        acceptedAnswer: { '@type': 'Answer', text: a },
-      })),
-    },
-  });
+  useSeo(
+    'FAQ — Perguntas frequentes | Baratona',
+    'Tire suas dúvidas sobre como criar, participar e organizar baratonas: check-in, votação, ranking e retrospectiva.',
+    {
+      image: 'https://baratona.lovable.app/og-faq.jpg',
+      url: 'https://baratona.lovable.app/faq',
+      type: 'article',
+      locale: 'pt_BR',
+      keywords: 'faq baratona, dúvidas, como criar baratona, organizar evento de bar',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqItems.map(({ q, a }) => ({
+          '@type': 'Question',
+          name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+      },
+    }
+  );
 
   return (
     <div className="min-h-screen bg-background">

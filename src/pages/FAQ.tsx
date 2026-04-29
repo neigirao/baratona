@@ -69,7 +69,17 @@ const faqItems = [
 ];
 
 export default function FAQ() {
-  useSeo('FAQ | Baratona', 'Perguntas frequentes sobre como criar, participar e organizar baratonas na plataforma.');
+  useSeo('FAQ | Baratona', 'Perguntas frequentes sobre como criar, participar e organizar baratonas na plataforma.', {
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map(({ q, a }) => ({
+        '@type': 'Question',
+        name: q,
+        acceptedAnswer: { '@type': 'Answer', text: a },
+      })),
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">

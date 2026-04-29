@@ -89,10 +89,36 @@ export default function EventLanding() {
     ? event.description ||
       `${event.eventType === 'special_circuit' ? 'Circuito de butecos' : 'Baratona'} em ${event.city} com ${bars.length} ${bars.length === 1 ? 'parada' : 'paradas'}.`
     : 'Baratona na plataforma Baratona';
+
+  const jsonLd = event
+    ? {
+        '@context': 'https://schema.org',
+        '@type': event.eventType === 'special_circuit' ? 'Festival' : 'Event',
+        name: event.name,
+        description: seoDescription,
+        url: shareUrl,
+        image: event.coverImageUrl || undefined,
+        startDate: event.startDate || event.eventDate || undefined,
+        endDate: event.endDate || event.eventDate || undefined,
+        eventStatus: 'https://schema.org/EventScheduled',
+        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+        location: bars.slice(0, 20).map((b) => ({
+          '@type': 'BarOrPub',
+          name: b.name,
+          address: b.address || undefined,
+          ...(b.latitude && b.longitude
+            ? { geo: { '@type': 'GeoCoordinates', latitude: b.latitude, longitude: b.longitude } }
+            : {}),
+        })),
+        organizer: { '@type': 'Person', name: event.ownerName },
+        inLanguage: 'pt-BR',
+      }
+    : null;
+
   useSeo(
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',
     seoDescription,
-    { image: event?.coverImageUrl, url: shareUrl, type: 'article' }
+    { image: event?.coverImageUrl, url: shareUrl, type: 'article', jsonLd }
   );
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;

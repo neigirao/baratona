@@ -35,7 +35,6 @@ export default defineConfig(({ mode }) => ({
           'supabase': ['@supabase/supabase-js'],
           'radix-ui': [
             '@radix-ui/react-dialog',
-            '@radix-ui/react-drawer',
             '@radix-ui/react-tabs',
             '@radix-ui/react-toast',
             '@radix-ui/react-tooltip',

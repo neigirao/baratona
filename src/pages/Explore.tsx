@@ -15,7 +15,17 @@ type EnrichedEvent = PlatformEvent & { barCount: number; memberCount: number };
 type FilterType = 'all' | 'open_baratona' | 'special_circuit';
 
 export default function Explore() {
-  useSeo('Explorar baratonas | Baratona Platform', 'Encontre baratonas e circuitos especiais por nome, cidade e tipo.');
+  useSeo(
+    'Explorar baratonas e circuitos | Baratona',
+    'Descubra baratonas públicas e circuitos especiais de butecos. Filtre por nome, cidade e tipo de evento.',
+    {
+      image: 'https://baratona.lovable.app/og-explore.jpg',
+      url: 'https://baratona.lovable.app/explorar',
+      type: 'website',
+      locale: 'pt_BR',
+      keywords: 'explorar baratonas, circuitos de butecos, eventos de bar, rota gastronômica',
+    }
+  );
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
 

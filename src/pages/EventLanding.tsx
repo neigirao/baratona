@@ -118,7 +118,18 @@ export default function EventLanding() {
   useSeo(
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',
     seoDescription,
-    { image: event?.coverImageUrl, url: shareUrl, type: 'article', jsonLd }
+    {
+      image: event?.coverImageUrl || 'https://baratona.lovable.app/og-cover.jpg',
+      url: shareUrl,
+      type: 'article',
+      locale: 'pt_BR',
+      keywords: event
+        ? `${event.name}, baratona, ${event.city || 'rio de janeiro'}, ${
+            event.eventType === 'special_circuit' ? 'circuito de butecos, comida di boteco' : 'rota de bares'
+          }`
+        : undefined,
+      jsonLd,
+    }
   );
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;

@@ -16,7 +16,16 @@ type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 export default function Home() {
   useSeo(
     'Baratona — Crie sua rota de bares com os amigos',
-    'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.'
+    'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.',
+    {
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Baratona',
+        url: 'https://baratona.lovable.app/',
+        description: 'Plataforma para criar e viver baratonas: rotas de bares com check-in, votação e ranking.',
+      },
+    }
   );
 
   const { user } = usePlatformAuth();

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -131,6 +131,8 @@ export default function MyBaratonas() {
   );
 }
 
+const SECTION_PAGE_SIZE = 8;
+
 function Section({
   title,
   icon,
@@ -148,6 +150,11 @@ function Section({
   emptyAction?: React.ReactNode;
   showOwnerBadge?: boolean;
 }) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(events.length / SECTION_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = events.slice((safePage - 1) * SECTION_PAGE_SIZE, safePage * SECTION_PAGE_SIZE);
+
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold flex items-center gap-2 text-muted-foreground">
@@ -169,11 +176,24 @@ function Section({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-3">
-          {events.map((e) => (
-            <EventCard key={e.id} event={e} showOwnerBadge={showOwnerBadge} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {paginated.map((e) => (
+              <EventCard key={e.id} event={e} showOwnerBadge={showOwnerBadge} />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2 pt-1">
+              <Button size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage((p) => p - 1)}>
+                Anterior
+              </Button>
+              <span className="text-xs text-muted-foreground">{safePage}/{totalPages}</span>
+              <Button size="sm" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                Próxima
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

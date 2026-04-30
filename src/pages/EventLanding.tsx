@@ -73,9 +73,19 @@ export default function EventLanding() {
         navigate(`/baratona/${slug}`, { replace: true });
       })
       .catch((err) => {
+        const msg = err instanceof Error ? err.message : 'Tente novamente';
+        const isExpired = msg.includes('expirado');
+        const isExhausted = msg.includes('esgotou');
+        const needsLogin = msg.includes('login');
         toast({
-          title: 'Convite inválido',
-          description: err instanceof Error ? err.message : 'Tente novamente',
+          title: isExpired
+            ? 'Convite expirado'
+            : isExhausted
+              ? 'Convite esgotado'
+              : needsLogin
+                ? 'Login necessário'
+                : 'Convite inválido',
+          description: msg,
           variant: 'destructive',
         });
       });
@@ -119,7 +129,7 @@ export default function EventLanding() {
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',
     seoDescription,
     {
-      image: event?.coverImageUrl || 'https://baratona.lovable.app/og-cover.jpg',
+      image: event?.coverImageUrl || `${window.location.origin}/og-cover.jpg`,
       url: shareUrl,
       type: 'article',
       locale: 'pt_BR',

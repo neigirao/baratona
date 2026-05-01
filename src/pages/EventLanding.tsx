@@ -15,6 +15,7 @@ import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';
 import { EventLandingSkeleton } from '@/components/ui/list-skeletons';
+import { useDynamicFavicon } from '@/hooks/useDynamicFavicon';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();
@@ -115,11 +116,18 @@ export default function EventLanding() {
       }
     : null;
 
+  const isComidaDiButeco = event?.slug === 'comida-di-buteco-rj-2026';
+  const ogImage =
+    event?.coverImageUrl ||
+    (isComidaDiButeco
+      ? 'https://baratona.lovable.app/og-comida-di-buteco.jpg'
+      : 'https://baratona.lovable.app/og-cover.jpg');
+
   useSeo(
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',
     seoDescription,
     {
-      image: event?.coverImageUrl || 'https://baratona.lovable.app/og-cover.jpg',
+      image: ogImage,
       url: shareUrl,
       type: 'article',
       locale: 'pt_BR',
@@ -131,6 +139,8 @@ export default function EventLanding() {
       jsonLd,
     }
   );
+
+  useDynamicFavicon(isComidaDiButeco ? '/comida-di-buteco-favicon.png' : null);
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;
   if (loading) return <EventLandingSkeleton />;

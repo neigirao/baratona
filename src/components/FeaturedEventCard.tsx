@@ -23,26 +23,22 @@ export function FeaturedEventCard({ event }: Props) {
   const isCircuit = event.eventType === 'special_circuit';
   const dateLabel = formatDateRange(event.startDate, event.endDate, event.eventDate);
   const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
-  const fallbackCover = isComidaDiButeco ? comidaDiButecoLogo : null;
+  // Para o Comida di Buteco usamos sempre o selo oficial local (parceria),
+  // ignorando o cover_image_url externo do site comidadibuteco.com.br.
+  const coverSrc = isComidaDiButeco ? comidaDiButecoLogo : event.coverImageUrl;
+  const useContain = isComidaDiButeco;
 
   return (
     <Card className="group relative overflow-hidden border-border/60 hover:border-primary/50 transition-all bg-card/60">
       {/* Cover */}
       <div className="relative h-40 overflow-hidden">
-        {event.coverImageUrl ? (
-          <img
-            src={event.coverImageUrl}
-            alt={event.name}
-            loading="lazy"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : fallbackCover ? (
-          <div className="w-full h-full bg-black flex items-center justify-center">
+        {coverSrc ? (
+          <div className={`w-full h-full ${useContain ? 'bg-black flex items-center justify-center' : ''}`}>
             <img
-              src={fallbackCover}
+              src={coverSrc}
               alt={event.name}
               loading="lazy"
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              className={`w-full h-full ${useContain ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`}
             />
           </div>
         ) : (

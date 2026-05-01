@@ -1,14 +1,16 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Globe, Settings, PartyPopper, KeyRound, ShieldCheck } from 'lucide-react';
+import { Globe, Settings, PartyPopper, KeyRound, ShieldCheck, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
+import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 
 export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
   const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
   const { isSuperAdmin } = usePlatformAdmin();
+  const { user: platformUser, signInWithGoogle, signOut: platformSignOut } = usePlatformAuth();
   
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">

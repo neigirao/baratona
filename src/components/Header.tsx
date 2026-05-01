@@ -84,7 +84,34 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
             </Link>
           )}
           
-          {/* User/Logout with confirmation */}
+          {/* Google Sign-in (when not logged in to platform) */}
+          {!platformUser && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => signInWithGoogle()}
+              className="h-8 gap-1.5 text-xs font-medium"
+              title="Entrar com Google"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Entrar</span>
+            </Button>
+          )}
+
+          {/* Platform user indicator */}
+          {platformUser && !currentUser && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => platformSignOut()}
+              className="h-8 px-2 text-xs"
+              title={platformUser.email ?? 'Sair'}
+            >
+              {(platformUser.user_metadata?.full_name as string)?.split(' ')[0] ?? 'Sair'}
+            </Button>
+          )}
+
+          {/* User/Logout with confirmation (legacy participant) */}
           {currentUser && (
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground hidden sm:block">

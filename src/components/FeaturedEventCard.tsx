@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Users, Calendar, ChevronRight, Beer, Sparkles } from 'lucide-react';
 import type { PlatformEvent } from '@/lib/platformEvents';
+import comidaDiButecoLogo from '@/assets/comida-di-buteco-logo.png';
 
 interface Props {
   event: PlatformEvent & { barCount: number; memberCount: number };
@@ -21,6 +22,8 @@ function formatDateRange(start?: string | null, end?: string | null, fallback?: 
 export function FeaturedEventCard({ event }: Props) {
   const isCircuit = event.eventType === 'special_circuit';
   const dateLabel = formatDateRange(event.startDate, event.endDate, event.eventDate);
+  const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+  const fallbackCover = isComidaDiButeco ? comidaDiButecoLogo : null;
 
   return (
     <Card className="group relative overflow-hidden border-border/60 hover:border-primary/50 transition-all bg-card/60">
@@ -33,6 +36,15 @@ export function FeaturedEventCard({ event }: Props) {
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+        ) : fallbackCover ? (
+          <div className="w-full h-full bg-black flex items-center justify-center">
+            <img
+              src={fallbackCover}
+              alt={event.name}
+              loading="lazy"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/30 via-secondary/20 to-background flex items-center justify-center">
             <Beer className="w-16 h-16 text-primary/40" />

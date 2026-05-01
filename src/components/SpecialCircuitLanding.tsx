@@ -7,6 +7,7 @@ import { track } from '@/lib/analytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Utensils, ExternalLink, Sparkles } from 'lucide-react';
+import comidaDiButecoLogo from '@/assets/comida-di-buteco-logo.png';
 import { CreateBaratonaFromFavoritesDialog } from './CreateBaratonaFromFavoritesDialog';
 import { SelectBarsForBaratonaDialog } from './SelectBarsForBaratonaDialog';
 import { CircuitMap } from './CircuitMap';
@@ -104,8 +105,23 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
     );
   }
 
+  const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+
   return (
     <section className="space-y-3">
+      {isComidaDiButeco && (
+        <div className="flex justify-center bg-gradient-to-b from-primary/5 to-transparent rounded-2xl py-4">
+          <Card className="border-primary/30 shadow-xl shadow-primary/10 bg-card/40 p-4 sm:p-6">
+            <img
+              src={comidaDiButecoLogo}
+              alt="Comida di Buteco — selo oficial do concurso"
+              className="block w-full max-w-[200px] sm:max-w-[260px] h-auto"
+              loading="eager"
+            />
+          </Card>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Utensils className="w-5 h-5 text-primary" />

@@ -1,6 +1,6 @@
 import { supabase } from './client';
 import { mapEventRow, mapEnrichedEventRow, type EventBar } from './mappers';
-import type { PlatformEvent } from '@/lib/platformEvents';
+import { isEventStatus, type EventStatus, type PlatformEvent } from '@/lib/platformEvents';
 import { FEATURED_EVENT_SLUG } from '@/lib/constants';
 
 export interface EventUpdateInput {

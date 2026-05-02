@@ -29,25 +29,20 @@ function buildMultiStopUrl(bars: EventBar[]) {
   return `https://www.google.com/maps/dir/${stops}`;
 }
 
-export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, totalCount }: CircuitMapProps) {
-  const [view, setView] = useState<ViewMode>('all');
-
+export function CircuitMap({ bars, favorites }: CircuitMapProps) {
   const barsWithCoords = useMemo(
     () => bars.filter((b) => b.id && b.latitude != null && b.longitude != null),
     [bars]
   );
 
-  const favCount = useMemo(
-    () => barsWithCoords.filter((b) => favorites.has(b.id || '')).length,
-    [barsWithCoords, favorites]
-  );
+  const hasFavorites = favorites.size > 0;
 
   const visibleBars = useMemo(() => {
-    if (view === 'favorites') {
+    if (hasFavorites) {
       return barsWithCoords.filter((b) => favorites.has(b.id || ''));
     }
     return barsWithCoords;
-  }, [view, barsWithCoords, favorites]);
+  }, [hasFavorites, barsWithCoords, favorites]);
 
   const bbox = useMemo(() => {
     const source = visibleBars.length > 0 ? visibleBars : barsWithCoords;

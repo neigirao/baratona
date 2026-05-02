@@ -1,17 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { EventBar } from '@/lib/platformApi';
-import { Button } from '@/components/ui/button';
-import { MapPin, Bookmark, Maximize2 } from 'lucide-react';
+import { MapPin, Maximize2 } from 'lucide-react';
 
 interface CircuitMapProps {
   bars: EventBar[];
   favorites: Set<string>;
   onToggleFavorite?: (barId: string) => void;
+  /** @deprecated kept for backwards compat — map is always auto */
   hideViewToggle?: boolean;
   totalCount?: number;
 }
-
-type ViewMode = 'all' | 'favorites';
 
 function getBboxUrl(bbox: { minLat: number; maxLat: number; minLng: number; maxLng: number }) {
   const padLat = Math.max((bbox.maxLat - bbox.minLat) * 0.15, 0.005);

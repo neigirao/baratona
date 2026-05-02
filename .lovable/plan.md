@@ -1,74 +1,46 @@
-# Aplicar logo oficial do Comida di Buteco
+# Mapa reage automaticamente aos bares marcados
 
-Parceria oficial confirmada — sem disclaimers de marca. A logo (selo laranja "DESDE 2000" sobre madeira) entra em 4 pontos: hero da página do evento, card nas listagens, OG image e favicon dinâmico.
+## Comportamento desejado
 
-## 1. Preparar assets
+- **Nenhum bar marcado** → mapa mostra **todos** os bares do circuito.
+- **Pelo menos 1 bar marcado** → mapa mostra **apenas os marcados** (some o resto, incluindo pinos e rota).
+- Ao desmarcar o último, volta a mostrar todos automaticamente.
 
-Copiar `user-uploads://image.png` para:
-- `src/assets/comida-di-buteco-logo.png` — usado nos componentes React (hero + card)
-- `public/comida-di-buteco-favicon.png` — favicon dinâmico (32×32 e 180×180 funcionam como PNG único)
-- `public/og-comida-di-buteco.jpg` — OG image (a própria imagem original já tem boas proporções para preview social)
+## Onde mexer
 
-## 2. Hero — `SpecialCircuitLanding.tsx`
+### 1. `src/components/CircuitMap.tsx`
 
-Adicionar bloco no topo do componente (antes do header existente "Petiscos em concurso"):
-
-- Selo centralizado dentro de um `Card` com `rounded-2xl`, `border-primary/30`, `shadow-xl shadow-primary/10`
-- Tamanho: `max-w-[200px]` mobile, `max-w-[260px]` desktop
-- Padding generoso (`p-6`) para destacar do True Black
-- Sutil `bg-gradient-to-b from-primary/5 to-transparent` ao redor para integrar à estética neon
-
-## 3. Card do evento — `FeaturedEventCard.tsx`
-
-Quando `event.slug === 'comida-di-buteco-rj-2026'`:
-- Se não houver `coverImageUrl`, usar `import logo from '@/assets/comida-di-buteco-logo.png'` como cover (no lugar do ícone Beer fallback), com `object-contain` e fundo escuro (`bg-black`)
-- Manter o badge "Circuito Especial" como está
-
-## 4. OG image — `EventLanding.tsx`
-
-No `useSeo`, quando `event.slug === 'comida-di-buteco-rj-2026'` e o evento não tiver `coverImageUrl` próprio definido, usar `https://baratona.lovable.app/og-comida-di-buteco.jpg` como `image`. Mantém o canonical e `og:type: article` já existentes.
-
-## 5. Favicon dinâmico
-
-Criar `src/hooks/useDynamicFavicon.ts`:
+Substituir o estado interno `view` (`'all' | 'favorites'`) por uma derivação automática:
 
 ```ts
-useDynamicFavicon(href: string | null)
-// Troca <link rel="icon"> ao montar, restaura href original ao desmontar
+const hasFavorites = favorites.size > 0;
+const visibleBars = hasFavorites
+  ? barsWithCoords.filter((b) => favorites.has(b.id || ''))
+  : barsWithCoords;
 ```
 
-Aplicar em `EventLanding.tsx`:
-```ts
-const customFavicon = event?.slug === 'comida-di-buteco-rj-2026'
-  ? '/comida-di-buteco-favicon.png'
-  : null;
-useDynamicFavicon(customFavicon);
-```
+- Remover o bloco do toggle (`!hideViewToggle && (...)`) e a prop `hideViewToggle` (não é mais necessária — sempre automático).
+- Atualizar o contador no cabeçalho para refletir o modo atual:
+  - sem favoritos: `"X bares no mapa"`
+  - com favoritos: `"X marcados no mapa (de Y)"`
+- Atualizar o texto do botão "Abrir no Google Maps":
+  - com favoritos: `"Abrir N marcados no Google Maps"`
+  - sem favoritos: `"Abrir N bares no Google Maps"`
+- Remover o overlay "Nenhum bar marcado ainda" (não pode mais ocorrer, pois sem favoritos mostramos todos).
+- O bbox passa a ser calculado a partir de `visibleBars` (mantendo o fallback atual já está correto).
 
-Implementação: guarda o `href` original do `<link rel="icon">` em ref, troca por `href` recebido, restaura no cleanup. Se `href` for `null`, não faz nada.
+### 2. `src/components/SpecialCircuitLanding.tsx`
 
-## Detalhes técnicos
+- O `CircuitMap` hoje recebe `bars={filteredBars}`, ou seja, ele também responde aos filtros de busca/bairro/sort/onlyFavorites da lista. Isso polui o comportamento pedido (o usuário pode "esconder" bares marcados ao filtrar por bairro, por exemplo).
+- Passar **`bars={bars}`** (lista completa do evento) para o mapa, deixando os filtros aplicados apenas à grade de cards abaixo. O mapa fica governado **só** pelos favoritos.
+- Remover a prop `hideViewToggle` e `totalCount` da chamada (não usadas mais).
 
-- **Sem mudanças de schema, RLS ou edge functions.**
-- **Sem dependências novas.**
-- O selo tem fundo de madeira opaco — funciona em qualquer fundo. No favicon 32px ficará reconhecível pela cor laranja, mesmo que "DESDE 2000" não seja legível (aceitável; é o trade-off de "usar como está").
-- A logo no card usa `object-contain` (não `cover`) pra não cortar o selo.
-- Tudo gated pelo slug do evento — zero impacto em outras baratonas.
+## Notas técnicas
 
-## Arquivos afetados
+- O hook `useSpecialCircuitFavorites` já mantém `favorites: Set<string>` reativo (server + link compartilhado + replay pós-login), então o mapa re-renderiza sozinho.
+- Bares sem coordenadas continuam fora do mapa (mantém o filtro `barsWithCoords`).
+- Sem mudanças em banco, RLS, edge functions ou rotas.
 
-| Ação | Arquivo |
-|---|---|
-| Criar | `src/assets/comida-di-buteco-logo.png` |
-| Criar | `public/comida-di-buteco-favicon.png` |
-| Criar | `public/og-comida-di-buteco.jpg` |
-| Criar | `src/hooks/useDynamicFavicon.ts` |
-| Editar | `src/components/SpecialCircuitLanding.tsx` (adicionar hero com selo) |
-| Editar | `src/components/FeaturedEventCard.tsx` (fallback cover gated por slug) |
-| Editar | `src/pages/EventLanding.tsx` (OG image + favicon dinâmico gated por slug) |
+## Riscos
 
-## Fora de escopo
-
-- Não substituir o `coverImageUrl` no banco — só fallback no frontend (não destrutivo, reversível).
-- Não criar versões alternativas (recortada, monocromática) — você pediu "como está".
-- Não aplicar em outros eventos — só `comida-di-buteco-rj-2026`.
+- Baixo. Mudança puramente de UI/derivação de estado em 2 arquivos. Não afeta favoritos, criação de baratona, nem outras telas que usam `BaratonaMap` (componente separado).

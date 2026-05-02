@@ -9,7 +9,7 @@ export interface EventUpdateInput {
   city?: string | null;
   visibility?: 'public' | 'private';
   eventType?: 'open_baratona' | 'special_circuit';
-  status?: string;
+  status?: EventStatus;
   eventDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;

@@ -28,8 +28,8 @@ export function QuickAddFAB() {
     // Haptic feedback
     if ('vibrate' in navigator) navigator.vibrate(30);
 
-    // Add drink
-    const success = await updateConsumption(currentUser.id, 'drink', 1, currentBarId);
+    // Add drink with subtype so it is recorded correctly
+    const success = await updateConsumption(currentUser.id, 'drink', 1, currentBarId, typeKey);
     
     if (success) {
       const drinkType = DRINK_TYPES.find(d => d.key === typeKey);

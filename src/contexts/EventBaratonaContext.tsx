@@ -126,6 +126,10 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
     secondsAgo,
     isRefreshing,
     refreshAll,
+    checkIn,
+    checkOut,
+    isCheckedIn,
+    getBarCheckins,
   }), [
     currentUser, isAdmin, language, t, participants, membersLoading,
     bars, barsLoading, appConfig, appConfigLoading, updateConfig,
@@ -135,6 +139,7 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
     submitVote, getBarVotes, getUserVoteForBar,
     getProjectedTime, getCurrentBar, getNextBar, currentBarId,
     secondsAgo, isRefreshing, refreshAll, eventType,
+    checkIn, checkOut, isCheckedIn, getBarCheckins,
   ]);
 
   return (

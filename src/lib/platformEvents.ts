@@ -9,6 +9,7 @@ export interface PlatformEvent {
   city: string;
   visibility: EventVisibility;
   eventType: EventType;
+  status: 'published' | 'archived' | 'draft';
   ownerId: string;
   ownerName: string;
   createdAt: string;

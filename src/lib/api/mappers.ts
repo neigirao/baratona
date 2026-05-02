@@ -27,6 +27,7 @@ export function mapEventRow(row: any): PlatformEvent {
     city: row.city || 'Rio de Janeiro',
     visibility: row.visibility,
     eventType: row.event_type,
+    status: row.status || 'published',
     ownerId: row.owner_user_id,
     ownerName: row.owner_name || 'Organizador',
     createdAt: row.created_at,

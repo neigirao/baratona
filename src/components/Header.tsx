@@ -1,7 +1,7 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
 import { Globe, Settings, PartyPopper, KeyRound, ShieldCheck, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
@@ -11,6 +11,8 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
   const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
   const { isSuperAdmin } = usePlatformAdmin();
   const { user: platformUser, signInWithGoogle, signOut: platformSignOut } = usePlatformAuth();
+  const { slug } = useParams<{ slug?: string }>();
+  const adminPath = slug ? `/baratona/${slug}/admin` : '/admin';
   
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -77,7 +79,7 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
 
           {/* Admin Button (Nei legacy) */}
           {isAdmin && (
-            <Link to="/admin">
+            <Link to={adminPath}>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
                 <Settings className="h-4 w-4" />
               </Button>

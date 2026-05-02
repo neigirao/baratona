@@ -56,7 +56,7 @@ export default function CreateEvent() {
     setBars((prev) => prev.filter((_, i) => i !== index).map((b, i) => ({ ...b, barOrder: i + 1 })));
   };
 
-  const canProceedStep1 = name.trim() && slug && description.trim() && city.trim();
+  const canProceedStep1 = name.trim() && slug && city.trim();
   const canProceedStep2 = bars.length >= 2 && bars.every((b) => b.name.trim() && b.address.trim());
 
   const onSubmit = async (e: FormEvent) => {
@@ -109,10 +109,12 @@ export default function CreateEvent() {
         {['Dados gerais', 'Bares do roteiro', 'Revisão'].map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-              step > i + 1 ? 'bg-primary text-primary-foreground' :
+              step > i + 1 ? 'bg-baratona-green text-white' :
               step === i + 1 ? 'bg-primary text-primary-foreground' :
               'bg-muted text-muted-foreground'
-            }`}>{i + 1}</div>
+            }`}>
+              {step > i + 1 ? '✓' : i + 1}
+            </div>
             <span className={step === i + 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'}>{label}</span>
             {i < 2 && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
           </div>
@@ -124,7 +126,7 @@ export default function CreateEvent() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div><Label>Nome da baratona</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Baratona do Centro" required /></div>
-            <div><Label>Descrição</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Conte o que rola nessa baratona..." required /></div>
+            <div><Label>Descrição <span className="text-muted-foreground text-xs">(opcional)</span></Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Conte o que rola nessa baratona..." /></div>
             <div><Label>Cidade</Label><Input value={city} onChange={(e) => setCity(e.target.value)} required /></div>
             <div><Label>Slug (URL)</Label><Input value={slug} readOnly className="text-muted-foreground" /></div>
             <div><Label>Data do evento</Label><Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} /></div>

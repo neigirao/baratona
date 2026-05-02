@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { useCheckins } from '@/hooks/useCheckins';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, Beer, Compass } from 'lucide-react';
 
@@ -23,8 +22,7 @@ import { BarItinerary } from '@/components/BarItinerary';
 import { EmergencyPanel } from '@/components/EmergencyPanel';
 
 export function MainTabs() {
-  const { language, currentUser, currentBarId } = useBaratona();
-  const { isCheckedIn } = useCheckins();
+  const { language, currentUser, currentBarId, isCheckedIn } = useBaratona();
   const [activeTab, setActiveTab] = useState('now');
   
   // Navigate to consumption tab
@@ -113,13 +111,10 @@ export function MainTabs() {
       <TabsContent value="explore" className="space-y-4 mt-0">
         {/* Interactive Map */}
         <BaratonaMap />
-        
-        {/* Vote Form */}
-        <VoteForm isCheckedIn={userIsCheckedInAtCurrentBar} onNavigateToConsumption={navigateToConsumption} />
-        
+
         {/* Bar Itinerary */}
         <BarItinerary onNavigateToConsumption={navigateToConsumption} />
-        
+
         {/* Emergency Panel */}
         <EmergencyPanel />
       </TabsContent>

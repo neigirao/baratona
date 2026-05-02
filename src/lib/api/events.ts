@@ -93,6 +93,7 @@ export async function createEventApi(
   input: Omit<PlatformEvent, 'id' | 'createdAt'>,
   bars: Omit<EventBar, 'id' | 'eventId'>[] = []
 ): Promise<PlatformEvent> {
+  const status: EventStatus = isEventStatus(input.status) ? input.status : 'published';
   const { data, error } = await supabase
     .from('events')
     .insert({
@@ -105,7 +106,7 @@ export async function createEventApi(
       owner_user_id: input.ownerId,
       owner_name: input.ownerName,
       event_date: input.eventDate || null,
-      status: (input as any).status || 'published',
+      status,
     })
     .select('*')
     .single();

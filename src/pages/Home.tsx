@@ -10,6 +10,7 @@ import type { PlatformEvent } from '@/lib/platformEvents';
 import { FeaturedEventCard } from '@/components/FeaturedEventCard';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { BaratonaHero } from '@/components/BaratonaHero';
+import { PLATFORM_BASE_URL, PLATFORM_OG_IMAGE } from '@/lib/constants';
 
 type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
 
@@ -18,8 +19,8 @@ export default function Home() {
     'Baratona — Crie sua rota de bares com os amigos',
     'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.',
     {
-      image: 'https://baratona.lovable.app/og-cover.jpg',
-      url: 'https://baratona.lovable.app/',
+      image: PLATFORM_OG_IMAGE,
+      url: `${PLATFORM_BASE_URL}/`,
       type: 'website',
       locale: 'pt_BR',
       keywords: 'baratona, rota de bares, butecos, app de bar, check-in, votação de bar, comida di boteco',
@@ -27,8 +28,8 @@ export default function Home() {
         '@context': 'https://schema.org',
         '@type': 'Organization',
         name: 'Baratona',
-        url: 'https://baratona.lovable.app/',
-        logo: 'https://baratona.lovable.app/og-cover.jpg',
+        url: `${PLATFORM_BASE_URL}/`,
+        logo: PLATFORM_OG_IMAGE,
         description: 'Plataforma para criar e viver baratonas: rotas de bares com check-in, votação e ranking.',
       },
     }

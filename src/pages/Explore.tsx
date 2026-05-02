@@ -10,6 +10,7 @@ import { type PlatformEvent } from '@/lib/platformEvents';
 import { listPublicEventsWithBarCountApi } from '@/lib/platformApi';
 import { useSeo } from '@/hooks/useSeo';
 import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar } from 'lucide-react';
+import { PLATFORM_BASE_URL } from '@/lib/constants';
 
 type EnrichedEvent = PlatformEvent & { barCount: number; memberCount: number };
 type FilterType = 'all' | 'open_baratona' | 'special_circuit';
@@ -19,8 +20,8 @@ export default function Explore() {
     'Explorar baratonas e circuitos | Baratona',
     'Descubra baratonas públicas e circuitos especiais de butecos. Filtre por nome, cidade e tipo de evento.',
     {
-      image: 'https://baratona.lovable.app/og-explore.jpg',
-      url: 'https://baratona.lovable.app/explorar',
+      image: `${PLATFORM_BASE_URL}/og-explore.jpg`,
+      url: `${PLATFORM_BASE_URL}/explorar`,
       type: 'website',
       locale: 'pt_BR',
       keywords: 'explorar baratonas, circuitos de butecos, eventos de bar, rota gastronômica',
@@ -28,6 +29,8 @@ export default function Explore() {
   );
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
 
   const eventsQuery = useQuery({
     queryKey: ['public-events'],
@@ -47,6 +50,11 @@ export default function Explore() {
       return true;
     });
   }, [events, search, typeFilter]);
+
+  // Reset to page 1 when filters change
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,7 +118,7 @@ export default function Explore() {
         )}
 
         <div className="grid md:grid-cols-2 gap-4">
-          {filtered.map((event) => {
+          {paginated.map((event) => {
             const isCircuit = event.eventType === 'special_circuit';
             return (
               <Card key={event.id} className="hover:border-primary/40 transition-colors overflow-hidden">
@@ -149,6 +157,30 @@ export default function Explore() {
             );
           })}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-4">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={safePage <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Anterior
+            </Button>
+            <span className="text-sm text-muted-foreground px-2">
+              {safePage} / {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Próxima
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

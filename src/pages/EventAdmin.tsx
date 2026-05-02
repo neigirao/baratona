@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
 import { EventRetrospective } from '@/components/EventRetrospective';
+import { FEATURED_EVENT_SLUG } from '@/lib/constants';
 import { EventWrapped } from '@/components/EventWrapped';
 import { EventInfoEditor } from '@/components/admin/EventInfoEditor';
 import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
@@ -36,7 +37,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
   const [creatingInvite, setCreatingInvite] = useState(false);
   const [showWrapped, setShowWrapped] = useState(false);
   const isCircuit = event.eventType === 'special_circuit';
-  const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
+  const isComidaDiButeco = event.slug === FEATURED_EVENT_SLUG;
   const isPrivate = event.visibility === 'private';
 
   useEffect(() => {

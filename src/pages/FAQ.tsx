@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { ChevronLeft } from 'lucide-react';
+import { PLATFORM_BASE_URL } from '@/lib/constants';
 
 const faqItems = [
   {
@@ -60,7 +61,7 @@ const faqItems = [
   },
   {
     q: 'Como compartilho minha baratona?',
-    a: 'Após criar, você recebe um link único (ex: baratona.lovable.app/baratona/meu-evento). Basta enviar esse link pros amigos.',
+    a: `Após criar, você recebe um link único (ex: ${PLATFORM_BASE_URL}/baratona/meu-evento). Basta enviar esse link pros amigos.`,
   },
   {
     q: 'Posso editar o evento depois de criado?',
@@ -73,8 +74,8 @@ export default function FAQ() {
     'FAQ — Perguntas frequentes | Baratona',
     'Tire suas dúvidas sobre como criar, participar e organizar baratonas: check-in, votação, ranking e retrospectiva.',
     {
-      image: 'https://baratona.lovable.app/og-faq.jpg',
-      url: 'https://baratona.lovable.app/faq',
+      image: `${PLATFORM_BASE_URL}/og-faq.jpg`,
+      url: `${PLATFORM_BASE_URL}/faq`,
       type: 'article',
       locale: 'pt_BR',
       keywords: 'faq baratona, dúvidas, como criar baratona, organizar evento de bar',

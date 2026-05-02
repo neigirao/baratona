@@ -8,6 +8,7 @@ import { BaratonaContext } from '@/contexts/BaratonaContext';
 import { useEventBars, useEventAppConfig, useEventVotes, useEventConsumption, useEventCheckins, useEventMembers } from '@/hooks/useEventData';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
+import { useBaratonaComputed } from '@/hooks/useBaratonaComputed';
 
 interface EventParticipant {
   id: string;
@@ -82,24 +83,7 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
     return votes.find(v => v.user_id === participantId && v.bar_id === String(barId));
   }, [votes]);
 
-  const getProjectedTime = useCallback((scheduledTime: string): string => {
-    const delay = appConfig?.global_delay_minutes || 0;
-    const [hours, minutes] = scheduledTime.split(':').map(Number);
-    const total = hours * 60 + minutes + delay;
-    return `${Math.floor(total / 60) % 24}`.padStart(2, '0') + ':' + `${total % 60}`.padStart(2, '0');
-  }, [appConfig?.global_delay_minutes]);
-
-  const getCurrentBar = useCallback(() => {
-    if (!appConfig?.current_bar_id) return undefined;
-    return bars.find(b => b.id === appConfig.current_bar_id);
-  }, [appConfig, bars]);
-
-  const getNextBar = useCallback(() => {
-    const current = getCurrentBar();
-    if (!current) return undefined;
-    const idx = bars.findIndex(b => b.id === current.id);
-    return idx < bars.length - 1 ? bars[idx + 1] : undefined;
-  }, [getCurrentBar, bars]);
+  const { getProjectedTime, getCurrentBar, getNextBar } = useBaratonaComputed(bars, appConfig);
 
   const setCurrentUser = useCallback(() => {}, []);
 
@@ -154,6 +138,12 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
   ]);
 
   return (
+    // EventBaratonaContext feeds the same BaratonaContext interface but backed
+    // by event_* tables. Bar IDs here are UUIDs (string) while the legacy
+    // BaratonaContext types them as number. The cast is intentional and
+    // contained: all consumers that receive IDs from this context also use
+    // string comparisons (see useEventData hooks).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <BaratonaContext.Provider value={value as any}>
       {children}
     </BaratonaContext.Provider>

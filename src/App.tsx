@@ -51,8 +51,8 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BackendHealthBanner />
         <BrowserRouter>
+          <BackendHealthBanner />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Home />} />

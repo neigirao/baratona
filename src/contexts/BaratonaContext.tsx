@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Language, TRANSLATIONS, TranslationStrings } from '@/lib/constants';
 import { useParticipants, useBars, useAppConfig, useVotes, useConsumption } from '@/hooks/useSupabaseData';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { useBaratonaComputed } from '@/hooks/useBaratonaComputed';
 import type { Database } from '@/integrations/supabase/types';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
@@ -179,36 +180,13 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     return votes.find(v => v.participant_id === participantId && v.bar_id === barId);
   }, [votes]);
   
-  const getProjectedTime = useCallback((scheduledTime: string): string => {
-    const delay = appConfig?.global_delay_minutes || 0;
-    // scheduledTime is in format "HH:MM:SS"
-    const [hours, minutes] = scheduledTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + delay;
-    const newHours = Math.floor(totalMinutes / 60) % 24;
-    const newMinutes = totalMinutes % 60;
-    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
-  }, [appConfig?.global_delay_minutes]);
-  
-  const getCurrentBar = useCallback(() => {
-    if (!appConfig) return undefined;
-    return bars.find(b => b.id === appConfig.current_bar_id);
-  }, [appConfig, bars]);
-  
-  const getNextBar = useCallback(() => {
-    if (!appConfig) return undefined;
-    const current = bars.find(b => b.id === appConfig.current_bar_id);
-    if (!current) return undefined;
-    const currentIndex = bars.findIndex(b => b.id === current.id);
-    if (currentIndex < bars.length - 1) {
-      return bars[currentIndex + 1];
-    }
-    return undefined;
-  }, [appConfig, bars]);
+  const { getProjectedTime, getCurrentBar, getNextBar } = useBaratonaComputed(bars, appConfig);
   
   const value = useMemo<BaratonaContextType>(() => ({
     currentUser,
     setCurrentUser,
     isAdmin,
+    eventType: 'open_baratona',
     language,
     setLanguage,
     t,

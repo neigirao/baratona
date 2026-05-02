@@ -72,7 +72,7 @@ export function EventsPanel({ events, loading, onChanged }: Props) {
     }
   };
 
-  const handleStatus = async (id: string, status: string) => {
+  const handleStatus = async (id: string, status: import('@/lib/platformEvents').EventStatus) => {
     try {
       await updateEventApi(id, { status });
       onChanged();

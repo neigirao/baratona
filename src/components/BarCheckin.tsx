@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { useCheckins } from '@/hooks/useCheckins';
 import { MapPin, Check, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { CheckoutConfirmDialog } from './CheckoutConfirmDialog';
@@ -11,8 +10,7 @@ interface BarCheckinProps {
 }
 
 export function BarCheckin({ onCheckinSuccess }: BarCheckinProps) {
-  const { currentUser, getCurrentBar, participants, language, currentBarId } = useBaratona();
-  const { checkIn, checkOut, getBarCheckins, isCheckedIn } = useCheckins();
+  const { currentUser, getCurrentBar, participants, language, currentBarId, checkIn, checkOut, getBarCheckins, isCheckedIn } = useBaratona();
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
   
   const currentBar = getCurrentBar();

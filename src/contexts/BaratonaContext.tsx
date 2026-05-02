@@ -3,6 +3,7 @@ import { Language, TRANSLATIONS, TranslationStrings } from '@/lib/constants';
 import { useParticipants, useBars, useAppConfig, useVotes, useConsumption } from '@/hooks/useSupabaseData';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { useBaratonaComputed } from '@/hooks/useBaratonaComputed';
+import { useCheckins } from '@/hooks/useCheckins';
 import type { Database } from '@/integrations/supabase/types';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
@@ -63,6 +64,12 @@ interface BaratonaContextType {
   // Loading alias for general components
   loading: boolean;
 
+  // Check-ins
+  checkIn: (participantId: string, barId: any) => Promise<boolean>;
+  checkOut: (participantId: string, barId: any) => Promise<boolean>;
+  isCheckedIn: (participantId: string, barId: any) => boolean;
+  getBarCheckins: (barId: any) => Array<{ participant_id: string; bar_id: any; checked_in_at: string }>;
+
   // Event type (for multi-event platform). Defaults to 'open_baratona' for legacy.
   eventType?: 'open_baratona' | 'special_circuit';
 }
@@ -81,6 +88,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   const { bars, loading: barsLoading, refetch: refetchBars } = useBars();
   const { appConfig, loading: appConfigLoading, updateConfig, refetch: refetchAppConfig } = useAppConfig();
   const { votes, submitVote: submitVoteToDb, getBarVotes, refetch: refetchVotes } = useVotes();
+  const { checkIn, checkOut, isCheckedIn, getBarCheckins } = useCheckins();
   
   // Sync status
   const { secondsAgo, isRefreshing, startRefresh, endRefresh, markUpdated } = useSyncStatus();
@@ -219,6 +227,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     secondsAgo,
     isRefreshing,
     refreshAll,
+    checkIn,
+    checkOut,
+    isCheckedIn,
+    getBarCheckins,
   }), [
     currentUser,
     setCurrentUser,
@@ -254,6 +266,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     secondsAgo,
     isRefreshing,
     refreshAll,
+    checkIn,
+    checkOut,
+    isCheckedIn,
+    getBarCheckins,
   ]);
 
   return (

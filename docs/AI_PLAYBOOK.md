@@ -57,16 +57,20 @@ Uma tarefa feita por IA só é considerada pronta quando:
 ## 5) Backlog técnico orientado a IA
 
 ### Curto prazo
-- Adicionar testes de hooks (`useConsumption`, `useCheckins`, `useAchievementChecker`).
-- Cobrir cenários de falha de rede e retry.
+- Adicionar testes de hooks de evento (`useEventConsumption`, `useEventCheckins`, `useEventVotes`).
+- Cobrir cenários de falha de rede e retry nos hooks de plataforma.
+- SEO técnico completo: sitemap.xml dinâmico, schema.org `Event`, robots.txt por ambiente.
 
 ### Médio prazo
-- Criar camada `services/` para centralizar queries Supabase.
-- Introduzir validação de contratos de payload com Zod.
+- Migração de dados históricos do legado para o modelo `event_id`.
+- Auditoria formal de RLS: suite de testes de policy Supabase.
+- Observabilidade em produção (Sentry ou equivalente).
+- Importação automática de lista curada de bares para circuitos especiais.
 
 ### Longo prazo
-- Arquitetura multi-evento com `event_id`.
-- Observabilidade (Sentry + métricas de operação).
+- Relatórios avançados pós-evento: taxa de presença por etapa, tempo de deslocamento real vs previsto.
+- Delegação de co-admin por evento (`event_admin`).
+- Anti-spam e limites de criação de baratonas por usuário.
 
 
 ## 6) Artefatos de suporte (já disponíveis no repositório)

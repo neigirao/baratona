@@ -1,5 +1,11 @@
 # Pacote V1 — Arquitetura e Plano de Implementação
 
+> **Arquivo histórico — planejamento pré-v1.**
+> Este documento foi o plano de design técnico antes da implementação. O v1 foi entregue em produção.
+> Para o estado atual da plataforma, consulte `docs/ARQUITETURA.md` e `docs/validacao-time-v1.md`.
+
+---
+
 ## 1) Arquitetura final v1 (tabelas, RLS e rotas multi-evento)
 
 ### 1.1 Entidades e tabelas

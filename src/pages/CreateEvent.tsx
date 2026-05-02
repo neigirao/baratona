@@ -9,7 +9,7 @@ import { normalizeSlug } from '@/lib/platformEvents';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { useSeo } from '@/hooks/useSeo';
 import { createEventApi, ensureProfile, findEventBySlugApi, isReservedSlug, type EventBar } from '@/lib/platformApi';
-import { ChevronLeft, ChevronRight, Plus, Trash2, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Plus, Trash2, GripVertical } from 'lucide-react';
 
 type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 
@@ -229,7 +229,7 @@ export default function CreateEvent() {
                   <ChevronLeft className="w-4 h-4 mr-1" /> Editar bares
                 </Button>
                 <Button type="submit" className="flex-1" disabled={saving}>
-                  {saving ? 'Criando...' : 'Criar baratona'}
+                  {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Criando...</> : 'Criar baratona'}
                 </Button>
               </div>
             </CardContent>

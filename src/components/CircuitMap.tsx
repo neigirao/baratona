@@ -1,17 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { EventBar } from '@/lib/platformApi';
-import { Button } from '@/components/ui/button';
-import { MapPin, Bookmark, Maximize2 } from 'lucide-react';
+import { MapPin, Maximize2 } from 'lucide-react';
 
 interface CircuitMapProps {
   bars: EventBar[];
   favorites: Set<string>;
   onToggleFavorite?: (barId: string) => void;
+  /** @deprecated kept for backwards compat — map is always auto */
   hideViewToggle?: boolean;
   totalCount?: number;
 }
-
-type ViewMode = 'all' | 'favorites';
 
 function getBboxUrl(bbox: { minLat: number; maxLat: number; minLng: number; maxLng: number }) {
   const padLat = Math.max((bbox.maxLat - bbox.minLat) * 0.15, 0.005);
@@ -31,25 +29,20 @@ function buildMultiStopUrl(bars: EventBar[]) {
   return `https://www.google.com/maps/dir/${stops}`;
 }
 
-export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, totalCount }: CircuitMapProps) {
-  const [view, setView] = useState<ViewMode>('all');
-
+export function CircuitMap({ bars, favorites }: CircuitMapProps) {
   const barsWithCoords = useMemo(
     () => bars.filter((b) => b.id && b.latitude != null && b.longitude != null),
     [bars]
   );
 
-  const favCount = useMemo(
-    () => barsWithCoords.filter((b) => favorites.has(b.id || '')).length,
-    [barsWithCoords, favorites]
-  );
+  const hasFavorites = favorites.size > 0;
 
   const visibleBars = useMemo(() => {
-    if (view === 'favorites') {
+    if (hasFavorites) {
       return barsWithCoords.filter((b) => favorites.has(b.id || ''));
     }
     return barsWithCoords;
-  }, [view, barsWithCoords, favorites]);
+  }, [hasFavorites, barsWithCoords, favorites]);
 
   const bbox = useMemo(() => {
     const source = visibleBars.length > 0 ? visibleBars : barsWithCoords;
@@ -109,36 +102,16 @@ export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, 
         <MapPin className="w-5 h-5 text-primary" />
         <h2 className="font-semibold">Mapa do circuito</h2>
         <span className="text-xs text-muted-foreground ml-auto">
-          {hideViewToggle
-            ? `${visibleBars.length} ${visibleBars.length === 1 ? 'bar' : 'bares'} no mapa${
-                typeof totalCount === 'number' && totalCount !== visibleBars.length ? ` (de ${totalCount})` : ''
-              }`
-            : `${visibleBars.length} de ${barsWithCoords.length} no mapa`}
+          {hasFavorites
+            ? `${visibleBars.length} ${visibleBars.length === 1 ? 'marcado' : 'marcados'} no mapa (de ${barsWithCoords.length})`
+            : `${visibleBars.length} ${visibleBars.length === 1 ? 'bar' : 'bares'} no mapa`}
         </span>
       </div>
 
-      {!hideViewToggle && (
-        <div className="flex gap-1.5 mb-3 flex-wrap">
-          <Button
-            size="sm"
-            variant={view === 'all' ? 'default' : 'outline'}
-            onClick={() => setView('all')}
-            className="h-8 text-xs"
-          >
-            <MapPin className="w-3.5 h-3.5 mr-1" />
-            Mostrar todos ({barsWithCoords.length})
-          </Button>
-          <Button
-            size="sm"
-            variant={view === 'favorites' ? 'default' : 'outline'}
-            onClick={() => setView('favorites')}
-            disabled={favCount === 0}
-            className="h-8 text-xs"
-          >
-            <Bookmark className={`w-3.5 h-3.5 mr-1 ${view === 'favorites' ? 'fill-current' : ''}`} />
-            Só marcados ({favCount})
-          </Button>
-        </div>
+      {hasFavorites && (
+        <p className="text-xs text-muted-foreground mb-2">
+          Mostrando só seus marcados. Desmarque todos para ver o circuito inteiro.
+        </p>
       )}
 
       <div className="rounded-lg overflow-hidden h-72 relative border border-border bg-muted">
@@ -159,7 +132,6 @@ export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, 
               const isFav = favorites.has(bar.id || '');
               return (
                 <g key={bar.id} transform={`translate(${x} ${y})`}>
-                  {/* Halo for fav */}
                   {isFav && (
                     <circle
                       r="2.2"
@@ -179,13 +151,6 @@ export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, 
             })}
           </svg>
         </div>
-        {visibleBars.length === 0 && view === 'favorites' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <p className="text-sm text-muted-foreground text-center px-4">
-              Nenhum bar marcado ainda.<br />Toque no <Bookmark className="inline w-3.5 h-3.5" /> dos cards.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Legend */}
@@ -194,10 +159,12 @@ export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, 
           <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary" />
           Marcado
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-muted-foreground" />
-          Demais
-        </span>
+        {!hasFavorites && (
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-muted-foreground" />
+            Demais
+          </span>
+        )}
       </div>
 
       {routeUrl && (
@@ -208,7 +175,7 @@ export function CircuitMap({ bars, favorites, onToggleFavorite, hideViewToggle, 
           className="mt-3 flex items-center justify-center gap-2 w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-lg"
         >
           <Maximize2 className="w-4 h-4" />
-          {view === 'favorites'
+          {hasFavorites
             ? `Abrir ${visibleBars.length} marcados no Google Maps`
             : `Abrir ${visibleBars.length} bares no Google Maps`}
         </a>

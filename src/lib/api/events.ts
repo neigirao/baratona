@@ -1,6 +1,6 @@
 import { supabase } from './client';
 import { mapEventRow, mapEnrichedEventRow, type EventBar } from './mappers';
-import type { PlatformEvent } from '@/lib/platformEvents';
+import { isEventStatus, type EventStatus, type PlatformEvent } from '@/lib/platformEvents';
 import { FEATURED_EVENT_SLUG } from '@/lib/constants';
 
 export interface EventUpdateInput {
@@ -9,7 +9,7 @@ export interface EventUpdateInput {
   city?: string | null;
   visibility?: 'public' | 'private';
   eventType?: 'open_baratona' | 'special_circuit';
-  status?: string;
+  status?: EventStatus;
   eventDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;
@@ -93,6 +93,7 @@ export async function createEventApi(
   input: Omit<PlatformEvent, 'id' | 'createdAt'>,
   bars: Omit<EventBar, 'id' | 'eventId'>[] = []
 ): Promise<PlatformEvent> {
+  const status: EventStatus = isEventStatus(input.status) ? input.status : 'published';
   const { data, error } = await supabase
     .from('events')
     .insert({
@@ -105,7 +106,7 @@ export async function createEventApi(
       owner_user_id: input.ownerId,
       owner_name: input.ownerName,
       event_date: input.eventDate || null,
-      status: input.status || 'published',
+      status,
     })
     .select('*')
     .single();

@@ -227,7 +227,7 @@ function EventRowCard({ event, onStatus, onVisibility, onArchive, onTransfer }: 
             </Link>
           </Button>
 
-          <Select value={status || 'draft'} onValueChange={(v) => onStatus(event.id, v)}>
+          <Select value={status || 'draft'} onValueChange={(v) => onStatus(event.id, v as import('@/lib/platformEvents').EventStatus)}>
             <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="draft">Rascunho</SelectItem>

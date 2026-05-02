@@ -105,7 +105,7 @@ export async function createEventApi(
       owner_user_id: input.ownerId,
       owner_name: input.ownerName,
       event_date: input.eventDate || null,
-      status: input.status || 'published',
+      status: (input as any).status || 'published',
     })
     .select('*')
     .single();

@@ -10,7 +10,7 @@ import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, re
 import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
-import { BaratonaHero } from '@/components/BaratonaHero';
+
 import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';

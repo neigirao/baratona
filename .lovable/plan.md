@@ -1,43 +1,46 @@
-# Mapa filtrado + Seleção explícita para criar baratona
+# Mapa reage automaticamente aos bares marcados
 
-Na página do Comida di Boteco (e qualquer evento "especial"), dois ajustes:
+## Comportamento desejado
 
-## 1. Filtros refletem no mapa
+- **Nenhum bar marcado** → mapa mostra **todos** os bares do circuito.
+- **Pelo menos 1 bar marcado** → mapa mostra **apenas os marcados** (some o resto, incluindo pinos e rota).
+- Ao desmarcar o último, volta a mostrar todos automaticamente.
 
-Hoje o `CircuitMap` recebe a lista completa de bares (`bars`). Vamos passar `filteredBars`, para que busca, bairro e "só marcados" também filtrem os pinos no mapa.
+## Onde mexer
 
-- O componente `CircuitMap` já mostra contagem "X de Y" e tem o próprio toggle "Só marcados". Vamos:
-  - Passar `filteredBars` como prop (em vez de `bars`).
-  - Esconder o toggle interno "Mostrar todos / Só marcados" quando os filtros externos já estão aplicando o recorte (evita duplicar controles). O toggle de favoritos da página continua sendo a fonte de verdade.
-- Texto do botão "Abrir no Google Maps" passa a refletir os bares visíveis após filtro (já é o comportamento natural).
+### 1. `src/components/CircuitMap.tsx`
 
-## 2. Botão "Criar minha baratona" com seleção explícita
+Substituir o estado interno `view` (`'all' | 'favorites'`) por uma derivação automática:
 
-Hoje só dá pra criar baratona depois de marcar favoritos (Bookmark). Vamos adicionar um fluxo direto:
+```ts
+const hasFavorites = favorites.size > 0;
+const visibleBars = hasFavorites
+  ? barsWithCoords.filter((b) => favorites.has(b.id || ''))
+  : barsWithCoords;
+```
 
-- **Novo botão fixo no topo da página**: "Criar minha baratona" (sempre visível, não depende de ter favoritos).
-- Ao clicar, abre um **novo dialog `SelectBarsForBaratonaDialog`** com:
-  - Lista de todos os bares do evento (com busca e filtro por bairro).
-  - Checkbox por bar; pré-seleciona os favoritos atuais (se houver).
-  - Contador "X selecionados" + regras 3–15 bares (mesma regra do RPC `create_baratona_from_favorites`).
-  - Campo de nome da baratona.
-  - Botão "Criar e abrir" → chama `createBaratonaFromFavoritesApi(eventId, name, selectedIds)` e navega para `/baratona/{slug}/admin`.
-  - Se usuário não está logado, dispara `signInWithGoogle()` antes (mesmo padrão do favorito).
-- O botão antigo "Criar minha baratona" da barra de favoritos continua funcionando (atalho rápido para quem já marcou).
+- Remover o bloco do toggle (`!hideViewToggle && (...)`) e a prop `hideViewToggle` (não é mais necessária — sempre automático).
+- Atualizar o contador no cabeçalho para refletir o modo atual:
+  - sem favoritos: `"X bares no mapa"`
+  - com favoritos: `"X marcados no mapa (de Y)"`
+- Atualizar o texto do botão "Abrir no Google Maps":
+  - com favoritos: `"Abrir N marcados no Google Maps"`
+  - sem favoritos: `"Abrir N bares no Google Maps"`
+- Remover o overlay "Nenhum bar marcado ainda" (não pode mais ocorrer, pois sem favoritos mostramos todos).
+- O bbox passa a ser calculado a partir de `visibleBars` (mantendo o fallback atual já está correto).
 
-## Detalhes técnicos
+### 2. `src/components/SpecialCircuitLanding.tsx`
 
-- **Arquivo novo**: `src/components/SelectBarsForBaratonaDialog.tsx` — reaproveita o RPC já existente (`create_baratona_from_favorites`), nenhuma migração necessária.
-- **Editar `src/components/SpecialCircuitLanding.tsx`**:
-  - Trocar `<CircuitMap bars={bars} ... />` por `<CircuitMap bars={filteredBars} ... />`.
-  - Adicionar botão "Criar minha baratona" no header da seção (ao lado de "Petiscos em concurso") ou como CTA dedicado acima do mapa.
-  - Estado `selectDialogOpen` + render do novo dialog.
-- **Editar `src/components/CircuitMap.tsx`**:
-  - Aceitar prop opcional `hideViewToggle?: boolean` para esconder os botões internos "Mostrar todos / Só marcados" quando os filtros externos já fazem o trabalho.
-  - Ajustar o texto da contagem para "X bares no mapa" quando filtrado externamente.
-- **Analytics**: novo evento `create_baratona_select_dialog_opened` e `create_baratona_created_from_select` para diferenciar do fluxo via favoritos.
+- O `CircuitMap` hoje recebe `bars={filteredBars}`, ou seja, ele também responde aos filtros de busca/bairro/sort/onlyFavorites da lista. Isso polui o comportamento pedido (o usuário pode "esconder" bares marcados ao filtrar por bairro, por exemplo).
+- Passar **`bars={bars}`** (lista completa do evento) para o mapa, deixando os filtros aplicados apenas à grade de cards abaixo. O mapa fica governado **só** pelos favoritos.
+- Remover a prop `hideViewToggle` e `totalCount` da chamada (não usadas mais).
 
-## Fora de escopo
+## Notas técnicas
 
-- Nenhuma mudança de schema, RLS ou edge functions.
-- Eventos públicos não-especiais (ex: open_baratona) não recebem o botão por ora — o fluxo "criar baseado em" faz mais sentido em circuitos grandes (Comida di Boteco). Pode ser estendido depois.
+- O hook `useSpecialCircuitFavorites` já mantém `favorites: Set<string>` reativo (server + link compartilhado + replay pós-login), então o mapa re-renderiza sozinho.
+- Bares sem coordenadas continuam fora do mapa (mantém o filtro `barsWithCoords`).
+- Sem mudanças em banco, RLS, edge functions ou rotas.
+
+## Riscos
+
+- Baixo. Mudança puramente de UI/derivação de estado em 2 arquivos. Não afeta favoritos, criação de baratona, nem outras telas que usam `BaratonaMap` (componente separado).

@@ -1,4 +1,4 @@
-import type { PlatformEvent } from '@/lib/platformEvents';
+import { isEventStatus, type PlatformEvent } from '@/lib/platformEvents';
 
 export interface EventBar {
   id?: string;
@@ -27,6 +27,7 @@ export function mapEventRow(row: any): PlatformEvent {
     city: row.city || 'Rio de Janeiro',
     visibility: row.visibility,
     eventType: row.event_type,
+    status: isEventStatus(row.status) ? row.status : 'draft',
     ownerId: row.owner_user_id,
     ownerName: row.owner_name || 'Organizador',
     createdAt: row.created_at,

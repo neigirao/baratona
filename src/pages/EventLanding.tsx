@@ -10,7 +10,7 @@ import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, re
 import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
-import { BaratonaHero } from '@/components/BaratonaHero';
+
 import { HighContrastToggle } from '@/components/HighContrastToggle';
 import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';
@@ -235,42 +235,52 @@ export default function EventLanding() {
     return null;
   })();
 
+  const heroImage = event.coverImageUrl;
+
   return (
     <div className="min-h-screen bg-background">
-      <BaratonaHero
-        title={event.name}
-        subtitle={
-          event.description
-            ? undefined
-            : isCircuit
-              ? `Circuito Especial · ${event.city ?? ''}`.replace(/ · $/, '')
-              : 'Baratona'
-        }
-        imageUrl={event.coverImageUrl}
-        height="lg"
-        asH1
-      />
-      <div className="container max-w-3xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild className="flex-shrink-0">
+      {/* Hero photo */}
+      <div className="relative w-full h-56 sm:h-72 md:h-96 overflow-hidden bg-card">
+        {heroImage ? (
+          <img
+            src={heroImage}
+            alt={event.name}
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-card to-background" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-background" />
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+          <Button variant="secondary" size="icon" asChild className="bg-background/70 backdrop-blur">
             <Link to="/explorar" aria-label="Voltar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <div className="flex-1 min-w-0 flex items-center justify-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/50 text-xs sm:text-sm text-muted-foreground flex-wrap justify-center">
-              {isCircuit && (
-                <span className="text-secondary font-bold uppercase tracking-wide">Circuito</span>
-              )}
-              {event.city && (
-                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
-              )}
-              <span className="flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {bars.length} {isCircuit ? 'butecos' : 'bares'}</span>
-              {dateLabel && (
-                <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {dateLabel}</span>
-              )}
-            </div>
-          </div>
-          <HighContrastToggle className="flex-shrink-0" />
+          <HighContrastToggle className="bg-background/70 backdrop-blur rounded-md" />
         </div>
+      </div>
+
+      <div className="container max-w-3xl mx-auto px-4 py-6 space-y-6 -mt-6 relative">
+        {/* Title + meta */}
+        <header className="space-y-3">
+          <h1 className="font-display font-black text-gradient-yellow text-3xl sm:text-5xl tracking-tight leading-tight">
+            {event.name}
+          </h1>
+          <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm text-muted-foreground">
+            {isCircuit && (
+              <span className="px-2 py-1 rounded-full bg-secondary/15 text-secondary font-bold uppercase tracking-wide text-[10px]">
+                Circuito
+              </span>
+            )}
+            {event.city && (
+              <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.city}</span>
+            )}
+            <span className="inline-flex items-center gap-1"><Beer className="w-3.5 h-3.5" /> {bars.length} {isCircuit ? 'butecos' : 'bares'}</span>
+            {dateLabel && (
+              <span className="inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {dateLabel}</span>
+            )}
+          </div>
+        </header>
 
         {event.description && (
           <p className="text-muted-foreground leading-relaxed">{event.description}</p>

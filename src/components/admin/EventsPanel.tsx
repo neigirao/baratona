@@ -72,7 +72,7 @@ export function EventsPanel({ events, loading, onChanged }: Props) {
     }
   };
 
-  const handleStatus = async (id: string, status: string) => {
+  const handleStatus = async (id: string, status: import('@/lib/platformEvents').EventStatus) => {
     try {
       await updateEventApi(id, { status });
       onChanged();
@@ -184,7 +184,7 @@ export function EventsPanel({ events, loading, onChanged }: Props) {
 
 interface RowProps {
   event: EventRow;
-  onStatus: (id: string, status: string) => void;
+  onStatus: (id: string, status: import('@/lib/platformEvents').EventStatus) => void;
   onVisibility: (id: string, v: 'public' | 'private') => void;
   onArchive: (id: string) => void;
   onTransfer: (id: string, newOwner: string) => void;
@@ -227,7 +227,7 @@ function EventRowCard({ event, onStatus, onVisibility, onArchive, onTransfer }: 
             </Link>
           </Button>
 
-          <Select value={status || 'draft'} onValueChange={(v) => onStatus(event.id, v)}>
+          <Select value={status || 'draft'} onValueChange={(v) => onStatus(event.id, v as import('@/lib/platformEvents').EventStatus)}>
             <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="draft">Rascunho</SelectItem>

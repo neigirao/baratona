@@ -1,4 +1,4 @@
-import type { PlatformEvent } from '@/lib/platformEvents';
+import { isEventStatus, type PlatformEvent } from '@/lib/platformEvents';
 
 export interface EventBar {
   id?: string;

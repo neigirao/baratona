@@ -167,11 +167,9 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
       )}
 
       <CircuitMap
-        bars={filteredBars}
+        bars={bars}
         favorites={favorites}
         onToggleFavorite={toggleFavorite}
-        hideViewToggle
-        totalCount={bars.length}
       />
 
       <CircuitFiltersBar

@@ -184,7 +184,7 @@ export function EventsPanel({ events, loading, onChanged }: Props) {
 
 interface RowProps {
   event: EventRow;
-  onStatus: (id: string, status: string) => void;
+  onStatus: (id: string, status: import('@/lib/platformEvents').EventStatus) => void;
   onVisibility: (id: string, v: 'public' | 'private') => void;
   onArchive: (id: string) => void;
   onTransfer: (id: string, newOwner: string) => void;

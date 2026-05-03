@@ -110,6 +110,11 @@ export default function Home() {
     },
   ];
 
+  // featured === null → loading; first special_circuit event becomes the hero badge
+  const heroBadgeEvent = featured === null
+    ? null
+    : (featured.find((e) => e.eventType === 'special_circuit') ?? undefined);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
@@ -118,6 +123,7 @@ export default function Home() {
         subtitle="Crie sua rota de bares com os amigos. Ranking, votação, check-in, mapa, conquistas e retrospectiva — tudo num app que funciona até com sinal ruim."
         height="xl"
         asH1
+        featuredEvent={heroBadgeEvent}
       />
       <section className="container max-w-5xl mx-auto px-4 -mt-6 pb-10 relative z-10">
         <div className="flex flex-col sm:flex-row justify-center gap-3">

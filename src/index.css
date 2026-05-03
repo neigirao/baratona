@@ -6,46 +6,93 @@
 
 @layer base {
   :root {
-    /* Baratona 2026 Design System — Gold Edition */
-    --background: 240 5% 4%;
-    --foreground: 30 20% 94%;
+    /* ============================================================
+       Baratona Design System — Gold Edition (v1.0 / Maio 2026)
+       Single source of truth. NEVER hardcode hex values in components.
+       Reference: docs/baratona-design-system.html
+       ============================================================ */
 
-    --card: 240 6% 8%;
-    --card-foreground: 30 20% 94%;
+    /* Backgrounds — true dark with violet undertone */
+    --background: 240 22% 5%;        /* #0A0A0F */
+    --background-2: 240 24% 7%;      /* #0D0D15 — sidebar, alt sections */
+    --foreground: 36 17% 92%;        /* #F0EDE8 — warm white */
+    --foreground-2: 258 4% 61%;      /* #9A97A0 — secondary text */
 
-    --popover: 240 6% 8%;
-    --popover-foreground: 30 20% 94%;
+    --card: 240 18% 9%;              /* #13131B */
+    --card-2: 240 14% 11%;           /* #181820 — card hover, inputs */
+    --card-foreground: 36 17% 92%;
 
-    /* Gold - Primary */
-    --primary: 38 91% 55%;
+    --popover: 240 18% 9%;
+    --popover-foreground: 36 17% 92%;
+
+    /* Gold — Primary (CTAs, brand) */
+    --primary: 36 91% 55%;           /* #F5A623 */
     --primary-foreground: 0 0% 0%;
+    --primary-light: 42 100% 70%;    /* #FFD166 — high scores, hover */
+    --primary-dark: 33 91% 47%;      /* #E8850A — gradient end */
 
-    /* Amber - Secondary */
-    --secondary: 33 84% 48%;
+    /* Amber — Secondary */
+    --secondary: 33 91% 47%;         /* #E8850A */
     --secondary-foreground: 0 0% 0%;
 
-    --muted: 240 6% 11%;
-    --muted-foreground: 240 5% 42%;
+    --muted: 240 14% 11%;            /* #181820 */
+    --muted-foreground: 240 8% 38%;  /* #5A5A6A */
 
-    --accent: 38 91% 55%;
+    --accent: 36 91% 55%;
     --accent-foreground: 0 0% 0%;
 
-    /* Red */
-    --destructive: 357 86% 52%;
+    /* Functional */
+    --destructive: 6 78% 57%;        /* #E74C3C */
     --destructive-foreground: 0 0% 100%;
+    --success: 145 63% 49%;          /* #2ECC71 — check-in, visited */
+    --success-foreground: 0 0% 0%;
 
-    --border: 240 6% 14%;
-    --input: 240 6% 14%;
-    --ring: 38 91% 55%;
+    --border: 240 16% 14%;           /* #1E1E2A */
+    --border-2: 240 13% 17%;         /* #252530 — hover borders */
+    --input: 240 24% 7%;             /* #0D0D15 */
+    --ring: 36 91% 55%;
 
-    --radius: 0.75rem;
+    /* Radius scale */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-full: 99px;
 
-    /* Custom Baratona Colors */
-    --baratona-black: 240 5% 4%;
+    /* Spacing scale (4px base) — use via Tailwind p-/m-/gap- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    --space-16: 64px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 24px hsl(36 91% 55% / 0.25);
+    --shadow-lg: 0 8px 32px hsl(36 91% 55% / 0.4);
+    --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.4);
+
+    /* Motion easings */
+    --ease-micro: 0.15s ease;
+    --ease-ui: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-page: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Zone pins (mapa) */
+    --zone-sul: 271 91% 65%;         /* #A855F7 */
+    --zone-centro: 36 91% 55%;       /* #F5A623 */
+    --zone-norte: 145 63% 49%;       /* #2ECC71 */
+    --zone-niteroi: 217 91% 60%;     /* #3B82F6 */
+
+    /* Legacy / domain aliases (mantidos para compat) */
+    --baratona-black: 240 22% 5%;
     --baratona-blue: 197 100% 47%;
-    --baratona-yellow: 38 91% 55%;
-    --baratona-red: 357 86% 52%;
-    --baratona-green: 142 76% 36%;
+    --baratona-yellow: 36 91% 55%;
+    --baratona-red: 6 78% 57%;
+    --baratona-green: 145 63% 49%;
 
     /* Gradients */
     --gradient-blue: linear-gradient(135deg, hsl(197 100% 47%), hsl(197 100% 35%));

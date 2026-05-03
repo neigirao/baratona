@@ -1,116 +1,125 @@
-import { ReactNode } from 'react';
-import baratonaBanner from '@/assets/baratona-banner.jpeg';
-
-type HeroHeight = 'sm' | 'md' | 'lg' | 'xl';
-
-const heightClasses: Record<HeroHeight, string> = {
-  sm: 'h-32',
-  md: 'h-48',
-  lg: 'h-64 sm:h-80',
-  xl: 'h-72 sm:h-96',
-};
-
-/** When showing a logo (no big Orbitron title), use a more compact height
- *  so the brand mark doesn't push the rest of the page below the fold on mobile. */
-const logoHeightClasses: Record<HeroHeight, string> = {
-  sm: 'h-24',
-  md: 'h-32 sm:h-40',
-  lg: 'h-40 sm:h-56',
-  xl: 'h-48 sm:h-64',
-};
-
-const logoSizeClasses: Record<HeroHeight, string> = {
-  sm: 'max-h-12 sm:max-h-16',
-  md: 'max-h-16 sm:max-h-24',
-  lg: 'max-h-20 sm:max-h-28',
-  xl: 'max-h-24 sm:max-h-32',
-};
+import { useEffect, useRef, type ReactNode } from 'react';
 
 interface BaratonaHeroProps {
   title: string;
   subtitle?: string;
-  /** Background photo. If it looks like a logo (URL contains "logo"), it is auto-promoted to logoUrl. */
   imageUrl?: string | null;
-  /** Explicit logo (transparent PNG / SVG). When set, replaces the Orbitron title and is rendered contained, no opacity. */
   logoUrl?: string | null;
-  height?: HeroHeight;
-  /** Renders inside the centered overlay, below title/subtitle. */
+  height?: 'sm' | 'md' | 'lg' | 'xl';
   overlayChildren?: ReactNode;
-  /** When true, title is rendered as h1 (use for landing/page heroes). */
   asH1?: boolean;
   className?: string;
 }
 
-const looksLikeLogo = (url?: string | null) => !!url && /logo/i.test(url);
-
-/**
- * Unified hero banner — preserves the iconic "Nei" look:
- * background image at 60% opacity, descending black gradient,
- * Orbitron title with the yellow gradient.
- *
- * When a logo is provided (or auto-detected from a URL containing "logo"),
- * the logo replaces the title and the background falls back to a subtle gradient
- * so the brand mark isn't darkened or stretched.
- */
 export function BaratonaHero({
   title,
   subtitle,
-  imageUrl,
-  logoUrl,
-  height = 'md',
   overlayChildren,
   asH1 = false,
   className = '',
 }: BaratonaHeroProps) {
-  // Auto-promote: if the cover URL looks like a logo, treat it as one.
-  const resolvedLogo = logoUrl || (looksLikeLogo(imageUrl) ? imageUrl : null);
-  const resolvedImage = resolvedLogo ? null : (imageUrl || baratonaBanner);
-  const TitleTag = asH1 ? 'h1' : 'div';
+  const imgRef = useRef<HTMLDivElement>(null);
 
-  const containerHeight = resolvedLogo ? logoHeightClasses[height] : heightClasses[height];
-  const logoSize = logoSizeClasses[height];
+  useEffect(() => {
+    const fn = () => {
+      if (imgRef.current) {
+        imgRef.current.style.transform = `translateY(${window.scrollY * 0.35}px)`;
+      }
+    };
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+
+  const TitleTag = asH1 ? 'h1' : 'h2';
 
   return (
-    <div className={`relative w-full overflow-hidden ${containerHeight} ${className}`}>
-      {resolvedImage && (
-        <>
-          <img
-            src={resolvedImage}
-            alt={title}
-            className="w-full h-full object-cover opacity-60"
-            loading="eager"
+    <section
+      className={`relative flex flex-col justify-end overflow-hidden bg-background min-h-[85vh] ${className}`}
+    >
+      {/* Parallax image */}
+      <div
+        ref={imgRef}
+        className="absolute inset-0 will-change-transform"
+        style={{ height: '115%', top: '-7.5%' }}
+      >
+        <img
+          src="/assets/hero-illustration.png"
+          alt="Baratona hero"
+          className="w-full h-full object-cover object-top"
+          loading="eager"
+        />
+      </div>
+
+      {/* Top gradient */}
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '33%',
+          background: 'linear-gradient(180deg, rgba(10,10,15,0.75) 0%, transparent 100%)',
+        }}
+      />
+
+      {/* Vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 120% 100% at 50% 50%, transparent 50%, rgba(10,10,15,0.5) 100%)',
+        }}
+      />
+
+      {/* Bottom gradient */}
+      <div
+        className="absolute bottom-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '65%',
+          background:
+            'linear-gradient(0deg, rgba(10,10,15,0.97) 0%, rgba(10,10,15,0.85) 35%, rgba(10,10,15,0.4) 65%, transparent 100%)',
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 container max-w-5xl mx-auto px-4 pb-10 space-y-5">
+        {/* Badge */}
+        <div
+          className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+          style={{
+            background: 'rgba(245,166,35,0.15)',
+            border: '1px solid rgba(245,166,35,0.35)',
+            color: '#F5A623',
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ background: '#F5A623' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
-        </>
-      )}
-      {!resolvedImage && (
-        <div className="absolute inset-0 bg-gradient-to-b from-card via-background to-background" />
-      )}
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-3 text-center gap-1 sm:gap-2">
-        {resolvedLogo ? (
-          <>
-            <img
-              src={resolvedLogo}
-              alt={title}
-              className={`${logoSize} w-auto object-contain`}
-              loading="eager"
-            />
-            {asH1 && <h1 className="sr-only">{title}</h1>}
-          </>
-        ) : (
-          <TitleTag
-            className="font-display font-black text-gradient-yellow text-3xl sm:text-5xl md:text-6xl tracking-tight"
-          >
-            {title}
-          </TitleTag>
-        )}
+          Circuito Comida di Buteco RJ 2026 ativo
+        </div>
+
+        <TitleTag
+          style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 'clamp(40px, 6vw, 76px)',
+            lineHeight: 1.05,
+          }}
+          className="text-foreground"
+        >
+          Monte sua{' '}
+          <span className="text-primary">baratona épica</span>
+        </TitleTag>
+
         {subtitle && (
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl line-clamp-2">
+          <p
+            className="text-muted-foreground max-w-[460px]"
+            style={{ fontSize: 'clamp(15px, 1.8vw, 18px)' }}
+          >
             {subtitle}
           </p>
         )}
-        {overlayChildren && <div className="mt-2 sm:mt-3 w-full">{overlayChildren}</div>}
+
+        {overlayChildren && <div className="w-full">{overlayChildren}</div>}
       </div>
-    </div>
+    </section>
   );
 }

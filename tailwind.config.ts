@@ -14,10 +14,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Orbitron', 'monospace'],
+        sans: ['"DM Sans"', 'sans-serif'],
+        display: ['"Bebas Neue"', 'sans-serif'],
+        heading: ['Syne', 'sans-serif'],
       },
       colors: {
+        gold: { DEFAULT: '#F5A623', light: '#FFD166', dark: '#E8850A' },
+        'green-check': '#2ECC71',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -104,6 +107,10 @@ export default {
           "0%": { transform: "translateY(-10px) rotate(0deg)", opacity: "1" },
           "100%": { transform: "translateY(100vh) rotate(720deg)", opacity: "0" },
         },
+        shimmer: {
+          "0%":   { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition:  "200% 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -113,6 +120,7 @@ export default {
         "scale-in": "scale-in 0.3s ease-out",
         "count-up": "count-up 0.2s ease-out",
         "confetti-fall": "confetti-fall 3s linear infinite",
+        shimmer: "shimmer 1.6s infinite",
       },
     },
   },

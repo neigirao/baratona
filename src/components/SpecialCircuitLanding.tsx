@@ -106,6 +106,80 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
 
   return (
     <section className="space-y-3">
+      {/* CDB Hero Banner */}
+      <div
+        className="rounded-2xl overflow-hidden mb-6"
+        style={{
+          background: 'linear-gradient(135deg, #1C0E00, #2E1800, #1A0E00)',
+          border: '1px solid rgba(245,166,35,0.2)',
+        }}
+      >
+        <div className="p-6 flex gap-6 items-center flex-wrap">
+          <img
+            src="/assets/comida-di-buteco-logo.png"
+            alt="Comida di Buteco"
+            className="w-24 h-24 object-contain flex-shrink-0"
+            style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.6))' }}
+          />
+          <div className="flex-1 min-w-48">
+            <div className="flex gap-2 mb-3 flex-wrap">
+              <span
+                className="text-xs font-bold tracking-wide px-2.5 py-0.5 rounded-full text-primary"
+                style={{
+                  background: 'rgba(245,166,35,0.15)',
+                  border: '1px solid rgba(245,166,35,0.25)',
+                }}
+              >
+                Circuito Especial
+              </span>
+              <span
+                className="text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1"
+                style={{
+                  background: 'rgba(46,204,113,0.1)',
+                  color: '#2ECC71',
+                  border: '1px solid rgba(46,204,113,0.2)',
+                }}
+              >
+                <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" /> Ativo
+              </span>
+            </div>
+            <h1
+              className="text-2xl font-black text-white leading-tight mb-2"
+              style={{ fontFamily: "'Syne', sans-serif" }}
+            >
+              {event.name}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {event.city} · {bars.length} bares participantes
+            </p>
+          </div>
+        </div>
+        <div
+          className="grid grid-cols-3 border-t"
+          style={{ borderColor: 'rgba(245,166,35,0.1)' }}
+        >
+          {[
+            { val: bars.length, label: 'Bares' },
+            { val: favorites.size, label: 'Favoritos' },
+            { val: '31d', label: 'Restam' },
+          ].map((s, i) => (
+            <div
+              key={i}
+              className="py-3 text-center"
+              style={{ borderRight: i < 2 ? '1px solid rgba(245,166,35,0.1)' : 'none' }}
+            >
+              <p
+                className="text-xl font-black text-primary"
+                style={{ fontFamily: "'Syne', sans-serif" }}
+              >
+                {s.val}
+              </p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Utensils className="w-5 h-5 text-primary" />

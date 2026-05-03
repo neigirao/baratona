@@ -42,7 +42,7 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
 
       <div className="container flex h-14 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-xl font-display font-bold text-gradient-yellow">BARATONA</span>
+          <span style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '3px', fontSize: '24px' }} className="text-primary">BARATONA</span>
           <span className="text-xs font-display text-primary">2026</span>
         </Link>
 

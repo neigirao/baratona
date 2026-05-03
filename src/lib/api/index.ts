@@ -28,7 +28,9 @@ export {
   updateBarApi,
   deleteBarApi,
   reorderBarsApi,
+  getUserBarCatalogApi,
   type BarInput,
+  type CatalogBar,
 } from './bars';
 export {
   adminListAllEventsApi,

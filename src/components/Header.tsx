@@ -49,7 +49,7 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
         <div className="flex items-center gap-2">
           {/* Wrapped Preview */}
           {onShowWrapped && (
-            <Button variant="ghost" size="sm" onClick={onShowWrapped} className="h-8 w-8 p-0 text-primary" title="Retrospectiva">
+            <Button variant="ghost" size="sm" onClick={onShowWrapped} className="h-8 w-8 p-0 text-primary" aria-label="Retrospectiva">
               <PartyPopper className="h-4 w-4" />
             </Button>
           )}

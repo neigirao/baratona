@@ -246,7 +246,7 @@ export default function EventLanding() {
 
         {/* Title + meta */}
         <header className="space-y-3">
-          <h1 className="font-display font-black text-gradient-yellow text-3xl sm:text-5xl tracking-tight leading-tight">
+          <h1 className="font-display font-black text-primary text-3xl sm:text-5xl tracking-tight leading-tight">
             {event.name}
           </h1>
           <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm text-muted-foreground">

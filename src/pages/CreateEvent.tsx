@@ -10,9 +10,10 @@ import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { useSeo } from '@/hooks/useSeo';
 import { createEventApi, ensureProfile, findEventBySlugApi, isReservedSlug, type EventBar } from '@/lib/platformApi';
+import { getUserBarCatalogApi, type CatalogBar } from '@/lib/api';
 import { ImageUploader } from '@/components/admin/ImageUploader';
 import { toast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, MapPin, Plus, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, MapPin, Plus, Trash2, AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
 
 type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 
@@ -36,6 +37,8 @@ export default function CreateEvent() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved'>('idle');
+  const [catalog, setCatalog] = useState<CatalogBar[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const slug = useMemo(() => normalizeSlug(name), [name]);
   const slugDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -52,6 +55,14 @@ export default function CreateEvent() {
     slugDebounceRef.current = setTimeout(() => checkSlug(slug), 500);
     return () => { if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current); };
   }, [slug, checkSlug]);
+
+  useEffect(() => {
+    if (!user) return;
+    setCatalogLoading(true);
+    getUserBarCatalogApi(user.id)
+      .then(setCatalog)
+      .finally(() => setCatalogLoading(false));
+  }, [user]);
 
   if (loading) return <div className="p-8">Carregando...</div>;
 
@@ -78,6 +89,18 @@ export default function CreateEvent() {
 
   const removeBar = (index: number) => {
     setBars((prev) => prev.filter((_, i) => i !== index).map((b, i) => ({ ...b, barOrder: i + 1 })));
+  };
+
+  const addFromCatalog = (cat: CatalogBar) => {
+    setBars((prev) => [
+      ...prev,
+      {
+        name: cat.name,
+        address: cat.address,
+        barOrder: prev.length + 1,
+        scheduledTime: cat.scheduledTime ?? '18:00',
+      },
+    ]);
   };
 
   const moveBar = (index: number, direction: 'up' | 'down') => {
@@ -221,6 +244,44 @@ export default function CreateEvent() {
             <p className="text-sm text-muted-foreground">Adicione os bares agora ou depois pelo painel de admin.</p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Catalog — bars used in previous events */}
+            {(catalogLoading || catalog.length > 0) && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5" /> Bares cadastrados por você
+                </p>
+                {catalogLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando catálogo...
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {catalog.map((cat) => {
+                      const alreadyAdded = bars.some(
+                        (b) => b.name.trim().toLowerCase() === cat.name.trim().toLowerCase()
+                      );
+                      return (
+                        <button
+                          key={cat.name}
+                          type="button"
+                          disabled={alreadyAdded}
+                          onClick={() => addFromCatalog(cat)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                            alreadyAdded
+                              ? 'border-success/40 bg-success/10 text-success cursor-default'
+                              : 'border-border hover:border-primary/50 hover:bg-primary/10 hover:text-primary cursor-pointer'
+                          }`}
+                        >
+                          {alreadyAdded ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                          {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {bars.map((bar, i) => (
               <div key={i} className="border border-border/50 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -274,7 +335,7 @@ export default function CreateEvent() {
               {coverImageUrl && (
                 <img src={coverImageUrl} alt="Capa" className="w-full h-36 object-cover rounded-lg" />
               )}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                 <p className="text-muted-foreground">Nome:</p><p className="font-medium">{name}</p>
                 <p className="text-muted-foreground">Slug:</p><p className="font-medium">/{slug}</p>
                 <p className="text-muted-foreground">Cidade:</p><p className="font-medium">{city}</p>

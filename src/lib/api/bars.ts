@@ -3,6 +3,40 @@ import { mapBarRow, type EventBar } from './mappers';
 
 export type { EventBar } from './mappers';
 
+export interface CatalogBar {
+  name: string;
+  address: string;
+  neighborhood: string | null;
+  scheduledTime: string | null;
+}
+
+/** Distinct bars the user has added to their own events — personal catalog. */
+export async function getUserBarCatalogApi(userId: string): Promise<CatalogBar[]> {
+  const { data, error } = await (supabase as any)
+    .from('event_bars')
+    .select('name, address, neighborhood, scheduled_time, events!inner(owner_user_id)')
+    .eq('events.owner_user_id', userId)
+    .order('name', { ascending: true });
+  if (error) return [];
+
+  // Deduplicate by name (keep first occurrence)
+  const seen = new Set<string>();
+  const out: CatalogBar[] = [];
+  for (const row of (data || [])) {
+    const key = row.name.trim().toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push({
+        name: row.name,
+        address: row.address || '',
+        neighborhood: row.neighborhood ?? null,
+        scheduledTime: row.scheduled_time ?? null,
+      });
+    }
+  }
+  return out;
+}
+
 // === Bar CRUD (owner or super_admin) ===
 
 export interface BarInput {

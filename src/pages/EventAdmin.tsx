@@ -159,7 +159,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('bars')}>
             <CardContent className="py-3 text-center">
               <Beer className="w-5 h-5 mx-auto text-primary mb-1" />
@@ -251,11 +251,26 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 h-auto">
-            <TabsTrigger value="info" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Info className="w-3.5 h-3.5" />Info</TabsTrigger>
-            <TabsTrigger value="status" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Radio className="w-3.5 h-3.5" />Controle</TabsTrigger>
-            <TabsTrigger value="broadcast" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Megaphone className="w-3.5 h-3.5" />Avisos</TabsTrigger>
-            <TabsTrigger value="bars" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><Beer className="w-3.5 h-3.5" />{isCircuit ? 'Butecos' : 'Bares'}</TabsTrigger>
-            <TabsTrigger value="retro" className="flex flex-col gap-0.5 py-1.5 text-[10px]"><BarChart3 className="w-3.5 h-3.5" />Retro</TabsTrigger>
+            <TabsTrigger value="info" className="flex flex-col gap-0.5 py-1.5" aria-label="Info">
+              <Info className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="status" className="flex flex-col gap-0.5 py-1.5" aria-label="Controle">
+              <Radio className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">Controle</span>
+            </TabsTrigger>
+            <TabsTrigger value="broadcast" className="flex flex-col gap-0.5 py-1.5" aria-label="Avisos">
+              <Megaphone className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">Avisos</span>
+            </TabsTrigger>
+            <TabsTrigger value="bars" className="flex flex-col gap-0.5 py-1.5" aria-label={isCircuit ? 'Butecos' : 'Bares'}>
+              <Beer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">{isCircuit ? 'Butecos' : 'Bares'}</span>
+            </TabsTrigger>
+            <TabsTrigger value="retro" className="flex flex-col gap-0.5 py-1.5" aria-label="Retro">
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">Retro</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Info tab — edit metadata */}

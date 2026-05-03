@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,9 +16,10 @@ import { useBaratona } from '@/contexts/BaratonaContext';
 
 interface LogoutConfirmDialogProps {
   onConfirm: () => void;
+  trigger?: React.ReactNode;
 }
 
-export function LogoutConfirmDialog({ onConfirm }: LogoutConfirmDialogProps) {
+export function LogoutConfirmDialog({ onConfirm, trigger }: LogoutConfirmDialogProps) {
   const { language } = useBaratona();
   
   const texts = {
@@ -40,14 +42,12 @@ export function LogoutConfirmDialog({ onConfirm }: LogoutConfirmDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-        >
-          <LogOut className="h-4 w-4" />
-          <span className="sr-only">{t.confirm}</span>
-        </Button>
+        {trigger ?? (
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <LogOut className="h-4 w-4" />
+            <span className="sr-only">{t.confirm}</span>
+          </Button>
+        )}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

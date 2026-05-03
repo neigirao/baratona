@@ -1,6 +1,10 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
-import { Globe, Settings, PartyPopper, KeyRound, ShieldCheck, LogIn } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { Globe, PartyPopper, ShieldCheck, LogIn, LogOut, Menu, Settings, HelpCircle, ListChecks, KeyRound, User } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 import { HighContrastToggle } from '@/components/HighContrastToggle';
@@ -13,7 +17,10 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
   const { user: platformUser, signInWithGoogle, signOut: platformSignOut } = usePlatformAuth();
   const { slug } = useParams<{ slug?: string }>();
   const adminPath = slug ? `/baratona/${slug}/admin` : '/admin';
-  
+  const displayName = (platformUser?.user_metadata?.full_name as string)?.split(' ')[0]
+    ?? platformUser?.email
+    ?? null;
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       {/* Broadcast Banner */}
@@ -24,35 +31,20 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
           </p>
         </div>
       )}
-      
+
       <div className="container flex h-14 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-xl font-display font-bold text-gradient-yellow">
-            BARATONA
-          </span>
+          <span className="text-xl font-display font-bold text-gradient-yellow">BARATONA</span>
           <span className="text-xs font-display text-primary">2026</span>
         </Link>
-        
+
         <div className="flex items-center gap-2">
           {/* Wrapped Preview */}
           {onShowWrapped && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onShowWrapped}
-              className="h-8 w-8 p-0 text-primary"
-              title="Retrospectiva"
-            >
+            <Button variant="ghost" size="sm" onClick={onShowWrapped} className="h-8 w-8 p-0 text-primary" title="Retrospectiva">
               <PartyPopper className="h-4 w-4" />
             </Button>
           )}
-          
-          {/* Join with code */}
-          <Link to="/entrar" title="Entrar com código">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary">
-              <KeyRound className="h-4 w-4" />
-            </Button>
-          </Link>
 
           {/* Language Toggle */}
           <Button
@@ -68,60 +60,104 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
           {/* High contrast */}
           <HighContrastToggle />
 
-          {/* Platform super-admin shortcut */}
-          {isSuperAdmin && (
-            <Link to="/admin/plataforma" title="Admin da plataforma">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary">
-                <ShieldCheck className="h-4 w-4" />
+          {/* Main navigation menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                <Menu className="h-4 w-4" />
               </Button>
-            </Link>
-          )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {/* Logged-in user info */}
+              {platformUser && (
+                <>
+                  <DropdownMenuLabel className="flex items-center gap-2 font-normal text-xs text-muted-foreground">
+                    <User className="h-3.5 w-3.5" />
+                    {displayName ?? platformUser.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              )}
 
-          {/* Admin Button (Nei legacy) */}
-          {isAdmin && (
-            <Link to={adminPath}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </Link>
-          )}
-          
-          {/* Google Sign-in (when not logged in to platform) */}
-          {!platformUser && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => signInWithGoogle()}
-              className="h-8 gap-1.5 text-xs font-medium"
-              title="Entrar com Google"
-            >
-              <LogIn className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Entrar</span>
-            </Button>
-          )}
+              {/* Legacy participant info */}
+              {currentUser && !platformUser && (
+                <>
+                  <DropdownMenuLabel className="flex items-center gap-2 font-normal text-xs text-muted-foreground">
+                    <User className="h-3.5 w-3.5" />
+                    {currentUser.name}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              )}
 
-          {/* Platform user indicator */}
-          {platformUser && !currentUser && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => platformSignOut()}
-              className="h-8 px-2 text-xs"
-              title={platformUser.email ?? 'Sair'}
-            >
-              {(platformUser.user_metadata?.full_name as string)?.split(' ')[0] ?? 'Sair'}
-            </Button>
-          )}
+              {/* FAQ */}
+              <DropdownMenuItem asChild>
+                <Link to="/faq" className="flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4" /> FAQ
+                </Link>
+              </DropdownMenuItem>
 
-          {/* User/Logout with confirmation (legacy participant) */}
-          {currentUser && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground hidden sm:block">
-                {currentUser.name}
-              </span>
-              <LogoutConfirmDialog onConfirm={() => setCurrentUser(null)} />
-            </div>
-          )}
+              {/* Entrar com código */}
+              <DropdownMenuItem asChild>
+                <Link to="/entrar" className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4" /> Entrar com código
+                </Link>
+              </DropdownMenuItem>
+
+              {/* Minhas baratonas */}
+              {platformUser && (
+                <DropdownMenuItem asChild>
+                  <Link to="/minhas-baratonas" className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4" /> Minhas baratonas
+                  </Link>
+                </DropdownMenuItem>
+              )}
+
+              {/* Event admin (legacy or platform) */}
+              {(isAdmin || slug) && (
+                <DropdownMenuItem asChild>
+                  <Link to={adminPath} className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" /> Admin do evento
+                  </Link>
+                </DropdownMenuItem>
+              )}
+
+              {/* Super admin — only for neigirao@gmail.com */}
+              {isSuperAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/plataforma" className="flex items-center gap-2 text-primary">
+                    <ShieldCheck className="h-4 w-4" /> Super admin
+                  </Link>
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuSeparator />
+
+              {/* Login / Logout */}
+              {!platformUser && !currentUser && (
+                <DropdownMenuItem onClick={() => signInWithGoogle()} className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" /> Entrar com Google
+                </DropdownMenuItem>
+              )}
+
+              {platformUser && (
+                <DropdownMenuItem onClick={() => platformSignOut()} className="flex items-center gap-2 text-destructive focus:text-destructive">
+                  <LogOut className="h-4 w-4" /> Sair
+                </DropdownMenuItem>
+              )}
+
+              {currentUser && (
+                <LogoutConfirmDialog
+                  onConfirm={() => setCurrentUser(null)}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer">
+                      <LogOut className="h-4 w-4" /> Sair ({currentUser.name})
+                    </DropdownMenuItem>
+                  }
+                />
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

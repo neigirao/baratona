@@ -10,18 +10,22 @@ import { BackendHealthBanner } from '@/components/BackendHealthBanner';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 
-// Code-splitting: heavy/secondary routes load on demand
-const FAQ = lazy(() => import('./pages/FAQ'));
-const Explore = lazy(() => import('./pages/Explore'));
-const CreateEvent = lazy(() => import('./pages/CreateEvent'));
-const JoinByInvite = lazy(() => import('./pages/JoinByInvite'));
-const MyBaratonas = lazy(() => import('./pages/MyBaratonas'));
-const EventLanding = lazy(() => import('./pages/EventLanding'));
-const EventLive = lazy(() => import('./pages/EventLive'));
-const EventAdmin = lazy(() => import('./pages/EventAdmin'));
-const Admin = lazy(() => import('./pages/Admin'));
-const PlatformAdmin = lazy(() => import('./pages/PlatformAdmin'));
-const NeiLegacy = lazy(() => import('./pages/NeiLegacy'));
+// Lazy import with automatic reload on chunk hash mismatch (stale deploy)
+function lazyWithReload<T extends React.ComponentType<unknown>>(factory: () => Promise<{ default: T }>) {
+  return lazy(() => factory().catch(() => { window.location.reload(); return new Promise(() => {}); }));
+}
+
+const FAQ = lazyWithReload(() => import('./pages/FAQ'));
+const Explore = lazyWithReload(() => import('./pages/Explore'));
+const CreateEvent = lazyWithReload(() => import('./pages/CreateEvent'));
+const JoinByInvite = lazyWithReload(() => import('./pages/JoinByInvite'));
+const MyBaratonas = lazyWithReload(() => import('./pages/MyBaratonas'));
+const EventLanding = lazyWithReload(() => import('./pages/EventLanding'));
+const EventLive = lazyWithReload(() => import('./pages/EventLive'));
+const EventAdmin = lazyWithReload(() => import('./pages/EventAdmin'));
+const Admin = lazyWithReload(() => import('./pages/Admin'));
+const PlatformAdmin = lazyWithReload(() => import('./pages/PlatformAdmin'));
+const NeiLegacy = lazyWithReload(() => import('./pages/NeiLegacy'));
 
 const queryClient = new QueryClient({
   defaultOptions: {

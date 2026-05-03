@@ -141,6 +141,7 @@ export async function createEventApi(
       owner_user_id: validated.ownerId,
       owner_name: validated.ownerName,
       event_date: validated.eventDate || null,
+      cover_image_url: validated.coverImageUrl || null,
       status,
     })
     .select('*')

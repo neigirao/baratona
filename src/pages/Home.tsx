@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSeo } from '@/hooks/useSeo';
-import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles, ListChecks } from 'lucide-react';
-import { listFeaturedEventsApi } from '@/lib/platformApi';
+import { Beer, MapPin, Trophy, Users, Star, Zap, ChevronRight, Sparkles, ListChecks, Clock, Settings } from 'lucide-react';
+import { listFeaturedEventsApi, listEventsByOwnerApi, listEventsJoinedByUserApi } from '@/lib/platformApi';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { FeaturedEventCard } from '@/components/FeaturedEventCard';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
@@ -13,6 +13,7 @@ import { BaratonaHero } from '@/components/BaratonaHero';
 import { PLATFORM_BASE_URL, PLATFORM_OG_IMAGE } from '@/lib/constants';
 
 type FeaturedEvent = PlatformEvent & { barCount: number; memberCount: number };
+type MyEvent = PlatformEvent & { barCount: number; memberCount: number; role?: string };
 
 export default function Home() {
   useSeo(
@@ -37,9 +38,27 @@ export default function Home() {
 
   const { user } = usePlatformAuth();
   const [featured, setFeatured] = useState<FeaturedEvent[] | null>(null);
+  const [myEvents, setMyEvents] = useState<MyEvent[] | null>(null);
+
   useEffect(() => {
     listFeaturedEventsApi(3).then(setFeatured).catch(() => setFeatured([]));
   }, []);
+
+  useEffect(() => {
+    if (!user) { setMyEvents(null); return; }
+    Promise.all([
+      listEventsByOwnerApi(user.id),
+      listEventsJoinedByUserApi(user.id),
+    ]).then(([owned, joined]) => {
+      const seen = new Set<string>();
+      const merged: MyEvent[] = [];
+      for (const e of [...owned, ...joined]) {
+        if (!seen.has(e.id)) { seen.add(e.id); merged.push(e); }
+      }
+      merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setMyEvents(merged.slice(0, 4));
+    }).catch(() => setMyEvents([]));
+  }, [user]);
 
   const features = [
     {
@@ -102,13 +121,67 @@ export default function Home() {
             </Button>
           )}
         </div>
-        <div className="flex justify-center mt-4">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium">
-            <Beer className="w-4 h-4" />
-            Gratuita na v1
-          </span>
-        </div>
       </section>
+
+      {/* Personalized section for logged-in users */}
+      {user && (myEvents === null || myEvents.length > 0) && (
+        <section className="container max-w-5xl mx-auto px-4 py-8">
+          <div className="flex items-end justify-between mb-4 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-primary text-sm font-semibold mb-1">
+                <Clock className="w-4 h-4" />
+                <span>Suas baratonas</span>
+              </div>
+              <h2 className="text-xl font-bold">Continue de onde parou</h2>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="hidden sm:flex">
+              <Link to="/minhas-baratonas">Ver todas <ChevronRight className="w-4 h-4 ml-1" /></Link>
+            </Button>
+          </div>
+          {myEvents === null ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {myEvents.map((e) => (
+                <Link key={e.id} to={`/baratona/${e.slug}`} className="block">
+                  <Card className="hover:border-primary/40 transition-colors h-full">
+                    <CardContent className="py-3 px-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate">{e.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{e.city}</p>
+                        </div>
+                        {e.ownerId === user.id && (
+                          <Link
+                            to={`/baratona/${e.slug}/admin`}
+                            onClick={(ev) => ev.stopPropagation()}
+                            className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                            title="Painel admin"
+                          >
+                            <Settings className="w-3.5 h-3.5" />
+                          </Link>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          e.status === 'live' ? 'bg-green-500/20 text-green-400' :
+                          e.status === 'finished' ? 'bg-muted text-muted-foreground' :
+                          'bg-primary/15 text-primary'
+                        }`}>
+                          {e.status === 'live' ? '● Ao vivo' : e.status === 'finished' ? 'Finalizado' : e.status === 'draft' ? 'Rascunho' : 'Publicado'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">{e.barCount} bares</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Featured Events */}
       {(featured === null || featured.length > 0) && (
@@ -187,7 +260,7 @@ export default function Home() {
       {/* CTA */}
       <section className="container max-w-3xl mx-auto px-4 py-16 text-center space-y-4">
         <h2 className="text-2xl font-bold">Pronto pra montar sua rota?</h2>
-        <p className="text-muted-foreground">É grátis e leva menos de 2 minutos.</p>
+        <p className="text-muted-foreground">Leva menos de 2 minutos.</p>
         <div className="flex justify-center gap-3">
           <Button asChild size="lg" className="font-bold px-8">
             <Link to="/criar">Começar agora</Link>

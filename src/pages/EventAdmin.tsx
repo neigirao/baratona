@@ -13,6 +13,10 @@ import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper, Info, BarChart3 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +40,8 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
   const [invites, setInvites] = useState<EventInvite[]>([]);
   const [creatingInvite, setCreatingInvite] = useState(false);
   const [showWrapped, setShowWrapped] = useState(false);
+  const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
   const isCircuit = event.eventType === 'special_circuit';
   const isComidaDiButeco = event.slug === FEATURED_EVENT_SLUG;
   const isPrivate = event.visibility === 'private';
@@ -72,6 +78,8 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
       toast({ title: 'Código revogado' });
     } catch {
       toast({ title: 'Erro ao revogar', variant: 'destructive' });
+    } finally {
+      setRevokeTargetId(null);
     }
   };
 
@@ -131,6 +139,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
   const handleFinishEvent = async () => {
     await updateConfig({ status: 'finished' });
     toast({ title: 'Evento finalizado!' });
+    setShowFinishDialog(false);
   };
 
   return (
@@ -151,21 +160,27 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
 
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3">
-          <Card><CardContent className="py-3 text-center">
-            <Beer className="w-5 h-5 mx-auto text-primary mb-1" />
-            <p className="text-xl font-bold">{bars.length}</p>
-            <p className="text-[10px] text-muted-foreground">Bares</p>
-          </CardContent></Card>
-          <Card><CardContent className="py-3 text-center">
-            <Users className="w-5 h-5 mx-auto text-primary mb-1" />
-            <p className="text-xl font-bold">{members.length}</p>
-            <p className="text-[10px] text-muted-foreground">Participantes</p>
-          </CardContent></Card>
-          <Card><CardContent className="py-3 text-center">
-            <Radio className="w-5 h-5 mx-auto text-primary mb-1" />
-            <p className="text-xl font-bold capitalize">{appConfig?.status || '—'}</p>
-            <p className="text-[10px] text-muted-foreground">Status</p>
-          </CardContent></Card>
+          <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('bars')}>
+            <CardContent className="py-3 text-center">
+              <Beer className="w-5 h-5 mx-auto text-primary mb-1" />
+              <p className="text-xl font-bold">{bars.length}</p>
+              <p className="text-[10px] text-muted-foreground">Bares</p>
+            </CardContent>
+          </Card>
+          <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('retro')}>
+            <CardContent className="py-3 text-center">
+              <Users className="w-5 h-5 mx-auto text-primary mb-1" />
+              <p className="text-xl font-bold">{members.length}</p>
+              <p className="text-[10px] text-muted-foreground">Participantes</p>
+            </CardContent>
+          </Card>
+          <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('status')}>
+            <CardContent className="py-3 text-center">
+              <Radio className="w-5 h-5 mx-auto text-primary mb-1" />
+              <p className="text-xl font-bold capitalize">{appConfig?.status || '—'}</p>
+              <p className="text-[10px] text-muted-foreground">Status</p>
+            </CardContent>
+          </Card>
         </div>
 
         {isComidaDiButeco && (
@@ -216,7 +231,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyInvite(inv.code)} title="Copiar link">
                             <Copy className="w-3.5 h-3.5" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDeleteInvite(inv.id)} title="Revogar">
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setRevokeTargetId(inv.id)} title="Revogar">
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
@@ -245,6 +260,17 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
 
           {/* Info tab — edit metadata */}
           <TabsContent value="info" className="space-y-4 mt-4">
+            {bars.length === 0 && (
+              <div className="flex items-start gap-3 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 text-sm">
+                <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-semibold text-primary">Comece aqui →</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Adicione os bares do roteiro na aba <strong>Bares</strong> e depois vá para <strong>Controle</strong> para iniciar o evento.
+                  </p>
+                </div>
+              </div>
+            )}
             <EventInfoEditor event={event} isSuperAdmin={isSuperAdmin} />
           </TabsContent>
 
@@ -295,7 +321,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
             </Card>
             )}
 
-            <Button variant="destructive" className="w-full" onClick={handleFinishEvent}>
+            <Button variant="destructive" className="w-full" onClick={() => setShowFinishDialog(true)}>
               Finalizar Evento
             </Button>
           </TabsContent>
@@ -348,6 +374,40 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
           onClose={() => setShowWrapped(false)}
         />
       )}
+
+      <AlertDialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Finalizar evento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso encerrará o evento para todos os participantes. Você ainda poderá ver a retrospectiva, mas não será possível registrar novos consumos ou votos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleFinishEvent}>
+              Finalizar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!revokeTargetId} onOpenChange={(open) => { if (!open) setRevokeTargetId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revogar código de convite?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este código não poderá mais ser usado para entrar no evento. Pessoas que já entraram não serão afetadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => revokeTargetId && handleDeleteInvite(revokeTargetId)}>
+              Revogar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

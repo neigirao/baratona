@@ -302,7 +302,7 @@ export default function CreateEvent() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label className="text-xs">Nome</Label><Input value={bar.name} onChange={(e) => updateBar(i, 'name', e.target.value)} placeholder="Nome do bar" /></div>
-                  <div><Label className="text-xs">Horário previsto</Label><Input type="time" value={bar.scheduledTime} onChange={(e) => updateBar(i, 'scheduledTime', e.target.value)} /></div>
+                  <div><Label className="text-xs">Horário previsto</Label><Input type="time" value={bar.scheduledTime ?? ''} onChange={(e) => updateBar(i, 'scheduledTime', e.target.value)} /></div>
                 </div>
                 <div><Label className="text-xs">Endereço</Label><Input value={bar.address} onChange={(e) => updateBar(i, 'address', e.target.value)} placeholder="Rua, número, bairro" /></div>
               </div>

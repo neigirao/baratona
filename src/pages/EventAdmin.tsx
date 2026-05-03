@@ -1,18 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import NotFound from './NotFound';
 import { findEventBySlugApi } from '@/lib/platformApi';
 import { EventBaratonaProvider } from '@/contexts/EventBaratonaContext';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Download, Loader2, KeyRound, Copy, Trash2, PartyPopper, Info, BarChart3 } from 'lucide-react';
+import { ChevronLeft, Settings, Beer, Users, Radio, Megaphone, Download, Loader2, Info, BarChart3, PartyPopper } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -20,67 +19,58 @@ import {
 import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { createInviteApi, listInvitesApi, deleteInviteApi, type EventInvite } from '@/lib/platformApi';
 import { EventRetrospective } from '@/components/EventRetrospective';
 import { FEATURED_EVENT_SLUG } from '@/lib/constants';
 import { EventWrapped } from '@/components/EventWrapped';
 import { EventInfoEditor } from '@/components/admin/EventInfoEditor';
 import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
+import { StatusTab } from '@/components/admin/StatusTab';
+import { BroadcastTab } from '@/components/admin/BroadcastTab';
+import { InvitesPanel } from '@/components/admin/InvitesPanel';
+
+type EventConfigPatch = {
+  current_bar_id?: string | null;
+  status?: string;
+  origin_bar_id?: string | null;
+  destination_bar_id?: string | null;
+  broadcast_msg?: string | null;
+  global_delay_minutes?: number;
+};
 
 function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; slug: string; isSuperAdmin: boolean }) {
   const {
-    bars, appConfig, updateAppConfig, participants, getCurrentBar, getNextBar,
-    currentBarId, getBarVotes,
+    bars, appConfig, updateAppConfig, getCurrentBar, getNextBar, currentBarId,
   } = useBaratona();
   const { members } = useEventMembers(event.id);
 
-  const [broadcastMsg, setBroadcastMsg] = useState('');
   const [activeTab, setActiveTab] = useState('status');
   const [scraping, setScraping] = useState(false);
-  const [invites, setInvites] = useState<EventInvite[]>([]);
-  const [creatingInvite, setCreatingInvite] = useState(false);
   const [showWrapped, setShowWrapped] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
-  const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
+
   const isCircuit = event.eventType === 'special_circuit';
   const isComidaDiButeco = event.slug === FEATURED_EVENT_SLUG;
   const isPrivate = event.visibility === 'private';
 
-  useEffect(() => {
-    if (isPrivate) {
-      listInvitesApi(event.id).then(setInvites).catch(() => setInvites([]));
-    }
-  }, [event.id, isPrivate]);
+  const updateConfig = updateAppConfig as unknown as (p: EventConfigPatch) => Promise<boolean>;
 
-  const handleCreateInvite = async () => {
-    setCreatingInvite(true);
-    try {
-      const inv = await createInviteApi(event.id, { maxUses: 50 });
-      setInvites((prev) => [inv, ...prev]);
-      toast({ title: `Código gerado: ${inv.code}` });
-    } catch {
-      toast({ title: 'Erro ao gerar código', variant: 'destructive' });
-    } finally {
-      setCreatingInvite(false);
-    }
+  const currentBar = getCurrentBar();
+  const nextBar = getNextBar();
+
+  const handleSetCurrentBar = async (barId: string) => {
+    await updateConfig({ current_bar_id: barId, status: 'at_bar' });
+    toast({ title: 'Bar atualizado!' });
   };
 
-  const handleCopyInvite = (code: string) => {
-    const url = `${window.location.origin}/baratona/${event.slug}?invite=${code}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: 'Link copiado!' });
+  const handleSetTransit = async (originId: string, destId: string) => {
+    await updateConfig({ status: 'in_transit', origin_bar_id: originId, destination_bar_id: destId });
+    toast({ title: 'Van em trânsito!' });
   };
 
-  const handleDeleteInvite = async (id: string) => {
-    try {
-      await deleteInviteApi(id);
-      setInvites((prev) => prev.filter((i) => i.id !== id));
-      toast({ title: 'Código revogado' });
-    } catch {
-      toast({ title: 'Erro ao revogar', variant: 'destructive' });
-    } finally {
-      setRevokeTargetId(null);
-    }
+  const handleFinishEvent = async () => {
+    await updateConfig({ status: 'finished' });
+    toast({ title: 'Evento finalizado!' });
+    setShowFinishDialog(false);
   };
 
   const handleScrape = async () => {
@@ -99,47 +89,6 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
     } finally {
       setScraping(false);
     }
-  };
-
-  type EventConfigPatch = {
-    current_bar_id?: string | null;
-    status?: string;
-    origin_bar_id?: string | null;
-    destination_bar_id?: string | null;
-    broadcast_msg?: string | null;
-    global_delay_minutes?: number;
-  };
-  const updateConfig = updateAppConfig as unknown as (p: EventConfigPatch) => Promise<boolean>;
-
-  const currentBar = getCurrentBar();
-  const nextBar = getNextBar();
-
-  const handleSetCurrentBar = async (barId: string) => {
-    await updateConfig({ current_bar_id: barId, status: 'at_bar' });
-    toast({ title: 'Bar atualizado!' });
-  };
-
-  const handleSetTransit = async (originId: string, destId: string) => {
-    await updateConfig({ status: 'in_transit', origin_bar_id: originId, destination_bar_id: destId });
-    toast({ title: 'Van em trânsito!' });
-  };
-
-  const handleBroadcast = async () => {
-    if (!broadcastMsg.trim()) return;
-    await updateConfig({ broadcast_msg: broadcastMsg });
-    toast({ title: 'Mensagem enviada!' });
-    setBroadcastMsg('');
-  };
-
-  const handleClearBroadcast = async () => {
-    await updateConfig({ broadcast_msg: null });
-    toast({ title: 'Mensagem removida' });
-  };
-
-  const handleFinishEvent = async () => {
-    await updateConfig({ status: 'finished' });
-    toast({ title: 'Evento finalizado!' });
-    setShowFinishDialog(false);
   };
 
   return (
@@ -177,12 +126,13 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
           <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('status')}>
             <CardContent className="py-3 text-center">
               <Radio className="w-5 h-5 mx-auto text-primary mb-1" />
-              <p className="text-xl font-bold capitalize">{appConfig?.status || '—'}</p>
+              <p className="text-xl font-bold capitalize">{appConfig?.status ?? '—'}</p>
               <p className="text-[10px] text-muted-foreground">Status</p>
             </CardContent>
           </Card>
         </div>
 
+        {/* CDB scraper */}
         {isComidaDiButeco && (
           <Card className="border-secondary/40 bg-secondary/5">
             <CardContent className="py-4 space-y-2">
@@ -199,54 +149,8 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
           </Card>
         )}
 
-        {isPrivate && (
-          <Card className="border-primary/30">
-            <CardContent className="py-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <KeyRound className="w-4 h-4 text-primary" /> Convites
-                </h3>
-                <Button onClick={handleCreateInvite} disabled={creatingInvite} size="sm" variant="outline">
-                  {creatingInvite ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Gerar código'}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Compartilhe o link para que pessoas entrem no evento privado.
-              </p>
-              {invites.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Nenhum código ainda.</p>
-              ) : (
-                <div className="space-y-3">
-                  {invites.map((inv) => {
-                    const exhausted = inv.maxUses != null && inv.usedCount >= inv.maxUses;
-                    const inviteUrl = `${window.location.origin}/baratona/${event.slug}?invite=${inv.code}`;
-                    const qrSrc = `https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(inviteUrl)}&choe=UTF-8`;
-                    return (
-                      <div key={inv.id} className="bg-muted/40 rounded-md p-3 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <code className="font-mono font-bold text-base tracking-wider flex-1">{inv.code}</code>
-                          <span className={`text-[10px] ${exhausted ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {inv.usedCount}/{inv.maxUses ?? '∞'} usos
-                          </span>
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyInvite(inv.code)} title="Copiar link">
-                            <Copy className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setRevokeTargetId(inv.id)} title="Revogar">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <img src={qrSrc} alt={`QR code ${inv.code}`} width={60} height={60} className="rounded border bg-white p-0.5" />
-                          <p className="text-[10px] text-muted-foreground break-all">{inviteUrl}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* Invites — private events only */}
+        {isPrivate && <InvitesPanel eventId={event.id} eventSlug={event.slug} />}
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -273,7 +177,6 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
             </TabsTrigger>
           </TabsList>
 
-          {/* Info tab — edit metadata */}
           <TabsContent value="info" className="space-y-4 mt-4">
             {bars.length === 0 && (
               <div className="flex items-start gap-3 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 text-sm">
@@ -289,90 +192,32 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
             <EventInfoEditor event={event} isSuperAdmin={isSuperAdmin} />
           </TabsContent>
 
-          {/* Control tab */}
-          <TabsContent value="status" className="space-y-4 mt-4">
-            <Card>
-              <CardContent className="py-4 space-y-3">
-                <h3 className="font-semibold text-sm">Bar Atual</h3>
-                <p className="text-sm text-muted-foreground">
-                  {currentBar ? `${currentBar.bar_order}. ${currentBar.name}` : 'Nenhum selecionado'}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {bars.map((bar) => (
-                    <Button
-                      key={bar.id}
-                      size="sm"
-                      variant={bar.id === currentBarId ? 'default' : 'outline'}
-                      className="text-xs"
-                      onClick={() => handleSetCurrentBar(String(bar.id))}
-                    >
-                      {bar.bar_order}. {bar.name}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {!isCircuit && (
-            <Card>
-              <CardContent className="py-4 space-y-3">
-                <h3 className="font-semibold text-sm">Van em Trânsito</h3>
-                {currentBar && nextBar && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleSetTransit(String(currentBar.id), String(nextBar.id))}
-                  >
-                    🚐 {currentBar.name} → {nextBar.name}
-                  </Button>
-                )}
-                <h3 className="font-semibold text-sm mt-3">Atraso Global</h3>
-                <div className="flex gap-2 items-center">
-                  <Button size="sm" variant="outline" onClick={() => updateConfig({ global_delay_minutes: Math.max(0, (appConfig?.global_delay_minutes || 0) - 5) })}>-5 min</Button>
-                  <span className="text-sm font-mono w-16 text-center">{appConfig?.global_delay_minutes || 0} min</span>
-                  <Button size="sm" variant="outline" onClick={() => updateConfig({ global_delay_minutes: (appConfig?.global_delay_minutes || 0) + 5 })}>+5 min</Button>
-                </div>
-              </CardContent>
-            </Card>
-            )}
-
-            <Button variant="destructive" className="w-full" onClick={() => setShowFinishDialog(true)}>
-              Finalizar Evento
-            </Button>
+          <TabsContent value="status" className="mt-4">
+            <StatusTab
+              bars={bars}
+              appConfig={appConfig}
+              currentBar={currentBar}
+              nextBar={nextBar}
+              currentBarId={currentBarId}
+              isCircuit={isCircuit}
+              onSetCurrentBar={handleSetCurrentBar}
+              onSetTransit={handleSetTransit}
+              onUpdateConfig={(patch) => updateConfig(patch as EventConfigPatch)}
+              onFinish={() => setShowFinishDialog(true)}
+            />
           </TabsContent>
 
-          {/* Broadcast tab */}
-          <TabsContent value="broadcast" className="space-y-4 mt-4">
-            <Card>
-              <CardContent className="py-4 space-y-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Megaphone className="w-4 h-4" /> Mensagem de Broadcast
-                </h3>
-                {appConfig?.broadcast_msg && (
-                  <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
-                    <p className="text-sm">📢 {appConfig.broadcast_msg}</p>
-                    <Button size="sm" variant="ghost" className="mt-2 text-xs" onClick={handleClearBroadcast}>
-                      Remover mensagem
-                    </Button>
-                  </div>
-                )}
-                <Textarea
-                  placeholder="Ex: A van vai sair em 5 minutos!"
-                  value={broadcastMsg}
-                  onChange={(e) => setBroadcastMsg(e.target.value)}
-                  rows={2}
-                />
-                <Button onClick={handleBroadcast} className="w-full">Enviar Broadcast</Button>
-              </CardContent>
-            </Card>
+          <TabsContent value="broadcast" className="mt-4">
+            <BroadcastTab
+              broadcastMsg={appConfig?.broadcast_msg}
+              onUpdateConfig={updateConfig}
+            />
           </TabsContent>
 
-          {/* Bars tab — full CRUD editor */}
           <TabsContent value="bars" className="space-y-2 mt-4">
             <EventBarsEditor eventId={event.id} />
           </TabsContent>
 
-          {/* Retrospective tab */}
           <TabsContent value="retro" className="space-y-3 mt-4">
             <Button onClick={() => setShowWrapped(true)} variant="secondary" className="w-full">
               <PartyPopper className="w-4 h-4 mr-2" /> Abrir Wrapped do evento
@@ -406,23 +251,6 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AlertDialog open={!!revokeTargetId} onOpenChange={(open) => { if (!open) setRevokeTargetId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revogar código de convite?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Este código não poderá mais ser usado para entrar no evento. Pessoas que já entraram não serão afetadas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => revokeTargetId && handleDeleteInvite(revokeTargetId)}>
-              Revogar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
@@ -431,25 +259,17 @@ export default function EventAdmin() {
   const { slug = '' } = useParams();
   const { user, loading } = usePlatformAuth();
   const { isSuperAdmin, loading: adminLoading } = usePlatformAdmin();
-  const [event, setEvent] = useState<PlatformEvent | null>(null);
-  const [eventLoading, setEventLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const ev = await findEventBySlugApi(slug);
-        setEvent(ev);
-      } catch {
-        // ignore
-      } finally {
-        setEventLoading(false);
-      }
-    }
-    load();
-  }, [slug]);
+  const { data: event, isLoading: eventLoading } = useQuery({
+    queryKey: ['event', slug],
+    queryFn: () => findEventBySlugApi(slug),
+    enabled: !!slug,
+    retry: false,
+  });
 
   if (loading || eventLoading || adminLoading) return <div className="p-8">Carregando...</div>;
   if (!event) return <NotFound />;
+
   const canEdit = !!user && (event.ownerId === user.id || isSuperAdmin || user.email === 'neigirao@gmail.com');
   if (!canEdit) {
     return (

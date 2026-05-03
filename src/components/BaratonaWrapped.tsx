@@ -57,7 +57,7 @@ export function BaratonaWrapped({ onClose }: { onClose?: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-background overflow-hidden"
+      className="fixed inset-0 z-[60] bg-background overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

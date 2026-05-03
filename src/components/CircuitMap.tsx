@@ -37,15 +37,17 @@ export function CircuitMap({ bars, favorites }: CircuitMapProps) {
 
   const hasFavorites = favorites.size > 0;
 
-  const visibleBars = useMemo(() => {
-    if (hasFavorites) {
-      return barsWithCoords.filter((b) => favorites.has(b.id || ''));
-    }
+  // Always show all bars on the map; favorites get highlighted pins
+  const visibleBars = barsWithCoords;
+
+  // Route only through favorites (if any), otherwise all bars
+  const routeBars = useMemo(() => {
+    if (hasFavorites) return barsWithCoords.filter((b) => favorites.has(b.id || ''));
     return barsWithCoords;
   }, [hasFavorites, barsWithCoords, favorites]);
 
   const bbox = useMemo(() => {
-    const source = visibleBars.length > 0 ? visibleBars : barsWithCoords;
+    const source = barsWithCoords;
     if (source.length === 0) return null;
     const lats = source.map((b) => b.latitude as number);
     const lngs = source.map((b) => b.longitude as number);
@@ -94,7 +96,7 @@ export function CircuitMap({ bars, favorites }: CircuitMapProps) {
   }
 
   const embedUrl = bbox ? getBboxUrl(bbox) : null;
-  const routeUrl = visibleBars.length >= 2 ? buildMultiStopUrl(visibleBars) : null;
+  const routeUrl = routeBars.length >= 2 ? buildMultiStopUrl(routeBars) : null;
 
   return (
     <section className="bar-card overflow-hidden" aria-label="Mapa do circuito">
@@ -102,17 +104,9 @@ export function CircuitMap({ bars, favorites }: CircuitMapProps) {
         <MapPin className="w-5 h-5 text-primary" />
         <h2 className="font-semibold">Mapa do circuito</h2>
         <span className="text-xs text-muted-foreground ml-auto">
-          {hasFavorites
-            ? `${visibleBars.length} ${visibleBars.length === 1 ? 'marcado' : 'marcados'} no mapa (de ${barsWithCoords.length})`
-            : `${visibleBars.length} ${visibleBars.length === 1 ? 'bar' : 'bares'} no mapa`}
+          {`${visibleBars.length} ${visibleBars.length === 1 ? 'bar' : 'bares'} no mapa`}
         </span>
       </div>
-
-      {hasFavorites && (
-        <p className="text-xs text-muted-foreground mb-2">
-          Mostrando só seus marcados. Desmarque todos para ver o circuito inteiro.
-        </p>
-      )}
 
       <div className="rounded-lg overflow-hidden h-72 relative border border-border bg-muted">
         {embedUrl && (
@@ -155,16 +149,16 @@ export function CircuitMap({ bars, favorites }: CircuitMapProps) {
 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary" />
-          Marcado
-        </span>
-        {!hasFavorites && (
+        {hasFavorites && (
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-muted-foreground" />
-            Demais
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary" />
+            Marcado
           </span>
         )}
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-full bg-muted-foreground" />
+          {hasFavorites ? 'Demais' : 'Bares'}
+        </span>
       </div>
 
       {routeUrl && (
@@ -176,7 +170,7 @@ export function CircuitMap({ bars, favorites }: CircuitMapProps) {
         >
           <Maximize2 className="w-4 h-4" />
           {hasFavorites
-            ? `Abrir ${visibleBars.length} marcados no Google Maps`
+            ? `Abrir ${routeBars.length} marcados no Google Maps`
             : `Abrir ${visibleBars.length} bares no Google Maps`}
         </a>
       )}

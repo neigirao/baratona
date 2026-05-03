@@ -48,7 +48,7 @@ function StarRating({ value, onChange, label, icon, size = 'sm' }: StarRatingPro
 }
 
 interface VoteFormProps {
-  barId?: number;
+  barId?: number | string;
   barName?: string;
   compact?: boolean;
   isCheckedIn?: boolean;
@@ -72,8 +72,8 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
   const effectiveBarId = barId ?? appConfig?.current_bar_id;
   
   // Find bar metadata (for featured_dish in circuit mode)
-  const bar = bars.find((b: any) => b.id === effectiveBarId) as any;
-  const featuredDish = bar?.featured_dish as string | undefined;
+  const bar = bars.find((b) => String((b as { id: unknown }).id) === String(effectiveBarId)) as { featured_dish?: string } | undefined;
+  const featuredDish = bar?.featured_dish;
   
   // Reset form when bar changes
   useEffect(() => {
@@ -88,7 +88,13 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
   if (!currentUser || !effectiveBarId) return null;
   
   // Check if user already voted for this bar
-  const existingVote = getUserVoteForBar(currentUser.id, effectiveBarId) as any;
+  const existingVote = getUserVoteForBar(currentUser.id, effectiveBarId) as {
+    dish_score?: number | null;
+    drink_score?: number | null;
+    food_score?: number | null;
+    vibe_score?: number | null;
+    service_score?: number | null;
+  } | null | undefined;
   
   const handleSubmit = async () => {
     if (isCircuit) {

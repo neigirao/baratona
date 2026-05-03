@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase, callRpc } from './client';
 
 export interface EventInvite {
   id: string;
@@ -63,19 +63,18 @@ export async function deleteInviteApi(inviteId: string): Promise<void> {
 }
 
 export async function redeemInviteApi(code: string, displayName: string): Promise<{ slug: string; eventId: string }> {
-  const { data, error } = await supabase.rpc('redeem_event_invite' as any, {
+  const data = await callRpc<{ slug: string; event_id: string }>('redeem_event_invite', {
     _code: code.trim().toUpperCase(),
     _display_name: displayName,
-  });
-  if (error) {
+  }).catch((error: Error) => {
     const msg = error.message || '';
     if (msg.includes('invite_not_found')) throw new Error('Código inválido');
     if (msg.includes('invite_expired')) throw new Error('Código expirado');
     if (msg.includes('invite_exhausted')) throw new Error('Código esgotou os usos');
     if (msg.includes('not_authenticated')) throw new Error('Faça login para usar o código');
     throw new Error('Não foi possível resgatar o convite');
-  }
-  const row = Array.isArray(data) ? data[0] : data;
+  });
+  const row = data[0];
   if (!row) throw new Error('Código inválido');
-  return { slug: (row as any).slug, eventId: (row as any).event_id };
+  return { slug: row.slug, eventId: row.event_id };
 }

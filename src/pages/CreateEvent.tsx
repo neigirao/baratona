@@ -9,7 +9,7 @@ import { normalizeSlug } from '@/lib/platformEvents';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { useSeo } from '@/hooks/useSeo';
 import { createEventApi, ensureProfile, findEventBySlugApi, isReservedSlug, type EventBar } from '@/lib/platformApi';
-import { ChevronLeft, ChevronRight, Plus, Trash2, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Plus, Trash2, GripVertical } from 'lucide-react';
 
 type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 
@@ -224,12 +224,32 @@ export default function CreateEvent() {
 
               <p className="text-xs text-muted-foreground">{description}</p>
 
+              {bars.filter((b) => b.name && b.address).length >= 2 && (
+                <div className="border-t border-border/50 pt-3 space-y-2">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-primary" /> Mapa do roteiro
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps/dir/${bars
+                      .filter((b) => b.name && b.address)
+                      .map((b) => encodeURIComponent(`${b.name}, ${b.address}`))
+                      .join('/')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-border rounded-xl text-sm font-medium hover:bg-muted/50 transition-colors"
+                  >
+                    <MapPin className="w-4 h-4 text-primary" />
+                    Ver rota com {bars.filter((b) => b.name && b.address).length} paradas no Google Maps
+                  </a>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(2)}>
                   <ChevronLeft className="w-4 h-4 mr-1" /> Editar bares
                 </Button>
                 <Button type="submit" className="flex-1" disabled={saving}>
-                  {saving ? 'Criando...' : 'Criar baratona'}
+                  {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Criando...</> : 'Criar baratona'}
                 </Button>
               </div>
             </CardContent>

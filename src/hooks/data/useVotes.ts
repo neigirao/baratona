@@ -57,7 +57,7 @@ export function useVotes() {
     }
   }, []);
 
-  const getBarVotes = useCallback((barId: number) => votes.filter(v => v.bar_id === barId), [votes]);
+  const getBarVotes = useCallback((barId: number | string) => votes.filter(v => v.bar_id === Number(barId)), [votes]);
 
   return { votes, loading, submitVote, getBarVotes, refetch: fetchVotes };
 }

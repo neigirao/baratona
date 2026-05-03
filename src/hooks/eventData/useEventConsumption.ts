@@ -54,11 +54,10 @@ export function useEventConsumption(eventId: string | null, _currentBarId?: stri
       setConsumption(prev => [...prev, optimistic]);
       try {
         await withRetry(async () => {
-          const insertData: Record<string, unknown> = {
-            event_id: eventId, user_id: userId, type, count: newCount, bar_id: effectiveBarId,
-          };
-          if (subtype) insertData.subtype = subtype;
-          const { error } = await supabase.from('event_consumption').insert(insertData as any);
+          const { error } = await supabase.from('event_consumption').insert({
+            event_id: eventId, user_id: userId, type, count: newCount,
+            bar_id: effectiveBarId, subtype: subtype || null,
+          });
           if (error) throw error;
         }, { maxAttempts: 3, baseDelay: 1000 });
         fetch();
@@ -78,9 +77,8 @@ export function useEventConsumption(eventId: string | null, _currentBarId?: stri
     if ('vibrate' in navigator) navigator.vibrate(50);
     try {
       await withRetry(async () => {
-        const updateData: Record<string, unknown> = { count: newCount };
-        if (subtype) updateData.subtype = subtype;
-        let query = supabase.from('event_consumption').update(updateData as any)
+        let query = supabase.from('event_consumption')
+          .update({ count: newCount, ...(subtype ? { subtype } : {}) })
           .eq('event_id', eventId).eq('user_id', userId).eq('type', type);
         if (effectiveBarId === null) query = query.is('bar_id', null);
         else query = query.eq('bar_id', effectiveBarId);

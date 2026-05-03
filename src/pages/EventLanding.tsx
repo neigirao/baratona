@@ -7,11 +7,11 @@ import { useSeo } from '@/hooks/useSeo';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import NotFound from './NotFound';
 import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, redeemInviteApi } from '@/lib/platformApi';
-import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, KeyRound, Lock } from 'lucide-react';
+import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
-
-import { HighContrastToggle } from '@/components/HighContrastToggle';
+import { CircuitMap } from '@/components/CircuitMap';
+import comidaDiButecoLogo from '@/assets/comida-di-buteco-logo.png';
 import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';
 import { EventLandingSkeleton } from '@/components/ui/list-skeletons';
@@ -235,7 +235,8 @@ export default function EventLanding() {
     return null;
   })();
 
-  const heroImage = event.coverImageUrl;
+  const heroImage = event.coverImageUrl || (isComidaDiButeco ? comidaDiButecoLogo : null);
+  const isLogoHero = !event.coverImageUrl && isComidaDiButeco;
 
   return (
     <div className="min-h-screen bg-background">
@@ -245,18 +246,17 @@ export default function EventLanding() {
           <img
             src={heroImage}
             alt={event.name}
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${isLogoHero ? 'object-contain p-8 sm:p-12' : 'object-cover'}`}
             loading="eager"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-card to-background" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-background" />
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+        <div className="absolute top-3 left-3">
           <Button variant="secondary" size="icon" asChild className="bg-background/70 backdrop-blur">
             <Link to="/explorar" aria-label="Voltar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <HighContrastToggle className="bg-background/70 backdrop-blur rounded-md" />
         </div>
       </div>
 
@@ -337,6 +337,7 @@ export default function EventLanding() {
                   </Card>
                 ))}
               </div>
+              <CircuitMap bars={bars} favorites={new Set()} />
             </section>
           )
         )}

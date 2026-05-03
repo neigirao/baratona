@@ -1,5 +1,11 @@
 # Transformação da Baratona em Plataforma (Discovery v1)
 
+> **Arquivo histórico — fase de discovery.**
+> Este documento registra a análise inicial e a visão de produto que originou a plataforma multi-evento.
+> A plataforma foi implementada. Para o estado atual, consulte `docs/ARQUITETURA.md`.
+
+---
+
 ## 1) Diagnóstico rápido do estado atual
 
 A aplicação já possui uma base sólida para evoluir para plataforma multi-baratona:

@@ -36,6 +36,10 @@ export default function JoinByInvite() {
       toast({ title: 'Digite o código', variant: 'destructive' });
       return;
     }
+    if (!/^[A-Z0-9]{6,12}$/.test(code.trim())) {
+      toast({ title: 'Código inválido', description: 'O código deve ter entre 6 e 12 caracteres (letras e números).', variant: 'destructive' });
+      return;
+    }
     setSubmitting(true);
     try {
       const { slug } = await redeemInviteApi(code, displayName || 'Participante');

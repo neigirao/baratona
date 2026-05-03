@@ -46,9 +46,9 @@ interface BaratonaContextType {
   consumptionLoading: boolean;
   
   // Votes
-  submitVote: (participantId: string, barId: number, scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }) => Promise<boolean>;
-  getBarVotes: (barId: number) => Array<Database['public']['Tables']['votes']['Row']>;
-  getUserVoteForBar: (participantId: string, barId: number) => (Database['public']['Tables']['votes']['Row'] & { dish_score?: number | null }) | undefined;
+  submitVote: (participantId: string, barId: number | string, scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }) => Promise<boolean>;
+  getBarVotes: (barId: number | string) => Array<Database['public']['Tables']['votes']['Row']>;
+  getUserVoteForBar: (participantId: string, barId: number | string) => (Database['public']['Tables']['votes']['Row'] & { dish_score?: number | null }) | undefined;
   
   // Computed
   getProjectedTime: (scheduledTime: string) => string;
@@ -167,8 +167,8 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   const t = TRANSLATIONS[language];
   
   const submitVote = useCallback(async (
-    participantId: string, 
-    barId: number, 
+    participantId: string,
+    barId: number | string,
     scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }
   ) => {
     // Haptic feedback
@@ -176,7 +176,7 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
       navigator.vibrate(50);
     }
     // Legacy uses 4 dimensions only — coerce to 0 if missing (legacy schema requires NOT NULL)
-    return submitVoteToDb(participantId, barId, {
+    return submitVoteToDb(participantId, Number(barId), {
       drinkScore: scores.drinkScore ?? 0,
       foodScore: scores.foodScore ?? 0,
       vibeScore: scores.vibeScore ?? 0,
@@ -184,8 +184,8 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     });
   }, [submitVoteToDb]);
 
-  const getUserVoteForBar = useCallback((participantId: string, barId: number) => {
-    return votes.find(v => v.participant_id === participantId && v.bar_id === barId);
+  const getUserVoteForBar = useCallback((participantId: string, barId: number | string) => {
+    return votes.find(v => v.participant_id === participantId && v.bar_id === Number(barId));
   }, [votes]);
   
   const { getProjectedTime, getCurrentBar, getNextBar } = useBaratonaComputed(bars, appConfig);

@@ -17,22 +17,39 @@ type MyEvent = PlatformEvent & { barCount: number; memberCount: number; role?: s
 
 export default function Home() {
   useSeo(
-    'Baratona — Crie sua rota de bares com os amigos',
-    'Plataforma para criar baratonas: roteiros de bares com ranking, check-in, votação, mapa e retrospectiva. Gratuita.',
+    'Baratona — Monte sua rota de bares com os amigos',
+    'Crie sua baratona: roteiro de bares com check-in, ranking, votação, mapa ao vivo e retrospectiva. Grátis para criar.',
     {
       image: PLATFORM_OG_IMAGE,
+      imageAlt: 'Baratona 2026 — Monte sua baratona épica no Rio de Janeiro',
+      imageWidth: 3168,
+      imageHeight: 1344,
       url: `${PLATFORM_BASE_URL}/`,
       type: 'website',
       locale: 'pt_BR',
-      keywords: 'baratona, rota de bares, butecos, app de bar, check-in, votação de bar, comida di boteco',
-      jsonLd: {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'Baratona',
-        url: `${PLATFORM_BASE_URL}/`,
-        logo: PLATFORM_OG_IMAGE,
-        description: 'Plataforma para criar e viver baratonas: rotas de bares com check-in, votação e ranking.',
-      },
+      keywords: 'baratona, rota de bares, butecos, app de bar, check-in, votação de bar, comida di buteco, Rio de Janeiro',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'Baratona',
+          url: `${PLATFORM_BASE_URL}/`,
+          description: 'Crie e viva baratonas: rotas de bares com check-in, votação e ranking ao vivo.',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: { '@type': 'EntryPoint', urlTemplate: `${PLATFORM_BASE_URL}/explorar?q={search_term_string}` },
+            'query-input': 'required name=search_term_string',
+          },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Baratona',
+          url: `${PLATFORM_BASE_URL}/`,
+          logo: `${PLATFORM_BASE_URL}/assets/comida-di-buteco-logo.png`,
+          description: 'Plataforma para criar e viver baratonas: rotas de bares com check-in, votação e ranking.',
+        },
+      ],
     }
   );
 

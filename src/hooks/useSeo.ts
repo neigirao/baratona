@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 
 interface SeoOptions {
   image?: string | null;
+  imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   url?: string | null;
   type?: string;
   /** JSON-LD structured data (object or array). Replaces any existing baratona JSON-LD. */
@@ -59,6 +62,12 @@ export function useSeo(title: string, description: string, options: SeoOptions =
     if (options.image) {
       ensureMeta('og:image', 'property').content = options.image;
       ensureMeta('twitter:image', 'name').content = options.image;
+      if (options.imageAlt) {
+        ensureMeta('og:image:alt', 'property').content = options.imageAlt;
+        ensureMeta('twitter:image:alt', 'name').content = options.imageAlt;
+      }
+      if (options.imageWidth)  ensureMeta('og:image:width',  'property').content = String(options.imageWidth);
+      if (options.imageHeight) ensureMeta('og:image:height', 'property').content = String(options.imageHeight);
     }
 
     // JSON-LD: replace any previous baratona block
@@ -76,5 +85,5 @@ export function useSeo(title: string, description: string, options: SeoOptions =
       const stale = document.getElementById(JSONLD_SCRIPT_ID);
       if (stale) stale.remove();
     };
-  }, [title, description, options.image, options.url, options.type, options.locale, options.keywords, options.jsonLd]);
+  }, [title, description, options.image, options.imageAlt, options.imageWidth, options.imageHeight, options.url, options.type, options.locale, options.keywords, options.jsonLd]);
 }

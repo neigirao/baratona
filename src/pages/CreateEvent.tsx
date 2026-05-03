@@ -18,7 +18,7 @@ type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 
 export default function CreateEvent() {
   useSeo('Criar baratona | Baratona Platform', 'Crie sua baratona com login Google, adicione bares e compartilhe.');
-  const { user, loading, signInWithGoogle, signOut } = usePlatformAuth();
+  const { user, loading, signInWithGoogle } = usePlatformAuth();
   const { isSuperAdmin } = usePlatformAdmin();
   const navigate = useNavigate();
 
@@ -135,10 +135,7 @@ export default function CreateEvent() {
 
   return (
     <div className="container max-w-2xl mx-auto px-4 py-10 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Criar baratona</h1>
-        <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
-      </div>
+      <h1 className="text-3xl font-bold">Criar baratona</h1>
 
       {/* Step indicator */}
       <div className="flex items-center gap-2 text-sm">

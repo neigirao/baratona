@@ -22,9 +22,8 @@ function formatDateRange(start?: string | null, end?: string | null, fallback?: 
 export function FeaturedEventCard({ event }: Props) {
   const isCircuit = event.eventType === 'special_circuit';
   const dateLabel = formatDateRange(event.startDate, event.endDate, event.eventDate);
-  const isComidaDiButeco = event.slug === 'comida-di-buteco-rj-2026';
-  // Para o Comida di Buteco usamos sempre o selo oficial local (parceria),
-  // ignorando o cover_image_url externo do site comidadibuteco.com.br.
+  const isComidaDiButeco =
+    event.slug.includes('comida') || event.name.toLowerCase().includes('comida di buteco');
   const coverSrc = isComidaDiButeco ? comidaDiButecoLogo : event.coverImageUrl;
   const useContain = isComidaDiButeco;
 
@@ -38,7 +37,8 @@ export function FeaturedEventCard({ event }: Props) {
               src={coverSrc}
               alt={event.name}
               loading="lazy"
-              className={`w-full h-full ${useContain ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`}
+              className={`w-full h-full ${useContain ? 'object-contain p-2' : 'object-cover group-hover:scale-105 transition-transform duration-500'}`}
+              style={useContain ? { filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' } : undefined}
             />
           </div>
         ) : (

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
@@ -58,7 +57,6 @@ export default function PlatformAdmin() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <div className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-6 h-6 text-primary" />

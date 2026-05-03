@@ -12,29 +12,16 @@ export interface CatalogBar {
 
 /** Distinct bars the user has added to their own events — personal catalog. */
 export async function getUserBarCatalogApi(userId: string): Promise<CatalogBar[]> {
-  const { data, error } = await (supabase as any)
-    .from('event_bars')
-    .select('name, address, neighborhood, scheduled_time, events!inner(owner_user_id)')
-    .eq('events.owner_user_id', userId)
-    .order('name', { ascending: true });
-  if (error) return [];
-
-  // Deduplicate by name (keep first occurrence)
-  const seen = new Set<string>();
-  const out: CatalogBar[] = [];
-  for (const row of (data || [])) {
-    const key = row.name.trim().toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push({
-        name: row.name,
-        address: row.address || '',
-        neighborhood: row.neighborhood ?? null,
-        scheduledTime: row.scheduled_time ?? null,
-      });
-    }
-  }
-  return out;
+  const data = await callRpc<{ name: string; address: string; neighborhood: string | null; scheduled_time: string | null }>(
+    'get_user_bar_catalog',
+    { _user_id: userId },
+  ).catch(() => []);
+  return data.map((row) => ({
+    name: row.name,
+    address: row.address || '',
+    neighborhood: row.neighborhood ?? null,
+    scheduledTime: row.scheduled_time ?? null,
+  }));
 }
 
 // === Bar CRUD (owner or super_admin) ===
@@ -111,13 +98,9 @@ export async function deleteBarApi(barId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function reorderBarsApi(orderedBarIds: string[]): Promise<void> {
-  // Updates one by one to respect RLS; small N (typically < 50) so OK.
-  await Promise.all(
-    orderedBarIds.map((id, idx) =>
-      supabase.from('event_bars').update({ bar_order: idx + 1 }).eq('id', id),
-    ),
-  );
+export async function reorderBarsApi(eventId: string, orderedBarIds: string[]): Promise<void> {
+  const barOrders = orderedBarIds.map((id, idx) => ({ id, order: idx + 1 }));
+  await callRpc('reorder_event_bars', { _event_id: eventId, _bar_orders: barOrders });
 }
 
 export async function getEventBarsApi(eventId: string): Promise<EventBar[]> {

@@ -98,7 +98,7 @@ export function EventBarsEditor({ eventId }: Props) {
     [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
     setBars(next);
     try {
-      await reorderBarsApi(next.map((b) => b.id!));
+      await reorderBarsApi(eventId, next.map((b) => b.id!));
       // Refresh local order numbers
       setBars(next.map((b, i) => ({ ...b, barOrder: i + 1 })));
     } catch {

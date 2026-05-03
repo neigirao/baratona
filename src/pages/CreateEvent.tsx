@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { useSeo } from '@/hooks/useSeo';
 import { createEventApi, ensureProfile, findEventBySlugApi, isReservedSlug, type EventBar } from '@/lib/platformApi';
 import { ImageUploader } from '@/components/admin/ImageUploader';
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Plus, Trash2, GripVertical } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, MapPin, Plus, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 
@@ -34,7 +35,23 @@ export default function CreateEvent() {
   const [eventDate, setEventDate] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved'>('idle');
   const slug = useMemo(() => normalizeSlug(name), [name]);
+  const slugDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const checkSlug = useCallback(async (s: string) => {
+    if (!s) { setSlugStatus('idle'); return; }
+    if (isReservedSlug(s)) { setSlugStatus('reserved'); return; }
+    setSlugStatus('checking');
+    const existing = await findEventBySlugApi(s).catch(() => null);
+    setSlugStatus(existing ? 'taken' : 'available');
+  }, []);
+
+  useEffect(() => {
+    if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+    slugDebounceRef.current = setTimeout(() => checkSlug(slug), 500);
+    return () => { if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current); };
+  }, [slug, checkSlug]);
 
   if (loading) return <div className="p-8">Carregando...</div>;
 
@@ -63,20 +80,29 @@ export default function CreateEvent() {
     setBars((prev) => prev.filter((_, i) => i !== index).map((b, i) => ({ ...b, barOrder: i + 1 })));
   };
 
-  const canProceedStep1 = name.trim() && slug && city.trim();
+  const moveBar = (index: number, direction: 'up' | 'down') => {
+    setBars((prev) => {
+      const next = [...prev];
+      const target = direction === 'up' ? index - 1 : index + 1;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next.map((b, i) => ({ ...b, barOrder: i + 1 }));
+    });
+  };
+
+  const canProceedStep1 = name.trim() && slug && city.trim() && slugStatus !== 'taken' && slugStatus !== 'reserved' && slugStatus !== 'checking';
   // Bars are optional — allow 0 or require filled fields if any were added
   const canProceedStep2 = bars.length === 0 || bars.every((b) => b.name.trim());
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!canProceedStep2) return;
-    if (isReservedSlug(slug)) {
-      alert('Esse slug é reservado.');
+    if (slugStatus === 'reserved') {
+      toast({ title: 'Slug reservado', description: 'Esse slug não pode ser usado. Ajuste o nome da baratona.', variant: 'destructive' });
       return;
     }
-    const existing = await findEventBySlugApi(slug);
-    if (existing) {
-      alert('Slug já existe. Ajuste o nome da baratona.');
+    if (slugStatus === 'taken') {
+      toast({ title: 'Slug já existe', description: 'Já existe uma baratona com esse nome. Tente um nome diferente.', variant: 'destructive' });
       return;
     }
 
@@ -98,9 +124,10 @@ export default function CreateEvent() {
         },
         bars
       );
-      navigate(`/baratona/${newEvent.slug}`);
+      toast({ title: 'Baratona criada!', description: 'Agora configure os detalhes no painel de admin.' });
+      navigate(`/baratona/${newEvent.slug}/admin`);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Não foi possível criar a baratona agora.');
+      toast({ title: 'Erro ao criar', description: err instanceof Error ? err.message : 'Não foi possível criar a baratona agora.', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -137,7 +164,17 @@ export default function CreateEvent() {
             <div><Label>Nome da baratona</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Baratona do Centro" required /></div>
             <div><Label>Descrição <span className="text-muted-foreground text-xs">(opcional)</span></Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Conte o que rola nessa baratona..." /></div>
             <div><Label>Cidade</Label><Input value={city} onChange={(e) => setCity(e.target.value)} required /></div>
-            <div><Label>Slug (URL)</Label><Input value={slug} readOnly className="text-muted-foreground" /></div>
+            <div>
+              <Label>Slug (URL)</Label>
+              <div className="relative">
+                <Input value={slug} readOnly className="text-muted-foreground pr-8" />
+                {slugStatus === 'checking' && <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground" />}
+                {slugStatus === 'available' && <CheckCircle2 className="absolute right-2.5 top-2.5 w-4 h-4 text-green-500" />}
+                {(slugStatus === 'taken' || slugStatus === 'reserved') && <AlertCircle className="absolute right-2.5 top-2.5 w-4 h-4 text-destructive" />}
+              </div>
+              {slugStatus === 'taken' && <p className="text-xs text-destructive mt-1">Slug já existe. Tente um nome diferente.</p>}
+              {slugStatus === 'reserved' && <p className="text-xs text-destructive mt-1">Esse slug é reservado e não pode ser usado.</p>}
+            </div>
             <div><Label>Data do evento</Label><Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} /></div>
 
             {/* Cover image */}
@@ -191,7 +228,14 @@ export default function CreateEvent() {
               <div key={i} className="border border-border/50 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    <div className="flex flex-col">
+                      <Button variant="ghost" size="icon" className="h-5 w-6 p-0" disabled={i === 0} onClick={() => moveBar(i, 'up')}>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-5 w-6 p-0" disabled={i === bars.length - 1} onClick={() => moveBar(i, 'down')}>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                     <span className="text-sm font-bold text-primary">Bar #{bar.barOrder}</span>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeBar(i)}>

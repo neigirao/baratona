@@ -1,4 +1,5 @@
-import { useBaratona } from '@/contexts/BaratonaContext';
+import { useContext } from 'react';
+import { BaratonaContext } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -12,7 +13,14 @@ import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 
 export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
-  const { language, setLanguage, currentUser, setCurrentUser, isAdmin, appConfig } = useBaratona();
+  const baratona = useContext(BaratonaContext);
+  const language = baratona?.language ?? 'pt';
+  const setLanguage = baratona?.setLanguage ?? (() => {});
+  const currentUser = baratona?.currentUser ?? null;
+  const setCurrentUser = baratona?.setCurrentUser ?? (() => {});
+  const isAdmin = baratona?.isAdmin ?? false;
+  const appConfig = baratona?.appConfig ?? null;
+
   const { isSuperAdmin } = usePlatformAdmin();
   const { user: platformUser, signInWithGoogle, signOut: platformSignOut } = usePlatformAuth();
   const { slug } = useParams<{ slug?: string }>();

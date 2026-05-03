@@ -2,11 +2,12 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { BaratonaProvider } from '@/contexts/BaratonaContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { BackendHealthBanner } from '@/components/BackendHealthBanner';
+import { Header } from '@/components/Header';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 
@@ -41,6 +42,16 @@ function EventProviderShell({ children }: { children: ReactNode }) {
   return <BaratonaProvider>{children}</BaratonaProvider>;
 }
 
+// Layout with global Header for all platform pages (no BaratonaProvider needed)
+function PlatformLayout() {
+  return (
+    <>
+      <Header />
+      <Outlet />
+    </>
+  );
+}
+
 function RouteFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -59,33 +70,26 @@ const App = () => (
           <BackendHealthBanner />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/explorar" element={<Explore />} />
-              <Route path="/criar" element={<CreateEvent />} />
-              <Route path="/entrar" element={<JoinByInvite />} />
-              <Route path="/minhas-baratonas" element={<MyBaratonas />} />
-              <Route path="/baratona/:slug" element={<EventLanding />} />
+              {/* Platform routes — all share the global Header via PlatformLayout */}
+              <Route element={<PlatformLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/explorar" element={<Explore />} />
+                <Route path="/criar" element={<CreateEvent />} />
+                <Route path="/entrar" element={<JoinByInvite />} />
+                <Route path="/minhas-baratonas" element={<MyBaratonas />} />
+                <Route path="/baratona/:slug" element={<EventLanding />} />
+                <Route path="/baratona/:slug/admin" element={<EventAdmin />} />
+                <Route path="/admin/plataforma" element={<PlatformAdmin />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+
+              {/* EventLive has its own Header inside EventBaratonaProvider */}
               <Route path="/baratona/:slug/live" element={<EventLive />} />
-              <Route path="/baratona/:slug/admin" element={<EventAdmin />} />
-              <Route path="/admin/plataforma" element={<PlatformAdmin />} />
-              <Route
-                path="/admin"
-                element={
-                  <EventProviderShell>
-                    <Admin />
-                  </EventProviderShell>
-                }
-              />
-              <Route
-                path="/nei"
-                element={
-                  <EventProviderShell>
-                    <NeiLegacy />
-                  </EventProviderShell>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
+
+              {/* Legacy routes have their own Header inside BaratonaProvider */}
+              <Route path="/admin" element={<EventProviderShell><Admin /></EventProviderShell>} />
+              <Route path="/nei" element={<EventProviderShell><NeiLegacy /></EventProviderShell>} />
             </Routes>
           </Suspense>
         </BrowserRouter>

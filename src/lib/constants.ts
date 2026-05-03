@@ -136,3 +136,10 @@ export const TRANSLATIONS: Record<Language, TranslationStrings> = {
 };
 
 export type Language = 'pt' | 'en';
+
+export const FEATURE_FLAGS = {
+  specialCircuit: true,
+  wrapped: true,
+  invites: true,
+  pushNotifications: false,
+} as const;

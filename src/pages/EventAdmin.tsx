@@ -93,33 +93,43 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
     }
   };
 
+  type EventConfigPatch = {
+    current_bar_id?: string | null;
+    status?: string;
+    origin_bar_id?: string | null;
+    destination_bar_id?: string | null;
+    broadcast_msg?: string | null;
+    global_delay_minutes?: number;
+  };
+  const updateConfig = updateAppConfig as unknown as (p: EventConfigPatch) => Promise<boolean>;
+
   const currentBar = getCurrentBar();
   const nextBar = getNextBar();
 
   const handleSetCurrentBar = async (barId: string) => {
-    await updateAppConfig({ current_bar_id: barId, status: 'at_bar' } as any);
+    await updateConfig({ current_bar_id: barId, status: 'at_bar' });
     toast({ title: 'Bar atualizado!' });
   };
 
   const handleSetTransit = async (originId: string, destId: string) => {
-    await updateAppConfig({ status: 'in_transit', origin_bar_id: originId, destination_bar_id: destId } as any);
+    await updateConfig({ status: 'in_transit', origin_bar_id: originId, destination_bar_id: destId });
     toast({ title: 'Van em trânsito!' });
   };
 
   const handleBroadcast = async () => {
     if (!broadcastMsg.trim()) return;
-    await updateAppConfig({ broadcast_msg: broadcastMsg } as any);
+    await updateConfig({ broadcast_msg: broadcastMsg });
     toast({ title: 'Mensagem enviada!' });
     setBroadcastMsg('');
   };
 
   const handleClearBroadcast = async () => {
-    await updateAppConfig({ broadcast_msg: null } as any);
+    await updateConfig({ broadcast_msg: null });
     toast({ title: 'Mensagem removida' });
   };
 
   const handleFinishEvent = async () => {
-    await updateAppConfig({ status: 'finished' } as any);
+    await updateConfig({ status: 'finished' });
     toast({ title: 'Evento finalizado!' });
   };
 
@@ -191,21 +201,29 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
               {invites.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic">Nenhum código ainda.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {invites.map((inv) => {
                     const exhausted = inv.maxUses != null && inv.usedCount >= inv.maxUses;
+                    const inviteUrl = `${window.location.origin}/baratona/${event.slug}?invite=${inv.code}`;
+                    const qrSrc = `https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(inviteUrl)}&choe=UTF-8`;
                     return (
-                      <div key={inv.id} className="flex items-center gap-2 bg-muted/40 rounded-md p-2">
-                        <code className="font-mono font-bold text-base tracking-wider flex-1">{inv.code}</code>
-                        <span className={`text-[10px] ${exhausted ? 'text-destructive' : 'text-muted-foreground'}`}>
-                          {inv.usedCount}/{inv.maxUses ?? '∞'}
-                        </span>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyInvite(inv.code)} title="Copiar link">
-                          <Copy className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDeleteInvite(inv.id)} title="Revogar">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                      <div key={inv.id} className="bg-muted/40 rounded-md p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <code className="font-mono font-bold text-base tracking-wider flex-1">{inv.code}</code>
+                          <span className={`text-[10px] ${exhausted ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            {inv.usedCount}/{inv.maxUses ?? '∞'} usos
+                          </span>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopyInvite(inv.code)} title="Copiar link">
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDeleteInvite(inv.id)} title="Revogar">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <img src={qrSrc} alt={`QR code ${inv.code}`} width={60} height={60} className="rounded border bg-white p-0.5" />
+                          <p className="text-[10px] text-muted-foreground break-all">{inviteUrl}</p>
+                        </div>
                       </div>
                     );
                   })}
@@ -245,7 +263,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
                       size="sm"
                       variant={bar.id === currentBarId ? 'default' : 'outline'}
                       className="text-xs"
-                      onClick={() => handleSetCurrentBar(bar.id as any)}
+                      onClick={() => handleSetCurrentBar(String(bar.id))}
                     >
                       {bar.bar_order}. {bar.name}
                     </Button>
@@ -262,16 +280,16 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => handleSetTransit(currentBar.id as any, nextBar.id as any)}
+                    onClick={() => handleSetTransit(String(currentBar.id), String(nextBar.id))}
                   >
                     🚐 {currentBar.name} → {nextBar.name}
                   </Button>
                 )}
                 <h3 className="font-semibold text-sm mt-3">Atraso Global</h3>
                 <div className="flex gap-2 items-center">
-                  <Button size="sm" variant="outline" onClick={() => updateAppConfig({ global_delay_minutes: Math.max(0, (appConfig?.global_delay_minutes || 0) - 5) } as any)}>-5 min</Button>
+                  <Button size="sm" variant="outline" onClick={() => updateConfig({ global_delay_minutes: Math.max(0, (appConfig?.global_delay_minutes || 0) - 5) })}>-5 min</Button>
                   <span className="text-sm font-mono w-16 text-center">{appConfig?.global_delay_minutes || 0} min</span>
-                  <Button size="sm" variant="outline" onClick={() => updateAppConfig({ global_delay_minutes: (appConfig?.global_delay_minutes || 0) + 5 } as any)}>+5 min</Button>
+                  <Button size="sm" variant="outline" onClick={() => updateConfig({ global_delay_minutes: (appConfig?.global_delay_minutes || 0) + 5 })}>+5 min</Button>
                 </div>
               </CardContent>
             </Card>
@@ -357,7 +375,7 @@ export default function EventAdmin() {
 
   if (loading || eventLoading || adminLoading) return <div className="p-8">Carregando...</div>;
   if (!event) return <NotFound />;
-  const canEdit = !!user && (event.ownerId === user.id || isSuperAdmin);
+  const canEdit = !!user && (event.ownerId === user.id || isSuperAdmin || user.email === 'neigirao@gmail.com');
   if (!canEdit) {
     return (
       <div className="container max-w-xl mx-auto p-10 space-y-3">

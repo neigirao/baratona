@@ -36,16 +36,15 @@ export function useEventVotes(eventId: string | null) {
     if (!eventId) return false;
     try {
       await withRetry(async () => {
-        const payload: Record<string, unknown> = {
-          event_id: eventId, user_id: userId, bar_id: barId,
-          drink_score: scores.drinkScore ?? null,
-          food_score: scores.foodScore ?? null,
-          vibe_score: scores.vibeScore ?? null,
-          service_score: scores.serviceScore ?? null,
-          dish_score: scores.dishScore ?? null,
-        };
         const { error } = await supabase
-          .from('event_votes').upsert(payload as any, { onConflict: 'event_id,user_id,bar_id' });
+          .from('event_votes').upsert({
+            event_id: eventId, user_id: userId, bar_id: barId,
+            drink_score: scores.drinkScore ?? null,
+            food_score: scores.foodScore ?? null,
+            vibe_score: scores.vibeScore ?? null,
+            service_score: scores.serviceScore ?? null,
+            dish_score: scores.dishScore ?? null,
+          }, { onConflict: 'event_id,user_id,bar_id' });
         if (error) throw error;
       }, { maxAttempts: 3, baseDelay: 1000 });
       return true;
@@ -55,7 +54,7 @@ export function useEventVotes(eventId: string | null) {
     }
   }, [eventId]);
 
-  const getBarVotes = useCallback((barId: string) => votes.filter(v => v.bar_id === barId), [votes]);
+  const getBarVotes = useCallback((barId: string | number) => votes.filter(v => v.bar_id === String(barId)), [votes]);
 
   return { votes, loading, submitVote, getBarVotes, refetch: fetch };
 }

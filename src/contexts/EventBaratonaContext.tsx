@@ -72,14 +72,14 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
 
   const isAdmin = currentUser?.is_admin || false;
 
-  const submitVote = useCallback(async (participantId: string, barId: any, scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }) => {
+  const submitVote = useCallback(async (participantId: string, barId: number | string, scores: { drinkScore?: number; foodScore?: number; vibeScore?: number; serviceScore?: number; dishScore?: number }) => {
     if ('vibrate' in navigator) navigator.vibrate(50);
     return submitVoteRaw(participantId, String(barId), scores);
   }, [submitVoteRaw]);
 
-  const getBarVotes = useCallback((barId: any) => getBarVotesRaw(String(barId)), [getBarVotesRaw]);
+  const getBarVotes = useCallback((barId: number | string) => getBarVotesRaw(String(barId)), [getBarVotesRaw]);
 
-  const getUserVoteForBar = useCallback((participantId: string, barId: any) => {
+  const getUserVoteForBar = useCallback((participantId: string, barId: number | string) => {
     return votes.find(v => v.user_id === participantId && v.bar_id === String(barId));
   }, [votes]);
 

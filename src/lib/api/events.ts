@@ -1,7 +1,27 @@
-import { supabase } from './client';
+import { z } from 'zod';
+import { supabase, callRpc } from './client';
 import { mapEventRow, mapEnrichedEventRow, type EventBar } from './mappers';
 import { isEventStatus, type EventStatus, type PlatformEvent } from '@/lib/platformEvents';
 import { FEATURED_EVENT_SLUG } from '@/lib/constants';
+
+// ── Zod schemas ──────────────────────────────────────────────────────────────
+
+const CreateEventSchema = z.object({
+  slug: z.string().min(1, 'Slug obrigatório').max(100).regex(/^[a-z0-9-]+$/, 'Slug inválido: use apenas letras, números e hífens'),
+  name: z.string().min(1, 'Nome obrigatório').max(200, 'Nome muito longo'),
+  description: z.string().max(2000, 'Descrição muito longa').optional().default(''),
+  city: z.string().min(1, 'Cidade obrigatória').max(100),
+  visibility: z.enum(['public', 'private']),
+  eventType: z.enum(['open_baratona', 'special_circuit']),
+  ownerId: z.string().min(1, 'Owner obrigatório'),
+  ownerName: z.string().min(1).max(200),
+  eventDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  status: z.enum(['draft', 'published', 'live', 'finished', 'archived']).optional(),
+  coverImageUrl: z.string().url().nullable().optional(),
+  externalSourceUrl: z.string().url().nullable().optional(),
+});
 
 export interface EventUpdateInput {
   name?: string;
@@ -75,9 +95,8 @@ export async function findEventBySlugApi(slug: string): Promise<PlatformEvent | 
 }
 
 export async function listPublicEventsWithBarCountApi(): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
-  const { data, error } = await (supabase as any).rpc('get_public_events_with_counts');
-  if (error) throw error;
-  return (data || []).map(mapEnrichedEventRow);
+  const data = await callRpc('get_public_events_with_counts');
+  return data.map(mapEnrichedEventRow);
 }
 
 export async function listFeaturedEventsApi(limit = 3): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
@@ -93,19 +112,35 @@ export async function createEventApi(
   input: Omit<PlatformEvent, 'id' | 'createdAt'>,
   bars: Omit<EventBar, 'id' | 'eventId'>[] = []
 ): Promise<PlatformEvent> {
-  const status: EventStatus = isEventStatus(input.status) ? input.status : 'published';
+  const validated = CreateEventSchema.parse({
+    slug: input.slug,
+    name: input.name,
+    description: input.description,
+    city: input.city,
+    visibility: input.visibility,
+    eventType: input.eventType,
+    ownerId: input.ownerId,
+    ownerName: input.ownerName,
+    eventDate: input.eventDate,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    status: input.status,
+    coverImageUrl: input.coverImageUrl,
+    externalSourceUrl: input.externalSourceUrl,
+  });
+  const status: EventStatus = isEventStatus(validated.status) ? validated.status! : 'published';
   const { data, error } = await supabase
     .from('events')
     .insert({
-      slug: input.slug,
-      name: input.name,
-      description: input.description,
-      city: input.city,
-      visibility: input.visibility,
-      event_type: input.eventType,
-      owner_user_id: input.ownerId,
-      owner_name: input.ownerName,
-      event_date: input.eventDate || null,
+      slug: validated.slug,
+      name: validated.name,
+      description: validated.description,
+      city: validated.city,
+      visibility: validated.visibility,
+      event_type: validated.eventType,
+      owner_user_id: validated.ownerId,
+      owner_name: validated.ownerName,
+      event_date: validated.eventDate || null,
       status,
     })
     .select('*')
@@ -143,18 +178,16 @@ export async function createEventApi(
 }
 
 export async function listEventsByOwnerApi(userId: string): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
-  const { data, error } = await (supabase as any).rpc('get_events_by_owner', { _owner_id: userId });
-  if (error) throw error;
-  return (data || []).map(mapEnrichedEventRow);
+  const data = await callRpc('get_events_by_owner', { _owner_id: userId });
+  return data.map(mapEnrichedEventRow);
 }
 
 export async function listEventsJoinedByUserApi(
   userId: string
 ): Promise<(PlatformEvent & { barCount: number; memberCount: number; role: string })[]> {
-  const { data, error } = await (supabase as any).rpc('get_events_joined_by_user', { _user_id: userId });
-  if (error) throw error;
-  return (data || []).map((row: any) => ({
+  const data = await callRpc<Record<string, unknown>>('get_events_joined_by_user', { _user_id: userId });
+  return data.map((row) => ({
     ...mapEnrichedEventRow(row),
-    role: row.member_role || 'participant',
+    role: typeof row.member_role === 'string' ? row.member_role : 'participant',
   }));
 }

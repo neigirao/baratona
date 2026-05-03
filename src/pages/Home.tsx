@@ -102,12 +102,6 @@ export default function Home() {
             </Button>
           )}
         </div>
-        <div className="flex justify-center mt-4">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium">
-            <Beer className="w-4 h-4" />
-            Gratuita na v1
-          </span>
-        </div>
       </section>
 
       {/* Featured Events */}
@@ -187,7 +181,7 @@ export default function Home() {
       {/* CTA */}
       <section className="container max-w-3xl mx-auto px-4 py-16 text-center space-y-4">
         <h2 className="text-2xl font-bold">Pronto pra montar sua rota?</h2>
-        <p className="text-muted-foreground">É grátis e leva menos de 2 minutos.</p>
+        <p className="text-muted-foreground">Leva menos de 2 minutos.</p>
         <div className="flex justify-center gap-3">
           <Button asChild size="lg" className="font-bold px-8">
             <Link to="/criar">Começar agora</Link>

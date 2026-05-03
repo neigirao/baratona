@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { normalizeSlug } from '@/lib/platformEvents';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
+import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import { useSeo } from '@/hooks/useSeo';
 import { createEventApi, ensureProfile, findEventBySlugApi, isReservedSlug, type EventBar } from '@/lib/platformApi';
+import { ImageUploader } from '@/components/admin/ImageUploader';
 import { ChevronLeft, ChevronRight, Loader2, MapPin, Plus, Trash2, GripVertical } from 'lucide-react';
 
 type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
@@ -16,7 +18,11 @@ type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 export default function CreateEvent() {
   useSeo('Criar baratona | Baratona Platform', 'Crie sua baratona com login Google, adicione bares e compartilhe.');
   const { user, loading, signInWithGoogle, signOut } = usePlatformAuth();
+  const { isSuperAdmin } = usePlatformAdmin();
   const navigate = useNavigate();
+
+  // Temp ID used only for image upload path before event is created
+  const [tempId] = useState(() => crypto.randomUUID());
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
@@ -26,6 +32,7 @@ export default function CreateEvent() {
   const [eventType, setEventType] = useState<'open_baratona' | 'special_circuit'>('open_baratona');
   const [bars, setBars] = useState<BarDraft[]>([]);
   const [eventDate, setEventDate] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const slug = useMemo(() => normalizeSlug(name), [name]);
 
@@ -57,11 +64,12 @@ export default function CreateEvent() {
   };
 
   const canProceedStep1 = name.trim() && slug && city.trim();
-  const canProceedStep2 = bars.length >= 2 && bars.every((b) => b.name.trim() && b.address.trim());
+  // Bars are optional — allow 0 or require filled fields if any were added
+  const canProceedStep2 = bars.length === 0 || bars.every((b) => b.name.trim());
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!slug || !canProceedStep2) return;
+    if (!canProceedStep2) return;
     if (isReservedSlug(slug)) {
       alert('Esse slug é reservado.');
       return;
@@ -86,12 +94,13 @@ export default function CreateEvent() {
           ownerId: user.id,
           ownerName: user.user_metadata?.full_name || user.email || 'Organizador',
           eventDate: eventDate || null,
+          coverImageUrl: coverImageUrl || null,
         },
         bars
       );
       navigate(`/baratona/${newEvent.slug}`);
-    } catch (err: any) {
-      alert(err?.message || 'Não foi possível criar a baratona agora.');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Não foi possível criar a baratona agora.');
     } finally {
       setSaving(false);
     }
@@ -130,13 +139,32 @@ export default function CreateEvent() {
             <div><Label>Cidade</Label><Input value={city} onChange={(e) => setCity(e.target.value)} required /></div>
             <div><Label>Slug (URL)</Label><Input value={slug} readOnly className="text-muted-foreground" /></div>
             <div><Label>Data do evento</Label><Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} /></div>
+
+            {/* Cover image */}
             <div>
-              <Label>Tipo de evento</Label>
-              <div className="flex gap-2 mt-2">
-                <Button type="button" size="sm" variant={eventType === 'open_baratona' ? 'default' : 'outline'} onClick={() => setEventType('open_baratona')}>Baratona aberta</Button>
-                <Button type="button" size="sm" variant={eventType === 'special_circuit' ? 'default' : 'outline'} onClick={() => setEventType('special_circuit')}>Circuito especial</Button>
+              <Label>Imagem de capa <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+              <div className="mt-2">
+                <ImageUploader
+                  bucket="event-covers"
+                  eventId={tempId}
+                  value={coverImageUrl}
+                  onChange={setCoverImageUrl}
+                  label=""
+                />
               </div>
             </div>
+
+            {/* Event type — super admin only */}
+            {isSuperAdmin && (
+              <div>
+                <Label>Tipo de evento</Label>
+                <div className="flex gap-2 mt-2">
+                  <Button type="button" size="sm" variant={eventType === 'open_baratona' ? 'default' : 'outline'} onClick={() => setEventType('open_baratona')}>Baratona aberta</Button>
+                  <Button type="button" size="sm" variant={eventType === 'special_circuit' ? 'default' : 'outline'} onClick={() => setEventType('special_circuit')}>Circuito especial</Button>
+                </div>
+              </div>
+            )}
+
             <div>
               <Label>Visibilidade</Label>
               <div className="flex gap-2 mt-2">
@@ -145,18 +173,18 @@ export default function CreateEvent() {
               </div>
             </div>
             <Button className="w-full" disabled={!canProceedStep1} onClick={() => setStep(2)}>
-              Próximo: Adicionar bares <ChevronRight className="w-4 h-4 ml-1" />
+              Próximo: Bares do roteiro <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 2: Bars */}
+      {/* Step 2: Bars (optional) */}
       {step === 2 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Bares do roteiro</CardTitle>
-            <p className="text-sm text-muted-foreground">Adicione pelo menos 2 bares na ordem do roteiro.</p>
+            <p className="text-sm text-muted-foreground">Adicione os bares agora ou depois pelo painel de admin.</p>
           </CardHeader>
           <CardContent className="space-y-4">
             {bars.map((bar, i) => (
@@ -202,27 +230,34 @@ export default function CreateEvent() {
               <CardTitle className="text-lg">Revisão final</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
+              {coverImageUrl && (
+                <img src={coverImageUrl} alt="Capa" className="w-full h-36 object-cover rounded-lg" />
+              )}
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 <p className="text-muted-foreground">Nome:</p><p className="font-medium">{name}</p>
                 <p className="text-muted-foreground">Slug:</p><p className="font-medium">/{slug}</p>
                 <p className="text-muted-foreground">Cidade:</p><p className="font-medium">{city}</p>
                 <p className="text-muted-foreground">Visibilidade:</p><p className="font-medium">{visibility === 'public' ? 'Pública' : 'Privada'}</p>
-                <p className="text-muted-foreground">Tipo:</p><p className="font-medium">{eventType === 'open_baratona' ? 'Baratona aberta' : 'Circuito especial'}</p>
-                <p className="text-muted-foreground">Bares:</p><p className="font-medium">{bars.length}</p>
+                {isSuperAdmin && (
+                  <><p className="text-muted-foreground">Tipo:</p><p className="font-medium">{eventType === 'open_baratona' ? 'Baratona aberta' : 'Circuito especial'}</p></>
+                )}
+                <p className="text-muted-foreground">Bares:</p><p className="font-medium">{bars.length > 0 ? bars.length : 'Nenhum (adicionar depois)'}</p>
               </div>
 
-              <div className="border-t border-border/50 pt-3">
-                <p className="font-semibold mb-2">Roteiro</p>
-                {bars.map((b) => (
-                  <div key={b.barOrder} className="flex items-center gap-2 py-1">
-                    <span className="text-xs font-bold text-primary w-6">#{b.barOrder}</span>
-                    <span>{b.name}</span>
-                    <span className="text-muted-foreground text-xs">— {b.scheduledTime}</span>
-                  </div>
-                ))}
-              </div>
+              {bars.length > 0 && (
+                <div className="border-t border-border/50 pt-3">
+                  <p className="font-semibold mb-2">Roteiro</p>
+                  {bars.map((b) => (
+                    <div key={b.barOrder} className="flex items-center gap-2 py-1">
+                      <span className="text-xs font-bold text-primary w-6">#{b.barOrder}</span>
+                      <span>{b.name}</span>
+                      {b.scheduledTime && <span className="text-muted-foreground text-xs">— {b.scheduledTime}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <p className="text-xs text-muted-foreground">{description}</p>
+              {description && <p className="text-xs text-muted-foreground">{description}</p>}
 
               {bars.filter((b) => b.name && b.address).length >= 2 && (
                 <div className="border-t border-border/50 pt-3 space-y-2">

@@ -1,4 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { PlatformEvent } from '@/lib/platformEvents';
 
 interface BaratonaHeroProps {
   title: string;
@@ -9,7 +11,18 @@ interface BaratonaHeroProps {
   overlayChildren?: ReactNode;
   asH1?: boolean;
   className?: string;
+  /**
+   * Featured event for the hero badge.
+   * null  → still loading (renders skeleton)
+   * undefined → no event (badge hidden)
+   * object → show badge if eventType === 'special_circuit'
+   */
+  featuredEvent?: (PlatformEvent & { barCount: number; memberCount: number }) | null;
 }
+
+const prefersReducedMotion = (): boolean =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function BaratonaHero({
   title,
@@ -17,31 +30,54 @@ export function BaratonaHero({
   overlayChildren,
   asH1 = false,
   className = '',
+  featuredEvent,
 }: BaratonaHeroProps) {
   const imgRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = prefersReducedMotion();
 
   useEffect(() => {
+    if (reduceMotion) return;
+
     const fn = () => {
       if (imgRef.current) {
         imgRef.current.style.transform = `translateY(${window.scrollY * 0.35}px)`;
       }
     };
+
+    // Listen for media query changes at runtime (e.g. user changes OS setting)
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMqChange = (e: MediaQueryListEvent) => {
+      if (e.matches && imgRef.current) {
+        imgRef.current.style.transform = '';
+        window.removeEventListener('scroll', fn);
+      }
+    };
+    mq.addEventListener('change', onMqChange);
     window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
+
+    return () => {
+      window.removeEventListener('scroll', fn);
+      mq.removeEventListener('change', onMqChange);
+    };
+  }, [reduceMotion]);
 
   const TitleTag = asH1 ? 'h1' : 'h2';
+
+  const imgWrapStyle = reduceMotion
+    ? { height: '100%', top: '0' }
+    : { height: '115%', top: '-7.5%', willChange: 'transform' as const };
+
+  // Badge states
+  const badgeLoading = featuredEvent === null;
+  const badgeEvent =
+    featuredEvent && featuredEvent.eventType === 'special_circuit' ? featuredEvent : null;
 
   return (
     <section
       className={`relative flex flex-col justify-end overflow-hidden bg-background min-h-[85vh] ${className}`}
     >
-      {/* Parallax image */}
-      <div
-        ref={imgRef}
-        className="absolute inset-0 will-change-transform"
-        style={{ height: '115%', top: '-7.5%' }}
-      >
+      {/* Parallax image — height oversize disabled under prefers-reduced-motion */}
+      <div ref={imgRef} className="absolute inset-0" style={imgWrapStyle}>
         <img
           src="/assets/hero-illustration.png"
           alt="Baratona hero"
@@ -80,21 +116,27 @@ export function BaratonaHero({
 
       {/* Content */}
       <div className="relative z-10 container max-w-5xl mx-auto px-4 pb-10 space-y-5">
-        {/* Badge */}
-        <div
-          className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
-          style={{
-            background: 'rgba(245,166,35,0.15)',
-            border: '1px solid rgba(245,166,35,0.35)',
-            color: '#F5A623',
-          }}
-        >
-          <span
-            className="w-1.5 h-1.5 rounded-full animate-pulse"
-            style={{ background: '#F5A623' }}
-          />
-          Circuito Comida di Buteco RJ 2026 ativo
-        </div>
+
+        {/* Badge — skeleton while loading, event name when ready */}
+        {badgeLoading && (
+          <Skeleton className="h-6 w-64 rounded-full" style={{ background: 'rgba(245,166,35,0.12)' }} />
+        )}
+        {badgeEvent && (
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+            style={{
+              background: 'rgba(245,166,35,0.15)',
+              border: '1px solid rgba(245,166,35,0.35)',
+              color: '#F5A623',
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ background: '#F5A623' }}
+            />
+            {badgeEvent.name} · {badgeEvent.city} ativo
+          </div>
+        )}
 
         <TitleTag
           style={{

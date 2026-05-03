@@ -11,7 +11,6 @@ import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 import { CircuitMap } from '@/components/CircuitMap';
-import comidaDiButecoLogo from '@/assets/comida-di-buteco-logo.png';
 import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';
 import { EventLandingSkeleton } from '@/components/ui/list-skeletons';
@@ -235,32 +234,16 @@ export default function EventLanding() {
     return null;
   })();
 
-  const heroImage = event.coverImageUrl || (isComidaDiButeco ? comidaDiButecoLogo : null);
-  const isLogoHero = !event.coverImageUrl && isComidaDiButeco;
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero photo */}
-      <div className="relative w-full h-56 sm:h-72 md:h-96 overflow-hidden bg-card">
-        {heroImage ? (
-          <img
-            src={heroImage}
-            alt={event.name}
-            className={`w-full h-full ${isLogoHero ? 'object-contain p-8 sm:p-12' : 'object-cover'}`}
-            loading="eager"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-card to-background" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-background" />
-        <div className="absolute top-3 left-3">
-          <Button variant="secondary" size="icon" asChild className="bg-background/70 backdrop-blur">
-            <Link to="/explorar" aria-label="Voltar"><ChevronLeft className="w-5 h-5" /></Link>
+      <div className="container max-w-3xl mx-auto px-4 pt-4 pb-6 space-y-6 relative">
+        {/* Back button */}
+        <div>
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground -ml-2">
+            <Link to="/explorar" aria-label="Voltar"><ChevronLeft className="w-4 h-4 mr-1" /> Explorar</Link>
           </Button>
         </div>
-      </div>
 
-      <div className="container max-w-3xl mx-auto px-4 py-6 space-y-6 -mt-6 relative">
         {/* Title + meta */}
         <header className="space-y-3">
           <h1 className="font-display font-black text-gradient-yellow text-3xl sm:text-5xl tracking-tight leading-tight">

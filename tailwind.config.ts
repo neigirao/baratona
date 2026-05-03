@@ -19,16 +19,33 @@ export default {
         heading: ['Syne', 'sans-serif'],
       },
       colors: {
-        gold: { DEFAULT: '#F5A623', light: '#FFD166', dark: '#E8850A' },
-        'green-check': '#2ECC71',
+        gold: {
+          DEFAULT: 'hsl(var(--primary))',
+          light: 'hsl(var(--primary-light))',
+          dark: 'hsl(var(--primary-dark))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        'green-check': 'hsl(var(--success))',
         border: "hsl(var(--border))",
+        'border-2': "hsl(var(--border-2))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: {
+          DEFAULT: "hsl(var(--background))",
+          2: "hsl(var(--background-2))",
+        },
+        foreground: {
+          DEFAULT: "hsl(var(--foreground))",
+          2: "hsl(var(--foreground-2))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          light: "hsl(var(--primary-light))",
+          dark: "hsl(var(--primary-dark))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -53,6 +70,7 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+          2: "hsl(var(--card-2))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -71,11 +89,37 @@ export default {
           red: "hsl(var(--baratona-red))",
           green: "hsl(var(--baratona-green))",
         },
+        zone: {
+          sul: "hsl(var(--zone-sul))",
+          centro: "hsl(var(--zone-centro))",
+          norte: "hsl(var(--zone-norte))",
+          niteroi: "hsl(var(--zone-niteroi))",
+        },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
+        DEFAULT: "var(--radius)",
+        md: "var(--radius)",
+        lg: "var(--radius-md)",
+        xl: "var(--radius-lg)",
+        full: "var(--radius-full)",
+      },
+      boxShadow: {
+        'gold-sm': "var(--shadow-sm)",
+        'gold-md': "var(--shadow-md)",
+        'gold-lg': "var(--shadow-lg)",
+        card: "var(--shadow-card)",
+        'glow-gold': "var(--glow-gold)",
+        'glow-blue': "var(--glow-blue)",
+        'glow-red': "var(--glow-red)",
+      },
+      transitionTimingFunction: {
+        ui: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      transitionDuration: {
+        micro: "150ms",
+        ui: "250ms",
+        page: "400ms",
       },
       keyframes: {
         "accordion-down": {

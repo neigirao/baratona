@@ -1,32 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { withRetry } from '@/hooks/useRetry';
+import { useRealtimeTable } from './useRealtimeTable';
 
 type EventVote = Database['public']['Tables']['event_votes']['Row'];
 
 export function useEventVotes(eventId: string | null) {
-  const [votes, setVotes] = useState<EventVote[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetch = useCallback(async () => {
-    if (!eventId) return;
-    const { data, error } = await supabase.from('event_votes').select('*').eq('event_id', eventId);
-    if (!error && data) setVotes(data);
-    setLoading(false);
-  }, [eventId]);
-
-  useEffect(() => {
-    if (!eventId) { setLoading(false); return; }
-    fetch();
-    const channel = supabase
-      .channel(`event-votes-${eventId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'event_votes', filter: `event_id=eq.${eventId}` },
-        () => fetch())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [eventId, fetch]);
+  const { data: votes, loading, refetch } = useRealtimeTable<EventVote>('event_votes', eventId);
 
   const submitVote = useCallback(async (
     userId: string,
@@ -54,7 +35,10 @@ export function useEventVotes(eventId: string | null) {
     }
   }, [eventId]);
 
-  const getBarVotes = useCallback((barId: string | number) => votes.filter(v => v.bar_id === String(barId)), [votes]);
+  const getBarVotes = useCallback(
+    (barId: string | number) => votes.filter(v => v.bar_id === String(barId)),
+    [votes],
+  );
 
-  return { votes, loading, submitVote, getBarVotes, refetch: fetch };
+  return { votes, loading, submitVote, getBarVotes, refetch };
 }

@@ -33,12 +33,12 @@ interface BaratonaContextType {
   updateAppConfig: (updates: Partial<Omit<AppConfigRow, 'id' | 'updated_at'>>) => Promise<boolean>;
   
   // Consumption - now with bar_id support
-  addDrink: (participantId: string, barId?: number | null, subtype?: string) => Promise<boolean>;
-  removeDrink: (participantId: string, barId?: number | null) => Promise<boolean>;
-  addFood: (participantId: string, barId?: number | null) => Promise<boolean>;
-  removeFood: (participantId: string, barId?: number | null) => Promise<boolean>;
-  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number, barId?: number | null, subtype?: string) => Promise<boolean>;
-  getParticipantConsumption: (participantId: string, barId?: number | null) => { drinks: number; food: number };
+  addDrink: (participantId: string, barId?: string | number | null, subtype?: string) => Promise<boolean>;
+  removeDrink: (participantId: string, barId?: string | number | null) => Promise<boolean>;
+  addFood: (participantId: string, barId?: string | number | null) => Promise<boolean>;
+  removeFood: (participantId: string, barId?: string | number | null) => Promise<boolean>;
+  updateConsumption: (participantId: string, type: 'drink' | 'food', delta: number, barId?: string | number | null, subtype?: string) => Promise<boolean>;
+  getParticipantConsumption: (participantId: string, barId?: string | number | null) => { drinks: number; food: number };
   getTotalParticipantConsumption: (participantId: string) => { drinks: number; food: number };
   totalDrinks: number;
   totalFood: number;
@@ -54,7 +54,7 @@ interface BaratonaContextType {
   getProjectedTime: (scheduledTime: string) => string;
   getCurrentBar: () => Bar | undefined;
   getNextBar: () => Bar | undefined;
-  currentBarId: number | null;
+  currentBarId: string | number | null;
   
   // Sync status
   secondsAgo: number;
@@ -205,12 +205,14 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     appConfig,
     appConfigLoading,
     updateAppConfig: updateConfig,
-    addDrink,
-    removeDrink,
-    addFood,
-    removeFood,
-    updateConsumption,
-    getParticipantConsumption,
+    // Legacy hooks type barId as number | null; cast to the wider union so the
+    // shared BaratonaContextType is satisfied. Legacy routes never pass string IDs.
+    addDrink: addDrink as BaratonaContextType['addDrink'],
+    removeDrink: removeDrink as BaratonaContextType['removeDrink'],
+    addFood: addFood as BaratonaContextType['addFood'],
+    removeFood: removeFood as BaratonaContextType['removeFood'],
+    updateConsumption: updateConsumption as BaratonaContextType['updateConsumption'],
+    getParticipantConsumption: getParticipantConsumption as BaratonaContextType['getParticipantConsumption'],
     getTotalParticipantConsumption,
     totalDrinks,
     totalFood,

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { withRetry } from '@/hooks/useRetry';
 
 type EventAppConfig = Database['public']['Tables']['event_app_config']['Row'];
 
@@ -10,9 +11,12 @@ export function useEventAppConfig(eventId: string | null) {
 
   const fetch = useCallback(async () => {
     if (!eventId) return;
-    const { data, error } = await supabase
-      .from('event_app_config').select('*').eq('event_id', eventId).maybeSingle();
-    if (!error && data) setAppConfig(data);
+    await withRetry(async () => {
+      const { data, error } = await supabase
+        .from('event_app_config').select('*').eq('event_id', eventId).maybeSingle();
+      if (error) throw error;
+      setAppConfig(data);
+    }, { maxAttempts: 3, baseDelay: 800 });
     setLoading(false);
   }, [eventId]);
 

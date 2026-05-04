@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { BaratonaProvider } from '@/contexts/BaratonaContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { FeatureErrorBoundary } from '@/components/FeatureErrorBoundary';
 import { BackendHealthBanner } from '@/components/BackendHealthBanner';
 import { Header } from '@/components/Header';
 import Home from './pages/Home';
@@ -75,17 +76,17 @@ const App = () => (
                 <Route path="/" element={<Home />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/explorar" element={<Explore />} />
-                <Route path="/criar" element={<CreateEvent />} />
+                <Route path="/criar" element={<FeatureErrorBoundary feature="criação de baratona"><CreateEvent /></FeatureErrorBoundary>} />
                 <Route path="/entrar" element={<JoinByInvite />} />
                 <Route path="/minhas-baratonas" element={<MyBaratonas />} />
-                <Route path="/baratona/:slug" element={<EventLanding />} />
-                <Route path="/baratona/:slug/admin" element={<EventAdmin />} />
+                <Route path="/baratona/:slug" element={<FeatureErrorBoundary feature="página do evento"><EventLanding /></FeatureErrorBoundary>} />
+                <Route path="/baratona/:slug/admin" element={<FeatureErrorBoundary feature="admin do evento"><EventAdmin /></FeatureErrorBoundary>} />
                 <Route path="/admin/plataforma" element={<PlatformAdmin />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
 
               {/* EventLive has its own Header inside EventBaratonaProvider */}
-              <Route path="/baratona/:slug/live" element={<EventLive />} />
+              <Route path="/baratona/:slug/live" element={<FeatureErrorBoundary feature="evento ao vivo"><EventLive /></FeatureErrorBoundary>} />
 
               {/* Legacy routes have their own Header inside BaratonaProvider */}
               <Route path="/admin" element={<EventProviderShell><Admin /></EventProviderShell>} />

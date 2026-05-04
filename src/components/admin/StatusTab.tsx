@@ -49,10 +49,11 @@ export function StatusTab({
                 key={bar.id}
                 size="sm"
                 variant={bar.id === currentBarId ? 'default' : 'outline'}
-                className="text-xs"
+                className="text-xs overflow-hidden"
+                title={bar.name}
                 onClick={() => onSetCurrentBar(String(bar.id))}
               >
-                {bar.bar_order}. {bar.name}
+                <span className="truncate">{bar.bar_order}. {bar.name}</span>
               </Button>
             ))}
           </div>

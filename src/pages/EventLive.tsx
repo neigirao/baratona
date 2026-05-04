@@ -86,8 +86,8 @@ export default function EventLive() {
       try {
         const ev = await findEventBySlugApi(slug);
         setEvent(ev);
-      } catch {
-        // ignore
+      } catch (e) {
+        console.error('[EventLive] failed to load event slug=%s', slug, e);
       } finally {
         setLoading(false);
       }

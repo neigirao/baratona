@@ -84,10 +84,10 @@ export function InvitesPanel({ eventId, eventSlug }: InvitesPanelProps) {
                       <span className={`text-[10px] ${exhausted ? 'text-destructive' : 'text-muted-foreground'}`}>
                         {inv.usedCount}/{inv.maxUses ?? '∞'} usos
                       </span>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopy(inv.code)} title="Copiar link">
+                      <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => handleCopy(inv.code)} title="Copiar link">
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setRevokeTargetId(inv.id)} title="Revogar">
+                      <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setRevokeTargetId(inv.id)} title="Revogar">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>

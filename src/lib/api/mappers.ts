@@ -19,10 +19,13 @@ export interface EventBar {
 }
 
 export function mapEventRow(row: any): PlatformEvent {
+  if (!row?.id || !row?.slug || !row?.name) {
+    console.error('[mapEventRow] missing required fields', row);
+  }
   return {
-    id: row.id,
-    slug: row.slug,
-    name: row.name,
+    id: row.id ?? '',
+    slug: row.slug ?? '',
+    name: row.name ?? '',
     description: row.description || '',
     city: row.city || 'Rio de Janeiro',
     visibility: row.visibility,
@@ -40,10 +43,13 @@ export function mapEventRow(row: any): PlatformEvent {
 }
 
 export function mapBarRow(row: any): EventBar {
+  if (!row?.id || !row?.name) {
+    console.error('[mapBarRow] missing required fields', row);
+  }
   return {
-    id: row.id,
+    id: row.id ?? '',
     eventId: row.event_id,
-    name: row.name,
+    name: row.name ?? '',
     address: row.address || '',
     latitude: row.latitude,
     longitude: row.longitude,

@@ -141,10 +141,10 @@ export function EventBarsEditor({ eventId }: Props) {
                   <p className="text-xs text-muted-foreground truncate">{bar.address}</p>
                 </button>
                 <div className="flex flex-col">
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move(idx, -1)} disabled={idx === 0}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => move(idx, -1)} disabled={idx === 0}>
                     <ChevronUp className="w-3 h-3" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move(idx, 1)} disabled={idx === bars.length - 1}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => move(idx, 1)} disabled={idx === bars.length - 1}>
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </div>

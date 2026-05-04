@@ -53,14 +53,14 @@ export default function MyBaratonas() {
     return (
       <div className="min-h-screen bg-background">
         <div className="container max-w-md mx-auto px-4 py-16 text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/15 text-primary">
-            <Beer className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary shadow-glow-gold">
+            <Beer className="w-10 h-10" />
           </div>
-          <h1 className="text-2xl font-bold">Minhas baratonas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-heading text-3xl font-bold text-foreground">Minhas baratonas</h1>
+          <p className="text-foreground-2">
             Faça login para ver as baratonas que você criou e em que está participando.
           </p>
-          <Button onClick={signInWithGoogle} size="lg" className="font-bold">
+          <Button onClick={signInWithGoogle} variant="gold" size="xl">
             Entrar com Google
           </Button>
           <div>
@@ -80,13 +80,13 @@ export default function MyBaratonas() {
       <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
-            <Link to="/"><ChevronLeft className="w-5 h-5" /></Link>
+            <Link to="/" aria-label="Voltar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold">Minhas baratonas</h1>
-            <p className="text-sm text-muted-foreground">Eventos que você criou e em que participa.</p>
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">Minhas baratonas</h1>
+            <p className="text-sm text-foreground-2">Eventos que você criou e em que participa.</p>
           </div>
-          <Button asChild size="sm" className="font-bold">
+          <Button asChild variant="gold" size="sm">
             <Link to="/criar"><Plus className="w-4 h-4 mr-1" /> Criar</Link>
           </Button>
         </div>
@@ -157,21 +157,21 @@ function Section({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold flex items-center gap-2 text-muted-foreground">
-        {icon}
+      <h2 className="font-heading text-lg font-semibold flex items-center gap-2 text-foreground-2">
+        <span className="text-primary">{icon}</span>
         {title}
         {!loading && <span className="text-xs font-normal">({events.length})</span>}
       </h2>
 
       {loading ? (
         <div className="grid sm:grid-cols-2 gap-3">
-          <Skeleton className="h-32 w-full rounded-lg" />
-          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
         </div>
       ) : events.length === 0 ? (
-        <Card className="bg-card/40 border-dashed">
+        <Card className="bg-background-2 border-dashed border-border">
           <CardContent className="py-8 text-center space-y-3">
-            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+            <p className="text-sm text-foreground-2">{emptyMessage}</p>
             {emptyAction}
           </CardContent>
         </Card>
@@ -184,11 +184,11 @@ function Section({
           </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2 pt-1">
-              <Button size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage((p) => p - 1)}>
+              <Button size="sm" variant="gold-outline" disabled={safePage <= 1} onClick={() => setPage((p) => p - 1)}>
                 Anterior
               </Button>
-              <span className="text-xs text-muted-foreground">{safePage}/{totalPages}</span>
-              <Button size="sm" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+              <span className="text-xs text-foreground-2">{safePage}/{totalPages}</span>
+              <Button size="sm" variant="gold-outline" disabled={safePage >= totalPages} onClick={() => setPage((p) => p + 1)}>
                 Próxima
               </Button>
             </div>
@@ -203,15 +203,15 @@ function EventCard({ event, showOwnerBadge }: { event: EnrichedOwned; showOwnerB
   const isCircuit = event.eventType === 'special_circuit';
   return (
     <Link to={`/baratona/${event.slug}`}>
-      <Card className="bg-card/60 hover:border-primary/40 transition-colors h-full">
+      <Card className="bg-card border-border hover:border-primary/50 hover:shadow-gold-md transition-all duration-ui h-full">
         <CardContent className="py-4 space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold leading-tight line-clamp-2">{event.name}</h3>
+            <h3 className="font-heading font-semibold leading-tight line-clamp-2 text-foreground">{event.name}</h3>
             <span
-              className={`text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 flex-shrink-0 ${
+              className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center gap-1 flex-shrink-0 ${
                 event.visibility === 'private'
-                  ? 'bg-muted text-muted-foreground'
-                  : 'bg-primary/10 text-primary'
+                  ? 'bg-muted text-foreground-2'
+                  : 'bg-primary/15 text-primary'
               }`}
             >
               {event.visibility === 'private' ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
@@ -219,11 +219,11 @@ function EventCard({ event, showOwnerBadge }: { event: EnrichedOwned; showOwnerB
             </span>
           </div>
           {showOwnerBadge && (
-            <span className="inline-flex items-center gap-1 text-xs text-secondary font-semibold">
+            <span className="inline-flex items-center gap-1 text-xs text-primary font-semibold">
               <Crown className="w-3 h-3" /> {isCircuit ? 'Organizador do circuito' : 'Organizador'}
             </span>
           )}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap pt-1">
+          <div className="flex items-center gap-3 text-xs text-foreground-2 flex-wrap pt-1">
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {event.city}</span>
             <span className="flex items-center gap-1"><Beer className="w-3 h-3" /> {event.barCount}</span>
             <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {event.memberCount}</span>

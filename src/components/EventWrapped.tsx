@@ -114,41 +114,41 @@ export function EventWrapped({ eventName, isCircuit = false, onClose }: Props) {
       <ProgressBars totalCards={cards} currentCard={current} onNavigate={setCurrent} />
 
       <div className="relative w-full h-full">
-        <WrappedCard active={current === 0} gradient="bg-gradient-to-br from-primary via-primary/80 to-secondary">
-          <PartyPopper className="w-24 h-24 text-white mb-6 animate-bounce" />
-          <h1 className="font-display text-4xl md:text-6xl font-black text-white text-center mb-4">{eventName}</h1>
-          <p className="text-white/80 text-xl text-center mb-2">Seu Resumo</p>
-          <p className="text-white/60 text-sm">Deslize para continuar →</p>
+        <WrappedCard active={current === 0} gradient="bg-gradient-to-br from-primary-light via-primary to-primary-dark">
+          <PartyPopper className="w-24 h-24 text-primary-foreground mb-6 animate-bounce" />
+          <h1 className="font-heading text-4xl md:text-6xl font-black text-primary-foreground text-center mb-4">{eventName}</h1>
+          <p className="text-primary-foreground/80 text-xl text-center mb-2 font-display tracking-widest uppercase">Seu Resumo</p>
+          <p className="text-primary-foreground/60 text-sm">Deslize para continuar →</p>
         </WrappedCard>
 
         {!isCircuit && (
           <>
-            <WrappedCard active={current === 1} gradient="bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400">
-              <p className="text-white/80 text-lg mb-4">Você bebeu</p>
+            <WrappedCard active={current === 1} gradient="bg-gradient-to-br from-[hsl(217_91%_60%)] via-[hsl(197_100%_47%)] to-[hsl(197_100%_35%)]">
+              <p className="text-white/80 text-lg mb-4 font-display tracking-wider uppercase">Você bebeu</p>
               <StatReveal value={personal.drinks} label="bebidas" icon={Beer} delay={200} active={current === 1} />
             </WrappedCard>
 
-            <WrappedCard active={current === 2} gradient="bg-gradient-to-br from-amber-500 via-orange-500 to-red-500">
-              <p className="text-white/80 text-lg mb-4">E comeu</p>
+            <WrappedCard active={current === 2} gradient="bg-gradient-to-br from-primary via-primary-dark to-[hsl(6_78%_57%)]">
+              <p className="text-white/80 text-lg mb-4 font-display tracking-wider uppercase">E comeu</p>
               <StatReveal value={personal.food} label="porções" icon={Utensils} delay={200} active={current === 2} />
             </WrappedCard>
 
-            <WrappedCard active={current === 3} gradient="bg-gradient-to-br from-purple-600 via-pink-500 to-rose-500">
-              <p className="text-white/80 text-lg mb-4">Seu bar favorito foi</p>
+            <WrappedCard active={current === 3} gradient="bg-gradient-to-br from-[hsl(271_91%_65%)] via-[hsl(330_85%_60%)] to-[hsl(0_85%_60%)]">
+              <p className="text-white/80 text-lg mb-4 font-display tracking-wider uppercase">Seu bar favorito foi</p>
               <div className="flex flex-col items-center gap-4">
                 <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <MapPin className="w-12 h-12 text-white" />
                 </div>
-                <span className="font-display text-3xl md:text-5xl font-black text-white text-center px-4">{personal.favoriteBar}</span>
+                <span className="font-heading text-3xl md:text-5xl font-black text-white text-center px-4">{personal.favoriteBar}</span>
               </div>
             </WrappedCard>
           </>
         )}
 
         {isCircuit && (
-          <WrappedCard active={current === 1} gradient="bg-gradient-to-br from-secondary via-secondary/80 to-primary">
-            <Utensils className="w-16 h-16 text-white mb-4" />
-            <p className="text-white/80 text-lg mb-4">Você curtiu</p>
+          <WrappedCard active={current === 1} gradient="bg-gradient-to-br from-primary via-primary-dark to-[hsl(33_91%_35%)]">
+            <Utensils className="w-16 h-16 text-primary-foreground mb-4" />
+            <p className="text-primary-foreground/80 text-lg mb-4 font-display tracking-wider uppercase">Você curtiu</p>
             <StatReveal value={bars.length} label="butecos no circuito" icon={MapPin} delay={200} active={current === 1} />
           </WrappedCard>
         )}
@@ -156,20 +156,20 @@ export function EventWrapped({ eventName, isCircuit = false, onClose }: Props) {
         {/* Top 3 drinkers — both flavors */}
         <WrappedCard
           active={current === (isCircuit ? 2 : 4)}
-          gradient="bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-400"
+          gradient="bg-gradient-to-br from-primary-light via-primary to-primary-dark"
         >
-          <Beer className="w-16 h-16 text-white mb-4" />
-          <h2 className="font-display text-xl font-bold text-white mb-6">Top 3 Bebedores</h2>
+          <Beer className="w-16 h-16 text-primary-foreground mb-4" />
+          <h2 className="font-heading text-xl font-bold text-primary-foreground mb-6 uppercase tracking-wider">Top 3 Bebedores</h2>
           <div className="w-full max-w-xs space-y-3">
             {rankings.drinkTop3.length === 0 && (
-              <p className="text-white/70 text-center text-sm">Sem dados ainda.</p>
+              <p className="text-primary-foreground/70 text-center text-sm">Sem dados ainda.</p>
             )}
             {rankings.drinkTop3.map((r, i) => (
-              <div key={r.id} className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div key={r.id} className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-primary-foreground/10">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{medal(i + 1)}</span>
-                  <div className="flex-1"><p className="text-white font-bold">{r.name}</p></div>
-                  <span className="text-white font-display text-xl font-black">{r.count} 🍺</span>
+                  <div className="flex-1"><p className="text-primary-foreground font-bold">{r.name}</p></div>
+                  <span className="text-primary-foreground font-display text-xl tracking-wide">{r.count} 🍺</span>
                 </div>
               </div>
             ))}
@@ -178,20 +178,20 @@ export function EventWrapped({ eventName, isCircuit = false, onClose }: Props) {
 
         <WrappedCard
           active={current === (isCircuit ? 3 : 5)}
-          gradient="bg-gradient-to-br from-orange-600 via-orange-500 to-red-400"
+          gradient="bg-gradient-to-br from-[hsl(33_91%_47%)] via-primary to-[hsl(6_78%_57%)]"
         >
           <Utensils className="w-16 h-16 text-white mb-4" />
-          <h2 className="font-display text-xl font-bold text-white mb-6">Top 3 Comedores</h2>
+          <h2 className="font-heading text-xl font-bold text-white mb-6 uppercase tracking-wider">Top 3 Comedores</h2>
           <div className="w-full max-w-xs space-y-3">
             {rankings.foodTop3.length === 0 && (
               <p className="text-white/70 text-center text-sm">Sem dados ainda.</p>
             )}
             {rankings.foodTop3.map((r, i) => (
-              <div key={r.id} className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+              <div key={r.id} className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{medal(i + 1)}</span>
                   <div className="flex-1"><p className="text-white font-bold">{r.name}</p></div>
-                  <span className="text-white font-display text-xl font-black">{r.count} 🍽️</span>
+                  <span className="text-white font-display text-xl tracking-wide">{r.count} 🍽️</span>
                 </div>
               </div>
             ))}
@@ -201,37 +201,37 @@ export function EventWrapped({ eventName, isCircuit = false, onClose }: Props) {
         {/* Champion bar / petisco */}
         <WrappedCard
           active={current === (isCircuit ? 4 : 6)}
-          gradient="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500"
+          gradient="bg-gradient-to-br from-primary-light via-primary to-primary-dark"
         >
-          <Trophy className="w-16 h-16 text-white mb-4" />
-          <h2 className="font-display text-xl font-bold text-white mb-4">
+          <Trophy className="w-16 h-16 text-primary-foreground mb-4" />
+          <h2 className="font-heading text-xl font-bold text-primary-foreground mb-4 uppercase tracking-wider">
             {isCircuit ? 'Melhor Petisco' : 'Melhor Bar'}
           </h2>
           {champion ? (
-            <div className="text-center text-white space-y-2 px-4">
-              <p className="font-display text-2xl md:text-4xl font-black">{champion.name}</p>
-              {isCircuit && champion.dish && <p className="text-white/90 text-base">{champion.dish}</p>}
-              <div className="inline-flex items-center gap-1 bg-white/20 rounded-full px-4 py-1 mt-2">
-                <Star className="w-4 h-4 fill-white" /> <span className="font-bold">{champion.rating}</span>
-                <span className="text-white/70 text-xs ml-1">({champion.votes} {champion.votes === 1 ? 'voto' : 'votos'})</span>
+            <div className="text-center text-primary-foreground space-y-2 px-4">
+              <p className="font-heading text-2xl md:text-4xl font-black">{champion.name}</p>
+              {isCircuit && champion.dish && <p className="text-primary-foreground/90 text-base">{champion.dish}</p>}
+              <div className="inline-flex items-center gap-1 bg-black/25 rounded-full px-4 py-1 mt-2 border border-primary-foreground/20">
+                <Star className="w-4 h-4 fill-primary-foreground" /> <span className="font-bold">{champion.rating}</span>
+                <span className="text-primary-foreground/70 text-xs ml-1">({champion.votes} {champion.votes === 1 ? 'voto' : 'votos'})</span>
               </div>
             </div>
           ) : (
-            <p className="text-white/80 text-sm">Ninguém votou ainda.</p>
+            <p className="text-primary-foreground/80 text-sm">Ninguém votou ainda.</p>
           )}
         </WrappedCard>
 
         {/* Closing card */}
         <WrappedCard
           active={current === cards - 1}
-          gradient="bg-gradient-to-br from-primary via-secondary to-primary"
+          gradient="bg-gradient-to-br from-primary via-primary-dark to-background"
         >
-          <Users className="w-16 h-16 text-white mb-4" />
-          <h2 className="font-display text-3xl font-bold text-white text-center mb-2">Foi épico!</h2>
-          <p className="text-white/80 text-center mb-6 px-4">
+          <Users className="w-16 h-16 text-primary-foreground mb-4" />
+          <h2 className="font-heading text-3xl font-bold text-primary-foreground text-center mb-2 uppercase tracking-wider">Foi épico!</h2>
+          <p className="text-primary-foreground/80 text-center mb-6 px-4">
             {participants.length} {participants.length === 1 ? 'pessoa participou' : 'pessoas participaram'} de {eventName}.
           </p>
-          <Button onClick={handleShare} variant="secondary" className="font-bold">
+          <Button onClick={handleShare} variant="gold" size="lg">
             <Share2 className="w-4 h-4 mr-2" /> Compartilhar
           </Button>
         </WrappedCard>

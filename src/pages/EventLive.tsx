@@ -27,14 +27,16 @@ function EventLiveInner({ event }: { event: PlatformEvent }) {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
+        <Card className="max-w-md w-full bg-card border-border shadow-card">
           <CardContent className="py-8 text-center space-y-4">
-            <Beer className="w-12 h-12 mx-auto text-primary" />
-            <h2 className="text-xl font-bold">{event.name}</h2>
-            <p className="text-muted-foreground">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary shadow-glow-gold">
+              <Beer className="w-8 h-8" />
+            </div>
+            <h2 className="font-heading text-xl font-bold text-foreground">{event.name}</h2>
+            <p className="text-foreground-2">
               Você precisa participar deste evento para acessar o modo ao vivo.
             </p>
-            <Button asChild>
+            <Button asChild variant="gold">
               <Link to={`/baratona/${event.slug}`}>Ir para a página do evento</Link>
             </Button>
           </CardContent>
@@ -54,7 +56,7 @@ function EventLiveInner({ event }: { event: PlatformEvent }) {
           </div>
           {isFinished && (
             <div className="mb-4">
-              <Button onClick={() => setShowWrapped(true)} variant="secondary" className="w-full font-bold">
+              <Button onClick={() => setShowWrapped(true)} variant="gold" size="lg" className="w-full">
                 <PartyPopper className="w-4 h-4 mr-2" />
                 Ver retrospectiva do evento
               </Button>
@@ -101,12 +103,14 @@ export default function EventLive() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
+        <Card className="max-w-md w-full bg-card border-border shadow-card">
           <CardContent className="py-8 text-center space-y-4">
-            <LogIn className="w-10 h-10 mx-auto text-primary" />
-            <h2 className="text-xl font-bold">Login necessário</h2>
-            <p className="text-muted-foreground">Faça login para acessar o modo ao vivo.</p>
-            <Button asChild>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mx-auto">
+              <LogIn className="w-7 h-7" />
+            </div>
+            <h2 className="font-heading text-xl font-bold text-foreground">Login necessário</h2>
+            <p className="text-foreground-2">Faça login para acessar o modo ao vivo.</p>
+            <Button asChild variant="gold">
               <Link to={`/baratona/${slug}`}>Voltar ao evento</Link>
             </Button>
           </CardContent>

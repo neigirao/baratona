@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { useCheckins } from '@/hooks/useCheckins';
 import { MapPin, Clock, CheckCircle, Circle, Star, Loader2, ChevronRight, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BarRadarChart } from './BarRadarChart';
 import { VoteForm } from './VoteForm';
 import {
   Drawer,
@@ -11,6 +10,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+
+const BarRadarChart = lazy(() => import('./BarRadarChart').then(m => ({ default: m.BarRadarChart })));
 
 interface BarItineraryProps {
   onNavigateToConsumption?: () => void;
@@ -226,7 +227,11 @@ export function BarItinerary({ onNavigateToConsumption }: BarItineraryProps) {
             )}
             
             {/* Radar Chart */}
-            {selectedBarId && <BarRadarChart barId={selectedBarId} />}
+            {selectedBarId && (
+              <Suspense fallback={<div className="h-40 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}>
+                <BarRadarChart barId={selectedBarId} />
+              </Suspense>
+            )}
             
             {/* Average Score */}
             {selectedBarId && getAverageRating(selectedBarId) && (

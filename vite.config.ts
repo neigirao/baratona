@@ -26,7 +26,6 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'tanstack': ['@tanstack/react-query'],
-          'charts': ['recharts'],
           'supabase': ['@supabase/supabase-js'],
           'radix-ui': [
             '@radix-ui/react-dialog',

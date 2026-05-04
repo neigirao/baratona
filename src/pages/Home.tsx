@@ -484,10 +484,10 @@ function Footer() {
           ))}
         </div>
         <div className="border-t border-border pt-6 flex justify-between items-center flex-wrap gap-3">
-          <p className="text-[13px] text-muted-foreground/80">
+          <p className="text-[13px] text-muted-foreground">
             © 2026 Baratona. Feito para butequeiros de verdade.
           </p>
-          <p className="text-[13px] text-muted-foreground/80">
+          <p className="text-[13px] text-muted-foreground">
             🍺 Beba com responsabilidade
           </p>
         </div>

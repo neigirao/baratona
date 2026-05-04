@@ -175,6 +175,7 @@ export async function createBaratonaFromFavoritesApi(
   }).catch((error: Error) => {
     const msg = error.message || '';
     if (msg.includes('not_authenticated')) throw new Error('Faça login para criar sua baratona');
+    if (msg.includes('access_denied')) throw new Error('Você não tem acesso a este evento');
     if (msg.includes('too_few_bars')) throw new Error('Selecione no mínimo 3 bares');
     if (msg.includes('too_many_bars')) throw new Error('Máximo de 15 bares por baratona');
     if (msg.includes('no_bars_selected')) throw new Error('Nenhum bar selecionado');

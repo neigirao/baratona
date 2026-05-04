@@ -357,7 +357,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
                     style={{ background: ZONE_PIN_COLORS[zone], boxShadow: `0 0 8px ${ZONE_PIN_COLORS[zone]}66` }}
                   />
                   <h2 className="font-heading text-base font-bold text-muted-foreground">{zone}</h2>
-                  <span className="text-xs text-muted-foreground/60">{items.length} bares</span>
+                  <span className="text-xs text-muted-foreground/80">{items.length} bares</span>
                   <div className="flex-1 h-px bg-border" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -393,7 +393,7 @@ export function SpecialCircuitLanding({ event, bars }: SpecialCircuitLandingProp
         )
       ) : (
         <div className="bg-background-2 border border-border rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex gap-4 items-center text-[11px] uppercase tracking-wide text-muted-foreground/60">
+          <div className="px-4 py-3 border-b border-border flex gap-4 items-center text-[11px] uppercase tracking-wide text-muted-foreground/80">
             <span className="min-w-6" />
             <span className="w-11" />
             <span className="flex-1">Bar</span>

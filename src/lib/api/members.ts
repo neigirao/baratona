@@ -5,7 +5,7 @@ export async function getEventMemberCountApi(eventId: string): Promise<number> {
     .from('event_members')
     .select('id', { count: 'exact', head: true })
     .eq('event_id', eventId);
-  if (error) return 0;
+  if (error) { console.error('[getEventMemberCountApi]', error); return 0; }
   return count || 0;
 }
 
@@ -26,7 +26,11 @@ export async function isEventMemberApi(eventId: string, userId: string): Promise
     .eq('event_id', eventId)
     .eq('user_id', userId)
     .maybeSingle();
-  if (error) return false;
+  if (error) {
+    // Log clearly: a query failure here incorrectly denies access to the user.
+    console.error('[isEventMemberApi] query failed — defaulting to false, may incorrectly deny access', error);
+    return false;
+  }
   return Boolean(data);
 }
 
@@ -47,6 +51,9 @@ export async function isSuperAdminApi(userId: string) {
     .eq('user_id', userId)
     .eq('role', 'super_admin')
     .maybeSingle();
-  if (error) return false;
+  if (error) {
+    console.error('[isSuperAdminApi] query failed — admin features will be unavailable', error);
+    return false;
+  }
   return Boolean(data);
 }

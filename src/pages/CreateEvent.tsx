@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,10 @@ import { getUserBarCatalogApi, type CatalogBar } from '@/lib/api';
 import { ImageUploader } from '@/components/admin/ImageUploader';
 import { toast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, MapPin, Plus, Trash2, AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type BarDraft = Omit<EventBar, 'id' | 'eventId'>;
 
@@ -37,6 +41,7 @@ export default function CreateEvent() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved'>('idle');
+  const [removeBarIndex, setRemoveBarIndex] = useState<number | null>(null);
   const [catalog, setCatalog] = useState<CatalogBar[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const slug = useMemo(() => normalizeSlug(name), [name]);
@@ -65,16 +70,7 @@ export default function CreateEvent() {
   }, [user]);
 
   if (loading) return <div className="p-8">Carregando...</div>;
-
-  if (!user) {
-    return (
-      <div className="container max-w-xl mx-auto px-4 py-12 space-y-4">
-        <h1 className="text-3xl font-bold">Entrar para criar</h1>
-        <p className="text-muted-foreground">Para criar sua baratona você precisa entrar com Google.</p>
-        <Button onClick={signInWithGoogle}>Entrar com Google</Button>
-      </div>
-    );
-  }
+  if (!user) return <Navigate to="/" replace />;
 
   const addBar = () => {
     setBars((prev) => [
@@ -296,7 +292,7 @@ export default function CreateEvent() {
                     </div>
                     <span className="text-sm font-bold text-primary">Bar #{bar.barOrder}</span>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => removeBar(i)}>
+                  <Button variant="ghost" size="icon" onClick={() => setRemoveBarIndex(i)}>
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
@@ -393,6 +389,28 @@ export default function CreateEvent() {
           </Card>
         </form>
       )}
+
+      <AlertDialog open={removeBarIndex !== null} onOpenChange={(open) => { if (!open) setRemoveBarIndex(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover bar?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removeBarIndex !== null && bars[removeBarIndex]?.name
+                ? `"${bars[removeBarIndex].name}" será removido do roteiro.`
+                : 'Este bar será removido do roteiro.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (removeBarIndex !== null) { removeBar(removeBarIndex); setRemoveBarIndex(null); } }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

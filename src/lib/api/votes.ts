@@ -13,11 +13,12 @@ export async function getDishRatingsApi(eventId: string): Promise<Record<string,
     .eq('event_id', eventId)
     .not('dish_score', 'is', null);
 
-  if (error) return {};
+  if (error) { console.error('[getDishRatingsApi]', error); return {}; }
   const byBar: Record<string, { sum: number; n: number }> = {};
   for (const row of data || []) {
     const id = (row as any).bar_id as string;
-    const score = (row as any).dish_score as number;
+    const score = Number((row as any).dish_score);
+    if (!id || isNaN(score)) continue;
     if (!byBar[id]) byBar[id] = { sum: 0, n: 0 };
     byBar[id].sum += score;
     byBar[id].n += 1;

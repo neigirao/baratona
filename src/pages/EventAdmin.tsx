@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
@@ -270,16 +270,11 @@ export default function EventAdmin() {
   if (loading || eventLoading || adminLoading) return <div className="p-8">Carregando...</div>;
   if (!event) return <NotFound />;
 
-  const canEdit = !!user && (event.ownerId === user.id || isSuperAdmin || user.email === 'neigirao@gmail.com');
-  if (!canEdit) {
-    return (
-      <div className="container max-w-xl mx-auto p-10 space-y-3">
-        <h1 className="text-2xl font-bold">Acesso restrito</h1>
-        <p className="text-muted-foreground">Somente o organizador (ou super-admin) pode acessar esse painel.</p>
-        <Button asChild variant="outline"><Link to={`/baratona/${slug}`}>Voltar ao evento</Link></Button>
-      </div>
-    );
-  }
+  // Unauthenticated users → redirect to event landing
+  if (!user) return <Navigate to={`/baratona/${slug}`} replace />;
+
+  const canEdit = user.id === event.ownerId || isSuperAdmin || user.email === 'neigirao@gmail.com';
+  if (!canEdit) return <Navigate to={`/baratona/${slug}`} replace />;
 
   return (
     <EventBaratonaProvider eventId={event.id} eventType={event.eventType}>

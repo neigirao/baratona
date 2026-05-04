@@ -15,7 +15,7 @@ export async function getUserBarCatalogApi(userId: string): Promise<CatalogBar[]
   const data = await callRpc<{ name: string; address: string; neighborhood: string | null; scheduled_time: string | null }>(
     'get_user_bar_catalog',
     { _user_id: userId },
-  ).catch(() => []);
+  ).catch((e) => { console.error('[getUserBarCatalogApi]', e); return []; });
   return data.map((row) => ({
     name: row.name,
     address: row.address || '',

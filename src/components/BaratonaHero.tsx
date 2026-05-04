@@ -78,12 +78,20 @@ export function BaratonaHero({
     >
       {/* Parallax image — height oversize disabled under prefers-reduced-motion */}
       <div ref={imgRef} className="absolute inset-0" style={imgWrapStyle}>
-        <img
-          src="/assets/hero-illustration.png"
-          alt="Baratona hero"
-          className="w-full h-full object-cover object-top"
-          loading="eager"
-        />
+        <picture>
+          <source
+            type="image/webp"
+            srcSet="/assets/hero-illustration-480.webp 480w, /assets/hero-illustration-960.webp 960w, /assets/hero-illustration.webp 1920w"
+            sizes="100vw"
+          />
+          <img
+            src="/assets/hero-illustration.png"
+            alt="Baratona hero"
+            className="w-full h-full object-cover object-top"
+            loading="eager"
+            fetchPriority="high"
+          />
+        </picture>
       </div>
 
       {/* Top gradient */}

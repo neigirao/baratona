@@ -33,12 +33,20 @@ function Hero() {
   return (
     <section className="relative min-h-[85vh] flex items-end overflow-hidden bg-background pb-12 md:pb-24">
       <div ref={imgRef} className="absolute inset-0 z-0 will-change-transform">
-        <img
-          src="/assets/hero-illustration.png"
-          alt="Baratona — festa carioca de butecos"
-          className="w-full h-[115%] object-cover object-top block"
-          loading="eager"
-        />
+        <picture>
+          <source
+            type="image/webp"
+            srcSet="/assets/hero-illustration-480.webp 480w, /assets/hero-illustration-960.webp 960w, /assets/hero-illustration.webp 1920w"
+            sizes="100vw"
+          />
+          <img
+            src="/assets/hero-illustration.png"
+            alt="Baratona — festa carioca de butecos"
+            className="w-full h-[115%] object-cover object-top block"
+            loading="eager"
+            fetchPriority="high"
+          />
+        </picture>
       </div>
 
       <div

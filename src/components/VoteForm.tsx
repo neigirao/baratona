@@ -35,9 +35,9 @@ function StarRating({ value, onChange, label, icon, size = 'sm' }: StarRatingPro
               className={cn(
                 starSize,
                 "transition-colors",
-                star <= value 
-                  ? "text-secondary fill-secondary" 
-                  : "text-muted-foreground"
+                star <= value
+                  ? "text-primary fill-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]"
+                  : "text-foreground-2 opacity-50"
               )}
             />
           </button>
@@ -158,22 +158,22 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
   if (existingVote && !isEditing) {
     return (
       <div className={cn(
-        "bg-card rounded-2xl border border-baratona-green/50 animate-fade-in",
+        "bg-card rounded-xl border border-success/40 shadow-gold-sm animate-fade-in",
         compact ? "p-3" : "p-4"
       )}>
         <div className="text-center">
-          <p className="text-sm text-baratona-green font-medium">
-            ✓ {language === 'pt' ? 'Voto registrado!' : 'Vote recorded!'}
+          <p className="text-sm text-success font-semibold uppercase tracking-wider">
+            ✓ {language === 'pt' ? 'Voto registrado' : 'Vote recorded'}
           </p>
           {isCircuit ? (
             <div className="flex items-center justify-center gap-2 mt-3">
-              <ChefHat className="w-5 h-5 text-secondary" />
-              <span className="text-xs text-muted-foreground">
+              <ChefHat className="w-5 h-5 text-primary" />
+              <span className="text-xs text-foreground-2">
                 {featuredDish || (language === 'pt' ? 'Petisco' : 'Dish')}:
               </span>
               <div className="flex gap-0.5">
                 {[1,2,3,4,5].map(s => (
-                  <Star key={s} className={cn("w-4 h-4", s <= (existingVote.dish_score ?? 0) ? "text-secondary fill-secondary" : "text-muted-foreground")} />
+                  <Star key={s} className={cn("w-4 h-4", s <= (existingVote.dish_score ?? 0) ? "text-primary fill-primary" : "text-foreground-2 opacity-40")} />
                 ))}
               </div>
             </div>
@@ -181,19 +181,19 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
             <div className="grid grid-cols-4 gap-2 mt-3">
               <div className="text-center">
                 <Beer className="w-4 h-4 text-primary mx-auto" />
-                <span className="text-xs font-bold">{existingVote.drink_score}</span>
+                <span className="text-xs font-display tracking-wide">{existingVote.drink_score}</span>
               </div>
               <div className="text-center">
-                <Utensils className="w-4 h-4 text-secondary mx-auto" />
-                <span className="text-xs font-bold">{existingVote.food_score}</span>
+                <Utensils className="w-4 h-4 text-primary mx-auto" />
+                <span className="text-xs font-display tracking-wide">{existingVote.food_score}</span>
               </div>
               <div className="text-center">
-                <Music className="w-4 h-4 text-destructive mx-auto" />
-                <span className="text-xs font-bold">{existingVote.vibe_score}</span>
+                <Music className="w-4 h-4 text-primary mx-auto" />
+                <span className="text-xs font-display tracking-wide">{existingVote.vibe_score}</span>
               </div>
               <div className="text-center">
-                <Users className="w-4 h-4 text-muted-foreground mx-auto" />
-                <span className="text-xs font-bold">{existingVote.service_score}</span>
+                <Users className="w-4 h-4 text-primary mx-auto" />
+                <span className="text-xs font-display tracking-wide">{existingVote.service_score}</span>
               </div>
             </div>
           )}
@@ -238,13 +238,13 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
   
   return (
     <div className={cn(
-      "bg-card rounded-2xl border border-border animate-slide-up",
+      "bg-card rounded-xl border border-border shadow-card animate-slide-up",
       compact ? "p-3" : "p-4"
     )}>
-      <h3 className="text-center font-display text-sm font-semibold text-muted-foreground mb-4">
+      <h3 className="text-center font-heading text-sm font-semibold text-foreground-2 mb-4 uppercase tracking-wider">
         {title}
       </h3>
-      
+
       {isCircuit ? (
         <div className="flex justify-center mb-4">
           <StarRating
@@ -283,15 +283,15 @@ export function VoteForm({ barId, barName, compact = false, isCheckedIn = false,
           />
         </div>
       )}
-      
+
       <Button
         onClick={handleSubmit}
         disabled={!isComplete || submitting}
-        className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-display font-bold"
+        variant="gold"
+        size="lg"
+        className="w-full"
       >
-        {submitting ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-        ) : null}
+        {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
         {language === 'pt' ? 'Enviar Avaliação' : 'Submit Review'}
       </Button>
     </div>

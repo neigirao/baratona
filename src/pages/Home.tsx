@@ -516,17 +516,20 @@ export default function Home() {
 
   const { user } = usePlatformAuth();
   const [featured, setFeatured] = useState<FeaturedEvent[] | null>(null);
+  const [featuredError, setFeaturedError] = useState(false);
   const [myEvents, setMyEvents] = useState<MyEvent[] | null>(null);
+  const [myEventsError, setMyEventsError] = useState(false);
 
   useEffect(() => {
     listFeaturedEventsApi(3)
-      .then(setFeatured)
-      .catch(() => setFeatured([]));
+      .then((data) => { setFeatured(data); setFeaturedError(false); })
+      .catch(() => { setFeatured([]); setFeaturedError(true); });
   }, []);
 
   useEffect(() => {
     if (!user) {
       setMyEvents(null);
+      setMyEventsError(false);
       return;
     }
     Promise.all([
@@ -546,13 +549,22 @@ export default function Home() {
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setMyEvents(merged.slice(0, 4));
+        setMyEventsError(false);
       })
-      .catch(() => setMyEvents([]));
+      .catch(() => { setMyEvents([]); setMyEventsError(true); });
   }, [user]);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Hero />
+
+      {user && myEventsError && (
+        <section className="px-5 sm:px-8 lg:px-16 py-6">
+          <div className="max-w-[1200px] mx-auto">
+            <p className="text-sm text-muted-foreground">Não foi possível carregar suas baratonas. <Link to="/minhas-baratonas" className="text-primary underline">Tentar novamente</Link></p>
+          </div>
+        </section>
+      )}
 
       {user && myEvents && myEvents.length > 0 && (
         <section className="px-5 sm:px-8 lg:px-16 py-10">
@@ -613,6 +625,14 @@ export default function Home() {
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {featuredError && (
+        <section className="px-5 sm:px-8 lg:px-16 py-6">
+          <div className="max-w-[1200px] mx-auto">
+            <p className="text-sm text-muted-foreground">Não foi possível carregar os eventos em destaque. <Link to="/explorar" className="text-primary underline">Ver todos</Link></p>
           </div>
         </section>
       )}

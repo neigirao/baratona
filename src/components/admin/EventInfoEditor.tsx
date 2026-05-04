@@ -40,6 +40,10 @@ export function EventInfoEditor({ event, isSuperAdmin, onSaved }: Props) {
     setForm((f) => ({ ...f, [k]: v }));
 
   const handleSave = async () => {
+    if (!form.name?.trim()) {
+      toast({ title: 'Nome do evento é obrigatório', variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     try {
       const updated = await updateEventApi(event.id, form);

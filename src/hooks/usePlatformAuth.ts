@@ -41,6 +41,9 @@ export function usePlatformAuth() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('baratona_user');
+    localStorage.removeItem('baratona_last_used');
+    localStorage.removeItem('baratona:pending-favorite');
   };
 
   return { session, user, loading, signInWithGoogle, signOut };

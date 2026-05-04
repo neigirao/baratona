@@ -41,9 +41,9 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
       )}
 
       <div className="container flex h-14 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2">
-          <span style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '3px', fontSize: '24px' }} className="text-primary">BARATONA</span>
-          <span className="text-xs font-display text-primary">2026</span>
+        <Link to="/" className="flex items-center gap-2 group" aria-label="Baratona — início">
+          <span className="font-display text-2xl tracking-[3px] text-primary group-hover:text-primary-light transition-colors">BARATONA</span>
+          <span className="text-[10px] font-display tracking-widest text-foreground-2 border border-border rounded-sm px-1 py-0.5">2026</span>
         </Link>
 
         <div className="flex items-center gap-2">

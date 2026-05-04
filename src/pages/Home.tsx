@@ -98,7 +98,7 @@ function Hero() {
               </Link>
               <Link
                 to="/explorar"
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 text-foreground px-6 py-3.5 text-[15px] font-medium border border-white/20 backdrop-blur-sm hover:bg-white/[0.18] hover:border-primary/50 transition-colors"
+                className="inline-flex items-center gap-2 rounded-full bg-foreground/10 text-foreground px-6 py-3.5 text-[15px] font-medium border border-foreground/20 backdrop-blur-sm hover:bg-foreground/[0.18] hover:border-primary/50 transition-colors"
               >
                 Explorar baratonas <ArrowRight className="w-4 h-4" />
               </Link>
@@ -217,7 +217,7 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
       to={`/baratona/${event.slug}`}
       className="group block rounded-xl overflow-hidden border border-primary/20 transition-all hover:-translate-y-1 hover:shadow-gold-md"
       style={{
-        background: 'linear-gradient(135deg, #1C1000 0%, #2A1800 50%, #1A0A00 100%)',
+        background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 50%, hsl(var(--background)) 100%)',
         display: 'grid',
         gridTemplateColumns: 'auto 1fr',
       }}
@@ -232,7 +232,7 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
           style={{
             width: 'clamp(100px, 13vw, 130px)',
             height: 'clamp(100px, 13vw, 130px)',
-            background: 'linear-gradient(135deg, #2a1800, #4a2c00)',
+            background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--card) / 0.6))',
           }}
         >
           {coverSrc ? (

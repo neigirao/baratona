@@ -45,14 +45,12 @@ export async function ensureProfile(user: any) {
 }
 
 export async function isSuperAdminApi(userId: string) {
-  const { data, error } = await supabase
-    .from('platform_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .eq('role', 'super_admin')
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('has_platform_role', {
+    _user_id: userId,
+    _role: 'super_admin',
+  });
   if (error) {
-    console.error('[isSuperAdminApi] query failed — admin features will be unavailable', error);
+    console.error('[isSuperAdminApi] rpc failed — admin features will be unavailable', error);
     return false;
   }
   return Boolean(data);

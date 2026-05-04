@@ -14,7 +14,15 @@ A **Baratona** é uma plataforma web mobile-first para criar e participar de rot
 
 ---
 
-## 2) Stack técnica
+## 2) Infraestrutura Supabase
+
+**Projeto ativo:** `lgicuwgpcyhouiyjviyw` — `https://lgicuwgpcyhouiyjviyw.supabase.co`
+
+> Em 2026-05-04, o projeto foi migrado do ID `tqwnkfcinbbcnydbcjil` para este novo projeto, com todas as 30 migrations aplicadas em ordem. O cliente Supabase lê as credenciais exclusivamente via variáveis de ambiente (`.env`) — nenhum ID de projeto está hardcoded no código-fonte.
+
+---
+
+## 3) Stack técnica
 
 ### Frontend
 - **React 18 + TypeScript + Vite**
@@ -34,7 +42,7 @@ A **Baratona** é uma plataforma web mobile-first para criar e participar de rot
 
 ---
 
-## 3) Estrutura de pastas
+## 4) Estrutura de pastas
 
 ```text
 src/
@@ -103,27 +111,27 @@ supabase/
 
 ---
 
-## 4) Dois contextos de execução
+## 5) Dois contextos de execução
 
-### 4.1 Contexto legado (`/nei`, `/admin`)
+### 5.1 Contexto legado (`/nei`, `/admin`)
 
 Usa `BaratonaProvider` + hooks legados (`useSupabaseData`, `useCheckins`, `useAchievements`), que acessam as tabelas originais: `participants`, `bars`, `app_config`, `votes`, `consumption`, `checkins`, `achievements`.
 
 O modo `/nei` ativa `setLegacyReadOnly(true)` — todos os hooks legados bloqueiam escrita e exibem toast informativo.
 
-### 4.2 Contexto de plataforma (`/baratona/:slug/*`)
+### 5.2 Contexto de plataforma (`/baratona/:slug/*`)
 
 Usa `EventBaratonaProvider`, que implementa a **mesma interface** `BaratonaContext` para que todos os componentes de domínio funcionem sem modificação. Os dados vêm das tabelas `event_*` filtradas por `event_id`.
 
 **Por que o cast `as any`?** IDs de bar no contexto de plataforma são UUIDs (`string`), enquanto o tipo original usa `number`. O cast é isolado em `EventBaratonaContext.tsx:157` e documentado.
 
-### 4.3 Hook compartilhado
+### 5.3 Hook compartilhado
 
 `useBaratonaComputed` (novo) contém `getProjectedTime`, `getCurrentBar` e `getNextBar` — usados por ambos os providers sem duplicação.
 
 ---
 
-## 5) Arquitetura de rotas
+## 6) Arquitetura de rotas
 
 ```text
 /                           Home institucional
@@ -144,9 +152,9 @@ Todas as rotas secundárias são lazy-loaded via `React.lazy` + `Suspense`.
 
 ---
 
-## 6) Modelo de dados
+## 7) Modelo de dados
 
-### 6.1 Tabelas de plataforma (novas)
+### 7.1 Tabelas de plataforma (novas)
 
 | Tabela | Descrição |
 |---|---|
@@ -163,24 +171,29 @@ Todas as rotas secundárias são lazy-loaded via `React.lazy` + `Suspense`.
 | `event_invites` | Códigos de convite com limite de usos e expiração |
 | `event_bar_favorites` | Favoritos de bar por usuário (para circuitos especiais) |
 
-### 6.2 Tabelas legadas (mantidas)
+### 7.2 Tabelas legadas (mantidas)
 
 `participants`, `bars`, `app_config`, `votes`, `consumption`, `checkins`, `achievements`
 
-### 6.3 RPCs principais
+### 7.3 RPCs principais
 
-| RPC | Finalidade |
-|---|---|
-| `get_public_events_with_counts` | Listagem pública com bar_count + member_count em 1 query |
-| `get_events_by_owner` | Eventos do owner com contagens (substitui N+1) |
-| `get_events_joined_by_user` | Eventos em que o usuário participa com contagens |
-| `get_bar_favorite_counts` | Contagem de favoritos por bar |
-| `create_baratona_from_favorites` | Cria evento a partir de bares favoritos de um circuito |
-| `redeem_event_invite` | Valida e resgata código de convite |
+| RPC | Caller | Finalidade |
+|---|---|---|
+| `get_public_events_with_counts` | anon + authenticated | Listagem pública com bar_count + member_count em 1 query |
+| `get_events_by_owner` | authenticated | Eventos do owner com contagens (substitui N+1) |
+| `get_events_joined_by_user` | authenticated | Eventos em que o usuário participa com contagens |
+| `get_bar_favorite_counts` | authenticated | Contagem de favoritos por bar |
+| `get_user_bar_catalog` | authenticated | Catálogo de bares usados pelo owner em eventos anteriores |
+| `create_baratona_from_favorites` | authenticated | Cria evento a partir de bares favoritos de um circuito |
+| `redeem_event_invite` | authenticated | Valida e resgata código de convite |
+| `reorder_event_bars` | authenticated (owner) | Reordena bares de forma atômica (PL/pgSQL, sem N+1) |
+| `has_platform_role` | authenticated (SECURITY DEFINER) | Verifica papel global sem depender de RLS em `platform_roles` |
+| `admin_list_all_events` | authenticated (super_admin) | Lista todos os eventos da plataforma |
+| `admin_set_platform_role` | authenticated (super_admin) | Concede/revoga papel em `platform_roles` |
 
 ---
 
-## 7) Camada de API (`src/lib/api/`)
+## 8) Camada de API (`src/lib/api/`)
 
 Módulos independentes re-exportados por `src/lib/api/index.ts` (e por `platformApi.ts` como barrel deprecated):
 
@@ -195,7 +208,7 @@ Módulos independentes re-exportados por `src/lib/api/index.ts` (e por `platform
 
 ---
 
-## 8) Diagrama textual de componentes
+## 9) Diagrama textual de componentes
 
 ```text
 main.tsx
@@ -231,9 +244,9 @@ main.tsx
 
 ---
 
-## 9) Fluxos principais
+## 10) Fluxos principais
 
-### 9.1 Criar e participar de evento (plataforma)
+### 10.1 Criar e participar de evento (plataforma)
 1. Usuário faz login com Google (`usePlatformAuth` → Supabase Auth OAuth).
 2. `ensureProfile` cria/atualiza `profiles`.
 3. Wizard `/criar` chama `createEventApi` (insere `events` + `event_members` + `event_app_config`).
@@ -241,21 +254,21 @@ main.tsx
 5. Participante entra via link público ou código de convite (`redeemInviteApi`).
 6. Modo ao vivo em `/baratona/:slug/live` usa `EventBaratonaProvider`.
 
-### 9.2 Circuito especial (ex.: Comida di Buteco)
+### 10.2 Circuito especial (ex.: Comida di Buteco)
 1. Evento criado com `event_type = 'special_circuit'`.
 2. Admin pode importar bares via Edge Function `scrape-comida-di-boteco`.
 3. `SpecialCircuitLanding` exibe grid com filtros (bairro, busca, favoritos).
 4. Usuário marca favoritos (`toggleBarFavoriteApi`) e cria sua baratona via `createBaratonaFromFavoritesApi` (RPC, mín. 3 / máx. 15 bares).
 
-### 9.3 Sincronização em tempo real
+### 10.3 Sincronização em tempo real
 Cada hook em `useEventData.ts` abre um canal Supabase Realtime filtrado por `event_id`. Ao detectar mudança, executa refetch. Combinado com atualização otimista + retry (`useRetry`), garante UX fluida mesmo com conectividade instável.
 
-### 9.4 Retrospectiva (Wrapped)
+### 10.4 Retrospectiva (Wrapped)
 Quando `event_app_config.status = 'finished'`, `EventLive` exibe botão para `EventWrapped`. Métricas são calculadas client-side a partir de consumo, check-ins, votos e conquistas.
 
 ---
 
-## 10) Segurança e RLS
+## 11) Segurança e RLS
 
 | Tabela | SELECT | INSERT | UPDATE/DELETE |
 |---|---|---|---|
@@ -263,14 +276,14 @@ Quando `event_app_config.status = 'finished'`, `EventLive` exibe botão para `Ev
 | `event_members` | membros do evento | usuário logado + (evento público OU owner OU convite válido) | — |
 | `event_bars` | membros | owner | owner |
 | `event_*` (config, votes, etc.) | membros | próprio user_id | próprio user_id |
-| `profiles` | público | `auth.uid() = id` | `auth.uid() = id` |
+| `profiles` | authenticated (qualquer usuário logado) | `auth.uid() = user_id` | `auth.uid() = user_id` |
 | `platform_roles` | próprio user_id | — | — |
 
 **Atenção**: tabelas legadas (`bars`, `participants`, `consumption`, etc.) têm RLS permissivo. A proteção de escrita no `/nei` é feita via `isLegacyReadOnly()` no frontend.
 
 ---
 
-## 11) Observabilidade e confiabilidade
+## 12) Observabilidade e confiabilidade
 
 - `AppErrorBoundary` previne crash total da UI.
 - `useRetry` com backoff exponencial em todas as operações críticas (3 tentativas, base 1s).
@@ -280,7 +293,7 @@ Quando `event_app_config.status = 'finished'`, `EventLive` exibe botão para `Ev
 
 ---
 
-## 12) Constantes de plataforma (`src/lib/constants.ts`)
+## 13) Constantes de plataforma (`src/lib/constants.ts`)
 
 | Constante | Uso |
 |---|---|
@@ -290,7 +303,7 @@ Quando `event_app_config.status = 'finished'`, `EventLive` exibe botão para `Ev
 
 ---
 
-## 13) Guia para novos contribuidores
+## 14) Guia para novos contribuidores
 
 1. Leia `src/App.tsx` para entender as rotas e os dois contextos.
 2. Para funcionalidades de evento, explore `src/contexts/EventBaratonaContext.tsx` e `src/hooks/useEventData.ts`.
@@ -301,7 +314,7 @@ Quando `event_app_config.status = 'finished'`, `EventLive` exibe botão para `Ev
 
 ---
 
-## 14) Roadmap técnico
+## 15) Roadmap técnico
 
 ### Curto prazo
 - Testes de integração dos hooks de plataforma (`useEventConsumption`, `useEventCheckins`).

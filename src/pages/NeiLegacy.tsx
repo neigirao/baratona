@@ -40,7 +40,7 @@ export default function NeiLegacy() {
 
   return (
     <>
-      <div className="sticky top-0 z-50 bg-amber-500/90 text-black text-xs sm:text-sm py-2 px-3 flex items-center justify-center gap-2 font-semibold backdrop-blur-sm">
+      <div className="sticky top-0 z-50 bg-primary/90 text-primary-foreground text-xs sm:text-sm py-2 px-3 flex items-center justify-center gap-2 font-semibold backdrop-blur-sm">
         <Lock className="w-3.5 h-3.5" />
         <span>Modo somente leitura — evento legado /nei</span>
       </div>

@@ -120,6 +120,10 @@ export default function PlatformAdmin() {
             <EventsPanel events={events} loading={eventsLoading} onChanged={refreshEvents} />
           </TabsContent>
 
+          <TabsContent value="users" className="mt-4">
+            <UsersPanel />
+          </TabsContent>
+
           <TabsContent value="roles" className="mt-4">
             <RolesPanel roles={roles} onChanged={refreshRoles} />
           </TabsContent>

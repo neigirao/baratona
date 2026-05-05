@@ -97,37 +97,37 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
-            <Link to={`/baratona/${slug}`}><ChevronLeft className="w-5 h-5" /></Link>
+            <Link to={`/baratona/${slug}`} aria-label="Voltar"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
           <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
+            <h1 className="font-heading text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
               <Settings className="w-5 h-5 text-primary" /> Admin — {event.name}
             </h1>
-            <p className="text-xs text-muted-foreground">{event.city} · {event.visibility === 'public' ? 'Público' : 'Privado'}</p>
+            <p className="text-xs text-foreground-2 uppercase tracking-wider">{event.city} · {event.visibility === 'public' ? 'Público' : 'Privado'}</p>
           </div>
         </div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('bars')}>
+          <Card className="bg-card border-border cursor-pointer hover:border-primary/50 hover:shadow-gold-md transition-all duration-ui" onClick={() => setActiveTab('bars')}>
             <CardContent className="py-3 text-center">
               <Beer className="w-5 h-5 mx-auto text-primary mb-1" />
-              <p className="text-xl font-bold">{bars.length}</p>
-              <p className="text-[10px] text-muted-foreground">Bares</p>
+              <p className="font-display text-2xl tracking-wider text-foreground">{bars.length}</p>
+              <p className="text-[10px] text-foreground-2 uppercase tracking-widest">Bares</p>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('retro')}>
+          <Card className="bg-card border-border cursor-pointer hover:border-primary/50 hover:shadow-gold-md transition-all duration-ui" onClick={() => setActiveTab('retro')}>
             <CardContent className="py-3 text-center">
               <Users className="w-5 h-5 mx-auto text-primary mb-1" />
-              <p className="text-xl font-bold">{members.length}</p>
-              <p className="text-[10px] text-muted-foreground">Participantes</p>
+              <p className="font-display text-2xl tracking-wider text-foreground">{members.length}</p>
+              <p className="text-[10px] text-foreground-2 uppercase tracking-widest">Participantes</p>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => setActiveTab('status')}>
+          <Card className="bg-card border-border cursor-pointer hover:border-primary/50 hover:shadow-gold-md transition-all duration-ui" onClick={() => setActiveTab('status')}>
             <CardContent className="py-3 text-center">
               <Radio className="w-5 h-5 mx-auto text-primary mb-1" />
-              <p className="text-xl font-bold capitalize">{appConfig?.status ?? '—'}</p>
-              <p className="text-[10px] text-muted-foreground">Status</p>
+              <p className="font-display text-base tracking-wide capitalize text-foreground">{appConfig?.status ?? '—'}</p>
+              <p className="text-[10px] text-foreground-2 uppercase tracking-widest">Status</p>
             </CardContent>
           </Card>
         </div>
@@ -219,7 +219,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
           </TabsContent>
 
           <TabsContent value="retro" className="space-y-3 mt-4">
-            <Button onClick={() => setShowWrapped(true)} variant="secondary" className="w-full">
+            <Button onClick={() => setShowWrapped(true)} variant="gold" size="lg" className="w-full">
               <PartyPopper className="w-4 h-4 mr-2" /> Abrir Wrapped do evento
             </Button>
             <EventRetrospective isCircuit={isCircuit} />

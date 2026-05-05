@@ -35,7 +35,7 @@ export function ConsumptionCounter() {
   const [clickedDrinkType, setClickedDrinkType] = useState<string | null>(null);
   
   // Debounce timer ref
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastDrinkSubtype = useRef<string | null>(null);
   
   const currentBar = getCurrentBar();

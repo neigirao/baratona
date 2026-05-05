@@ -80,70 +80,72 @@ export function BarCheckin({ onCheckinSuccess }: BarCheckinProps) {
   
   return (
     <>
-      <div className="bg-card rounded-2xl p-4 border border-border animate-slide-up">
+      <div className="bg-card rounded-xl p-4 border border-border shadow-card animate-slide-up">
         {/* Current bar header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <MapPin className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">
+              <h3 className="font-heading font-semibold text-foreground">
                 {currentBar.name}
               </h3>
-              <p className="text-xs text-muted-foreground">{currentBar.address}</p>
+              <p className="text-xs text-foreground-2">{currentBar.address}</p>
             </div>
           </div>
-          
+
           {/* Checked in count */}
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-1 text-foreground-2">
             <Users className="w-4 h-4" />
-            <span className="text-sm font-semibold">{checkedInParticipants.length}</span>
+            <span className="text-sm font-display tracking-wide">{checkedInParticipants.length}</span>
           </div>
         </div>
-        
+
         {/* Check-in button */}
         <button
           onClick={handleToggleCheckin}
-          className={`w-full py-4 rounded-xl font-display font-bold text-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${
-            userIsCheckedIn 
-              ? 'bg-baratona-green text-white shadow-lg shadow-baratona-green/30' 
-              : 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+          className={`w-full py-4 rounded-xl font-display font-bold text-lg tracking-wider transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-gold-md ${
+            userIsCheckedIn
+              ? 'bg-success text-success-foreground'
+              : 'bg-gradient-to-r from-primary-light to-primary text-primary-foreground hover:shadow-gold-lg'
           }`}
         >
           {userIsCheckedIn ? (
             <>
               <Check className="w-6 h-6" />
-              {language === 'pt' ? 'Estou aqui! ✓' : "I'm here! ✓"}
+              {language === 'pt' ? 'ESTOU AQUI ✓' : "I'M HERE ✓"}
             </>
           ) : (
             <>
               <MapPin className="w-6 h-6" />
-              {language === 'pt' ? 'Cheguei!' : 'I arrived!'}
+              {language === 'pt' ? 'CHEGUEI!' : 'I ARRIVED!'}
             </>
           )}
         </button>
-        
+
         {/* Checked in participants list with avatars */}
         {checkedInParticipants.length > 0 ? (
           <div className="mt-4 pt-3 border-t border-border">
-            <p className="text-xs text-muted-foreground mb-2">
-              {language === 'pt' ? 'Quem está aqui:' : 'Who is here:'}
+            <p className="text-xs text-foreground-2 mb-2 uppercase tracking-wider">
+              {language === 'pt' ? 'Quem está aqui' : 'Who is here'}
             </p>
             <div className="flex flex-wrap gap-2">
               {checkedInParticipants.map(p => (
-                <div 
+                <div
                   key={p.id}
                   className="flex items-center gap-1.5"
                 >
-                  <ParticipantAvatar 
-                    name={p.name} 
+                  <ParticipantAvatar
+                    name={p.name}
                     isCurrentUser={p.id === currentUser.id}
                     size="sm"
                   />
-                  <span 
+                  <span
                     className={`text-xs ${
-                      p.id === currentUser.id 
-                        ? 'text-baratona-green font-semibold' 
-                        : 'text-muted-foreground'
+                      p.id === currentUser.id
+                        ? 'text-success font-semibold'
+                        : 'text-foreground-2'
                     }`}
                   >
                     {p.name}
@@ -155,15 +157,15 @@ export function BarCheckin({ onCheckinSuccess }: BarCheckinProps) {
           </div>
         ) : (
           <div className="mt-4 pt-3 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground italic">
-              {language === 'pt' 
-                ? 'Ninguém fez check-in ainda. Seja o primeiro! 🎉' 
+            <p className="text-xs text-foreground-2 italic">
+              {language === 'pt'
+                ? 'Ninguém fez check-in ainda. Seja o primeiro! 🎉'
                 : 'No one checked in yet. Be the first! 🎉'}
             </p>
           </div>
         )}
       </div>
-      
+
       {/* Checkout confirmation dialog */}
       <CheckoutConfirmDialog
         open={showCheckoutConfirm}

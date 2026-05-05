@@ -192,7 +192,7 @@ export function ConsumptionCounter() {
           <span className="text-sm font-medium">{t.drink}</span>
         </div>
         
-        <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="grid grid-cols-2 min-[400px]:grid-cols-4 gap-2 mb-3">
           {DRINK_TYPES.map((type) => (
             <button
               key={type.key}

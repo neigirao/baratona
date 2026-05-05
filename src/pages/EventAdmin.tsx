@@ -108,7 +108,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           <Card className="bg-card border-border cursor-pointer hover:border-primary/50 hover:shadow-gold-md transition-all duration-ui" onClick={() => setActiveTab('bars')}>
             <CardContent className="py-3 text-center">
               <Beer className="w-5 h-5 mx-auto text-primary mb-1" />

@@ -83,13 +83,13 @@ export default function PlatformAdmin() {
         </div>
 
         <Tabs defaultValue="stats">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="stats">Visão Geral</TabsTrigger>
-            <TabsTrigger value="activity">Atividade</TabsTrigger>
-            <TabsTrigger value="reports">Relatórios</TabsTrigger>
-            <TabsTrigger value="alerts">Alertas</TabsTrigger>
-            <TabsTrigger value="events">Eventos ({events.length})</TabsTrigger>
-            <TabsTrigger value="roles">Papéis ({roles.length})</TabsTrigger>
+          <TabsList className="flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="stats" className="text-xs sm:text-sm">Visão Geral</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs sm:text-sm">Atividade</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">Relatórios</TabsTrigger>
+            <TabsTrigger value="alerts" className="text-xs sm:text-sm">Alertas</TabsTrigger>
+            <TabsTrigger value="events" className="text-xs sm:text-sm">Eventos ({events.length})</TabsTrigger>
+            <TabsTrigger value="roles" className="text-xs sm:text-sm">Papéis ({roles.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="stats" className="mt-4">

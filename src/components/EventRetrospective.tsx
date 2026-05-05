@@ -172,6 +172,7 @@ export function EventRetrospective({ isCircuit = false }: Props) {
             {dishRanking.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum voto em petisco ainda.</p>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -196,6 +197,7 @@ export function EventRetrospective({ isCircuit = false }: Props) {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

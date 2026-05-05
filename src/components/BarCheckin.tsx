@@ -91,7 +91,7 @@ export function BarCheckin({ onCheckinSuccess }: BarCheckinProps) {
               <h3 className="font-heading font-semibold text-foreground">
                 {currentBar.name}
               </h3>
-              <p className="text-xs text-foreground-2">{currentBar.address}</p>
+              <p className="text-xs text-foreground-2 line-clamp-1">{currentBar.address}</p>
             </div>
           </div>
 

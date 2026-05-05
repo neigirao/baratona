@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry } from '@/hooks/useRetry';
 import { isLegacyReadOnly } from '@/lib/legacyMode';
@@ -14,13 +14,16 @@ interface Checkin {
 export function useCheckins() {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
+  const channelId = useRef(`checkins-${crypto.randomUUID()}`);
+  const fetchVersion = useRef(0);
 
   const fetchCheckins = useCallback(async () => {
+    const v = ++fetchVersion.current;
     const { data, error } = await supabase
       .from('checkins')
       .select('*');
-    
-    if (!error && data) {
+
+    if (!error && data && v === fetchVersion.current) {
       setCheckins(data);
     }
     setLoading(false);
@@ -29,9 +32,8 @@ export function useCheckins() {
   useEffect(() => {
     fetchCheckins();
 
-    // Subscribe to realtime changes
     const channel = supabase
-      .channel('checkins-changes')
+      .channel(channelId.current)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'checkins' },

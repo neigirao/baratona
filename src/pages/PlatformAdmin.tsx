@@ -90,6 +90,7 @@ export default function PlatformAdmin() {
             <TabsTrigger value="reports" className="text-xs sm:text-sm">Relatórios</TabsTrigger>
             <TabsTrigger value="alerts" className="text-xs sm:text-sm">Alertas</TabsTrigger>
             <TabsTrigger value="events" className="text-xs sm:text-sm">Eventos ({events.length})</TabsTrigger>
+            <TabsTrigger value="users" className="text-xs sm:text-sm">Usuários</TabsTrigger>
             <TabsTrigger value="roles" className="text-xs sm:text-sm">Papéis ({roles.length})</TabsTrigger>
           </TabsList>
 

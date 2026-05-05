@@ -11,88 +11,74 @@ const DRINK_TYPES = [
 ];
 
 export function ConsumptionCounter() {
-  const { 
-    currentUser, 
-    addDrink: contextAddDrink,
-    updateConsumption, 
-    getParticipantConsumption, 
+  const {
+    currentUser,
+    updateConsumption,
+    getParticipantConsumption,
     getTotalParticipantConsumption,
     getCurrentBar,
     currentBarId,
-    t, 
-    language 
+    consumption,
+    t,
+    language,
   } = useBaratona();
-  
-  // Track pending drink deltas per subtype so each type is saved correctly
+
   const [pendingBySubtype, setPendingBySubtype] = useState<Record<string, number>>({});
   const [pendingFood, setPendingFood] = useState(0);
-  const [jokeCount, setJokeCount] = useState(() => {
-    const saved = localStorage.getItem('baratona_jokes');
-    return saved ? parseInt(saved, 10) : 0;
-  });
+  const [pendingJokes, setPendingJokes] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
   const [clickedDrinkType, setClickedDrinkType] = useState<string | null>(null);
 
   const pendingDrinks = Object.values(pendingBySubtype).reduce((s, n) => s + n, 0);
-
-  // Debounce timer ref
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+
   const currentBar = getCurrentBar();
-  
-  // Get consumption for current bar and total
-  const barConsumption = currentUser 
+
+  const barConsumption = currentUser
     ? getParticipantConsumption(currentUser.id, currentBarId)
     : { drinks: 0, food: 0 };
-  const totalConsumption = currentUser 
+  const totalConsumption = currentUser
     ? getTotalParticipantConsumption(currentUser.id)
     : { drinks: 0, food: 0 };
-  
-  const hasPendingChanges = pendingDrinks !== 0 || pendingFood !== 0;
 
-  
-  // Calculate display values (database + pending)
+  // Joke count from DB (type='joke', bar_id=null, event-scoped)
+  const dbJokeCount = currentUser
+    ? (consumption as any[])
+        .filter((c) => (c.user_id || c.participant_id) === currentUser.id && c.type === 'joke')
+        .reduce((s: number, c: any) => s + c.count, 0)
+    : 0;
+  const displayJokes = dbJokeCount + pendingJokes;
+
+  const hasPendingChanges = pendingDrinks !== 0 || pendingFood !== 0 || pendingJokes !== 0;
   const displayDrinks = barConsumption.drinks + pendingDrinks;
   const displayFood = barConsumption.food + pendingFood;
-  
-  // Auto-save with debounce
+
   const saveChanges = useCallback(async () => {
-    if (!currentUser || (pendingDrinks === 0 && pendingFood === 0)) return;
-    
+    if (!currentUser || !hasPendingChanges) return;
     setIsSaving(true);
-    
     try {
       const promises: Promise<boolean>[] = [];
 
-      // Save each drink subtype separately so stats are accurate
       for (const [subtype, delta] of Object.entries(pendingBySubtype)) {
-        if (delta !== 0) {
-          promises.push(updateConsumption(currentUser.id, 'drink', delta, currentBarId, subtype));
-        }
+        if (delta !== 0) promises.push(updateConsumption(currentUser.id, 'drink', delta, currentBarId, subtype));
       }
-
-      if (pendingFood !== 0) {
-        promises.push(updateConsumption(currentUser.id, 'food', pendingFood, currentBarId));
-      }
+      if (pendingFood !== 0) promises.push(updateConsumption(currentUser.id, 'food', pendingFood, currentBarId));
+      // Jokes stored with bar_id=null so they're event-scoped, not bar-scoped
+      if (pendingJokes !== 0) promises.push(updateConsumption(currentUser.id, 'joke' as any, pendingJokes, null));
 
       const results = await Promise.all(promises);
-      const allSucceeded = results.every(r => r);
-
-      if (allSucceeded) {
+      if (results.every(r => r)) {
         setPendingBySubtype({});
         setPendingFood(0);
-        
-        // Show visual feedback
+        setPendingJokes(0);
         setShowSavedFeedback(true);
         setTimeout(() => setShowSavedFeedback(false), 1500);
-        
-        // Haptic feedback for save
         if ('vibrate' in navigator) navigator.vibrate([50, 30, 50]);
       } else {
         throw new Error('Some updates failed');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: language === 'pt' ? 'Erro' : 'Error',
         description: language === 'pt' ? 'Falha ao salvar consumo' : 'Failed to save consumption',
@@ -101,25 +87,21 @@ export function ConsumptionCounter() {
     } finally {
       setIsSaving(false);
     }
-  }, [pendingBySubtype, pendingFood, currentUser, currentBarId, updateConsumption, language]);
-  
-  // Debounced auto-save effect
+  }, [pendingBySubtype, pendingFood, pendingJokes, hasPendingChanges, currentUser, currentBarId, updateConsumption, language]);
+
   useEffect(() => {
     if (hasPendingChanges && currentUser) {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => { saveChanges(); }, 2000);
     }
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [pendingBySubtype, pendingFood, hasPendingChanges, saveChanges, currentUser]);
-  
-  // Early return AFTER all hooks
+  }, [pendingBySubtype, pendingFood, pendingJokes, hasPendingChanges, saveChanges, currentUser]);
+
   if (!currentUser) return null;
-  
+
   const handleAddDrink = (amount: number = 1, drinkTypeKey?: string) => {
     const key = drinkTypeKey || '__none__';
-    // Guard: don't let the total go below zero
-    const currentCount = (barConsumption.drinks + pendingDrinks);
-    if (amount < 0 && currentCount <= 0) return;
+    if (amount < 0 && barConsumption.drinks + pendingDrinks <= 0) return;
     setPendingBySubtype(prev => ({ ...prev, [key]: (prev[key] || 0) + amount }));
     if ('vibrate' in navigator) navigator.vibrate(30);
     if (drinkTypeKey) {
@@ -127,43 +109,33 @@ export function ConsumptionCounter() {
       setTimeout(() => setClickedDrinkType(null), 300);
     }
   };
-  
-  
+
   const handleAddFood = (amount: number = 1) => {
     setPendingFood(prev => prev + amount);
     if ('vibrate' in navigator) navigator.vibrate(30);
   };
 
-  const handleAddJoke = () => {
-    setJokeCount(prev => {
-      const next = prev + 1;
-      localStorage.setItem('baratona_jokes', String(next));
-      return next;
-    });
-    if ('vibrate' in navigator) navigator.vibrate(30);
-  };
-
-  const handleRemoveJoke = () => {
-    if (jokeCount > 0) {
-      setJokeCount(prev => {
-        const next = prev - 1;
-        localStorage.setItem('baratona_jokes', String(next));
-        return next;
-      });
-      if ('vibrate' in navigator) navigator.vibrate(30);
-    }
-  };
-  
   const handleRemoveFood = () => {
     if (displayFood > 0) {
       setPendingFood(prev => prev - 1);
       if ('vibrate' in navigator) navigator.vibrate(30);
     }
   };
-  
+
+  const handleAddJoke = (amount = 1) => {
+    setPendingJokes(prev => prev + amount);
+    if ('vibrate' in navigator) navigator.vibrate(30);
+  };
+
+  const handleRemoveJoke = () => {
+    if (displayJokes > 0) {
+      setPendingJokes(prev => prev - 1);
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    }
+  };
+
   return (
     <div className="bg-card rounded-2xl p-4 border border-border animate-slide-up relative overflow-hidden">
-      {/* Saved feedback overlay */}
       {showSavedFeedback && (
         <div className="absolute inset-0 bg-baratona-green/20 flex items-center justify-center z-10 animate-fade-in">
           <div className="bg-baratona-green text-white px-4 py-2 rounded-full flex items-center gap-2 font-semibold">
@@ -172,35 +144,34 @@ export function ConsumptionCounter() {
           </div>
         </div>
       )}
-      
-      {/* Current bar indicator */}
+
       {currentBar && (
         <div className="flex items-center justify-center gap-2 mb-3 text-xs text-muted-foreground">
           <MapPin className="w-3 h-3 text-primary" />
           <span>{currentBar.name}</span>
         </div>
       )}
-      
+
       <h3 className="text-center font-display text-sm font-semibold text-muted-foreground mb-4">
         {language === 'pt' ? 'Meu Consumo Neste Bar' : 'My Consumption Here'}
       </h3>
-      
-      {/* Drink Type Buttons Grid */}
+
+      {/* Bebidas */}
       <div className="mb-4">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Beer className="w-5 h-5 text-primary" />
           <span className="text-sm font-medium">{t.drink}</span>
         </div>
-        
+
         <div className="grid grid-cols-2 min-[400px]:grid-cols-4 gap-2 mb-3">
           {DRINK_TYPES.map((type) => (
             <button
               key={type.key}
               onClick={() => handleAddDrink(1, type.key)}
               className={`
-                relative flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-150
-                ${clickedDrinkType === type.key 
-                  ? 'bg-primary scale-110 border-primary shadow-lg shadow-primary/40' 
+                relative flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all duration-150
+                ${clickedDrinkType === type.key
+                  ? 'bg-primary scale-110 border-primary shadow-lg shadow-primary/40'
                   : 'bg-primary/10 border-primary/20 hover:bg-primary/20 active:scale-95'
                 }
               `}
@@ -219,11 +190,10 @@ export function ConsumptionCounter() {
             </button>
           ))}
         </div>
-        
-        {/* Total drinks display */}
+
         <div className="flex items-center justify-center">
           <div className="flex flex-col items-center">
-            <span className="text-xs text-muted-foreground">{language === 'pt' ? 'Total' : 'Total'}</span>
+            <span className="text-xs text-muted-foreground">Total</span>
             <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingDrinks !== 0 ? 'scale-110' : ''}`}>
               {displayDrinks}
             </span>
@@ -235,24 +205,18 @@ export function ConsumptionCounter() {
           </div>
         </div>
       </div>
-      
-      <div className="border-t border-border pt-4">
-        {/* Food Section */}
+
+      <div className="border-t border-border pt-4 space-y-4">
+        {/* Comida */}
         <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             <Utensils className="w-5 h-5 text-secondary" />
             <span className="text-sm font-medium">{t.food}</span>
           </div>
-          
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleRemoveFood}
-              className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10"
-              disabled={displayFood === 0}
-            >
+            <button onClick={handleRemoveFood} className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10" disabled={displayFood === 0}>
               <Minus className="w-5 h-5 text-secondary-foreground" />
             </button>
-            
             <div className="flex flex-col items-center min-w-[3.5rem]">
               <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingFood !== 0 ? 'scale-110' : ''}`}>
                 {displayFood}
@@ -263,78 +227,53 @@ export function ConsumptionCounter() {
                 </span>
               )}
             </div>
-            
-            <button
-              onClick={() => handleAddFood(1)}
-              className="counter-btn counter-btn-yellow w-10 h-10"
-            >
+            <button onClick={() => handleAddFood(1)} className="counter-btn counter-btn-yellow w-10 h-10">
               <Plus className="w-5 h-5 text-secondary-foreground" />
             </button>
           </div>
-      
-      {/* Joke Counter Section */}
-      <div className="border-t border-border pt-4 mt-4">
-        <div className="flex flex-col items-center gap-3">
+          <button onClick={() => handleAddFood(5)} className="text-xs px-3 py-1.5 rounded-full bg-secondary/10 text-secondary font-semibold hover:bg-secondary/20 transition-colors">
+            +5 🍴
+          </button>
+        </div>
+
+        {/* Piadas */}
+        <div className="border-t border-border pt-4 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             <Laugh className="w-5 h-5 text-primary" />
             <span className="text-sm font-medium">{language === 'pt' ? 'Piadas' : 'Jokes'}</span>
           </div>
-          
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleRemoveJoke}
-              className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10"
-              disabled={jokeCount === 0}
-            >
+            <button onClick={handleRemoveJoke} className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10" disabled={displayJokes === 0}>
               <Minus className="w-5 h-5 text-secondary-foreground" />
             </button>
-            
             <div className="flex flex-col items-center min-w-[3.5rem]">
-              <span className="font-display text-3xl font-bold text-foreground">
-                {jokeCount}
+              <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingJokes !== 0 ? 'scale-110' : ''}`}>
+                {displayJokes}
               </span>
+              {pendingJokes !== 0 && (
+                <span className="text-xs font-semibold text-baratona-green">+{pendingJokes}</span>
+              )}
             </div>
-            
-            <button
-              onClick={handleAddJoke}
-              className="counter-btn counter-btn-yellow w-10 h-10"
-            >
+            <button onClick={() => handleAddJoke()} className="counter-btn counter-btn-yellow w-10 h-10">
               <Plus className="w-5 h-5 text-secondary-foreground" />
             </button>
           </div>
-          
-          <button
-            onClick={() => { for (let i = 0; i < 5; i++) handleAddJoke(); }}
-            className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
-          >
+          <button onClick={() => handleAddJoke(5)} className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors">
             +5 😂
           </button>
         </div>
       </div>
-          {/* Quick add +5 button */}
-          <button
-            onClick={() => handleAddFood(5)}
-            className="text-xs px-3 py-1.5 rounded-full bg-secondary/10 text-secondary font-semibold hover:bg-secondary/20 transition-colors"
-          >
-            +5 🍴
-          </button>
-        </div>
-      </div>
-        
+
       {/* Auto-save indicator */}
       <div className="mt-4 flex items-center justify-center">
         {isSaving ? (
-          <span className="text-xs text-muted-foreground animate-pulse">
-            {language === 'pt' ? 'Salvando...' : 'Saving...'}
-          </span>
+          <span className="text-xs text-muted-foreground animate-pulse">{language === 'pt' ? 'Salvando...' : 'Saving...'}</span>
         ) : hasPendingChanges ? (
-          <span className="text-xs text-muted-foreground">
-            {language === 'pt' ? 'Salvando automaticamente...' : 'Auto-saving...'}
-          </span>
+          <span className="text-xs text-muted-foreground">{language === 'pt' ? 'Salvando automaticamente...' : 'Auto-saving...'}</span>
         ) : null}
       </div>
-      
-      {/* Total consumption summary */}
+
+      {/* Resumo total */}
       <div className="mt-4 pt-3 border-t border-border">
         <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">

@@ -54,21 +54,22 @@ export function AlertsPanel({ events }: Props) {
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
   const publishedNoMembers = events.filter(
-    (e) => (e as any).status === 'published' && e.memberCount <= 1,
+    (e) => e.status === 'published' && e.memberCount <= 1,
   );
 
   const staleDrafts = events.filter(
     (e) =>
-      (e as any).status === 'draft' &&
+      e.status === 'draft' &&
       e.createdAt &&
       now - new Date(e.createdAt).getTime() > sevenDaysMs,
   );
 
-  const barsNoCheckins = events.filter(
+  // Published events with bars but only 1 member (the owner) — likely no real participants yet
+  const publishedLowEngagement = events.filter(
     (e) =>
-      (e as any).status === 'published' &&
+      e.status === 'published' &&
       e.barCount > 0 &&
-      e.memberCount > 1,
+      e.memberCount <= 1,
   );
 
   return (
@@ -123,17 +124,17 @@ export function AlertsPanel({ events }: Props) {
       />
 
       <AlertGroup
-        title={`Publicados com bares mas sem check-ins recentes`}
+        title={`Publicados com bares mas sem participantes (${publishedLowEngagement.length})`}
         icon={MapPin}
-        empty="Sem alertas de engajamento no momento."
+        empty="Todos os eventos publicados têm participantes."
         items={
-          barsNoCheckins.length > 0 ? (
+          publishedLowEngagement.length > 0 ? (
             <div>
-              {barsNoCheckins.slice(0, 10).map((e) => (
+              {publishedLowEngagement.slice(0, 10).map((e) => (
                 <AlertItem
                   key={e.id}
                   label={e.name}
-                  sub={`${e.barCount} bares · ${e.memberCount} membros`}
+                  sub={`${e.city ?? 'Sem cidade'} · ${e.barCount} bares · ${e.memberCount} membro(s)`}
                   href={`/baratona/${e.slug}`}
                 />
               ))}

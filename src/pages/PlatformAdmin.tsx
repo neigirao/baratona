@@ -15,6 +15,7 @@ import { StatsPanel } from '@/components/admin/StatsPanel';
 import { ActivityPanel } from '@/components/admin/ActivityPanel';
 import { ReportsPanel } from '@/components/admin/ReportsPanel';
 import { AlertsPanel } from '@/components/admin/AlertsPanel';
+import { UsersPanel } from '@/components/admin/UsersPanel';
 
 type EventRow = PlatformEvent & { barCount: number; memberCount: number };
 

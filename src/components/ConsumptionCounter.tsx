@@ -23,8 +23,8 @@ export function ConsumptionCounter() {
     language 
   } = useBaratona();
   
-  // Local pending changes (delta from current database value)
-  const [pendingDrinks, setPendingDrinks] = useState(0);
+  // Track pending drink deltas per subtype so each type is saved correctly
+  const [pendingBySubtype, setPendingBySubtype] = useState<Record<string, number>>({});
   const [pendingFood, setPendingFood] = useState(0);
   const [jokeCount, setJokeCount] = useState(() => {
     const saved = localStorage.getItem('baratona_jokes');
@@ -33,10 +33,11 @@ export function ConsumptionCounter() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
   const [clickedDrinkType, setClickedDrinkType] = useState<string | null>(null);
-  
+
+  const pendingDrinks = Object.values(pendingBySubtype).reduce((s, n) => s + n, 0);
+
   // Debounce timer ref
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastDrinkSubtype = useRef<string | null>(null);
   
   const currentBar = getCurrentBar();
   
@@ -49,6 +50,7 @@ export function ConsumptionCounter() {
     : { drinks: 0, food: 0 };
   
   const hasPendingChanges = pendingDrinks !== 0 || pendingFood !== 0;
+
   
   // Calculate display values (database + pending)
   const displayDrinks = barConsumption.drinks + pendingDrinks;
@@ -62,21 +64,23 @@ export function ConsumptionCounter() {
     
     try {
       const promises: Promise<boolean>[] = [];
-      
-      if (pendingDrinks !== 0) {
-        // For drinks, pass the last selected subtype if available
-        promises.push(updateConsumption(currentUser.id, 'drink', pendingDrinks, currentBarId, lastDrinkSubtype.current || undefined));
+
+      // Save each drink subtype separately so stats are accurate
+      for (const [subtype, delta] of Object.entries(pendingBySubtype)) {
+        if (delta !== 0) {
+          promises.push(updateConsumption(currentUser.id, 'drink', delta, currentBarId, subtype));
+        }
       }
-      
+
       if (pendingFood !== 0) {
         promises.push(updateConsumption(currentUser.id, 'food', pendingFood, currentBarId));
       }
-      
+
       const results = await Promise.all(promises);
       const allSucceeded = results.every(r => r);
-      
+
       if (allSucceeded) {
-        setPendingDrinks(0);
+        setPendingBySubtype({});
         setPendingFood(0);
         
         // Show visual feedback
@@ -97,39 +101,28 @@ export function ConsumptionCounter() {
     } finally {
       setIsSaving(false);
     }
-  }, [pendingDrinks, pendingFood, currentUser, currentBarId, updateConsumption, language]);
+  }, [pendingBySubtype, pendingFood, currentUser, currentBarId, updateConsumption, language]);
   
   // Debounced auto-save effect
   useEffect(() => {
     if (hasPendingChanges && currentUser) {
-      // Clear existing timer
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-      
-      // Set new timer for 2 seconds
-      saveTimerRef.current = setTimeout(() => {
-        saveChanges();
-      }, 2000);
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => { saveChanges(); }, 2000);
     }
-    
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-    };
-  }, [pendingDrinks, pendingFood, hasPendingChanges, saveChanges, currentUser]);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [pendingBySubtype, pendingFood, hasPendingChanges, saveChanges, currentUser]);
   
   // Early return AFTER all hooks
   if (!currentUser) return null;
   
   const handleAddDrink = (amount: number = 1, drinkTypeKey?: string) => {
-    setPendingDrinks(prev => prev + amount);
+    const key = drinkTypeKey || '__none__';
+    // Guard: don't let the total go below zero
+    const currentCount = (barConsumption.drinks + pendingDrinks);
+    if (amount < 0 && currentCount <= 0) return;
+    setPendingBySubtype(prev => ({ ...prev, [key]: (prev[key] || 0) + amount }));
     if ('vibrate' in navigator) navigator.vibrate(30);
-    
-    // Track subtype for persistence
     if (drinkTypeKey) {
-      lastDrinkSubtype.current = drinkTypeKey;
       setClickedDrinkType(drinkTypeKey);
       setTimeout(() => setClickedDrinkType(null), 300);
     }
@@ -199,7 +192,7 @@ export function ConsumptionCounter() {
           <span className="text-sm font-medium">{t.drink}</span>
         </div>
         
-        <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="grid grid-cols-2 min-[400px]:grid-cols-4 gap-2 mb-3">
           {DRINK_TYPES.map((type) => (
             <button
               key={type.key}

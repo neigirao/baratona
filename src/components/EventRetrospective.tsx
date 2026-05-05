@@ -100,6 +100,25 @@ export function EventRetrospective({ isCircuit = false }: Props) {
     [barRatings]
   );
 
+  // Consumption per bar — shows drink/food totals per location
+  const consumptionByBar = useMemo(() => {
+    return bars.map((bar: any) => {
+      const barRows = consumption.filter((c: any) => c.bar_id === bar.id);
+      const totalDrinks = barRows.filter((c: any) => c.type === 'drink').reduce((s: number, c: any) => s + c.count, 0);
+      const totalFood = barRows.filter((c: any) => c.type === 'food').reduce((s: number, c: any) => s + c.count, 0);
+      const memberBreakdown = participants
+        .map((p: any) => {
+          const pc = barRows.filter((c: any) => (c.user_id || c.participant_id) === p.id);
+          const drinks = pc.filter((c: any) => c.type === 'drink').reduce((s: number, c: any) => s + c.count, 0);
+          const food = pc.filter((c: any) => c.type === 'food').reduce((s: number, c: any) => s + c.count, 0);
+          return { participant: p, drinks, food };
+        })
+        .filter((r) => r.drinks > 0 || r.food > 0)
+        .sort((a, b) => b.drinks - a.drinks);
+      return { bar, totalDrinks, totalFood, memberBreakdown };
+    }).filter((b) => b.totalDrinks > 0 || b.totalFood > 0);
+  }, [bars, consumption, participants]);
+
   const globalAverage = useMemo(() => {
     const rated = barRatings.filter((b) => b.voteCount > 0);
     if (!rated.length) return null;
@@ -153,6 +172,7 @@ export function EventRetrospective({ isCircuit = false }: Props) {
             {dishRanking.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum voto em petisco ainda.</p>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -177,6 +197,7 @@ export function EventRetrospective({ isCircuit = false }: Props) {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -252,6 +273,45 @@ export function EventRetrospective({ isCircuit = false }: Props) {
                 </div>
               );
             })}
+          </CardContent>
+        </Card>
+      )}
+
+      {consumptionByBar.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" /> Consumo por Bar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-5">
+            {consumptionByBar.map(({ bar, totalDrinks, totalFood, memberBreakdown }) => (
+              <div key={bar.id}>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold">{bar.name}</h4>
+                  <span className="text-xs text-muted-foreground">
+                    {totalDrinks > 0 && `🍺 ${totalDrinks}`}
+                    {totalDrinks > 0 && totalFood > 0 && ' · '}
+                    {totalFood > 0 && `🍽️ ${totalFood}`}
+                  </span>
+                </div>
+                <Table>
+                  <TableBody>
+                    {memberBreakdown.map((r, i) => (
+                      <TableRow key={r.participant.id} className={i < 1 ? 'font-semibold' : ''}>
+                        <TableCell className="w-12">{getMedal(i)}</TableCell>
+                        <TableCell>{r.participant.name}</TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {r.drinks > 0 && `🍺 ${r.drinks}`}
+                          {r.drinks > 0 && r.food > 0 && ' '}
+                          {r.food > 0 && `🍽️ ${r.food}`}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

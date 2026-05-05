@@ -4,13 +4,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import {
-  adminListAllEventsApi, adminListPlatformRolesApi,
-  type PlatformRoleRow,
+  adminListAllEventsApi, adminListPlatformRolesApi, adminGetPlatformStatsApi,
+  type PlatformRoleRow, type PlatformStats,
 } from '@/lib/api';
 import type { PlatformEvent } from '@/lib/platformEvents';
 import { toast } from '@/hooks/use-toast';
 import { EventsPanel } from '@/components/admin/EventsPanel';
 import { RolesPanel } from '@/components/admin/RolesPanel';
+import { StatsPanel } from '@/components/admin/StatsPanel';
+import { ActivityPanel } from '@/components/admin/ActivityPanel';
+import { ReportsPanel } from '@/components/admin/ReportsPanel';
+import { AlertsPanel } from '@/components/admin/AlertsPanel';
 
 type EventRow = PlatformEvent & { barCount: number; memberCount: number };
 
@@ -18,6 +22,7 @@ export default function PlatformAdmin() {
   const { isSuperAdmin, loading } = usePlatformAdmin();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [roles, setRoles] = useState<PlatformRoleRow[]>([]);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
   const [eventsLoading, setEventsLoading] = useState(true);
 
   const refreshEvents = async () => {
@@ -40,10 +45,19 @@ export default function PlatformAdmin() {
     }
   };
 
+  const refreshStats = async () => {
+    try {
+      setStats(await adminGetPlatformStatsApi());
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     if (!isSuperAdmin) return;
     refreshEvents();
     refreshRoles();
+    refreshStats();
   }, [isSuperAdmin]);
 
   if (loading) {
@@ -68,11 +82,37 @@ export default function PlatformAdmin() {
           </div>
         </div>
 
-        <Tabs defaultValue="events">
-          <TabsList>
+        <Tabs defaultValue="stats">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="stats">Visão Geral</TabsTrigger>
+            <TabsTrigger value="activity">Atividade</TabsTrigger>
+            <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            <TabsTrigger value="alerts">Alertas</TabsTrigger>
             <TabsTrigger value="events">Eventos ({events.length})</TabsTrigger>
             <TabsTrigger value="roles">Papéis ({roles.length})</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="stats" className="mt-4">
+            {stats ? (
+              <StatsPanel stats={stats} />
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="activity" className="mt-4">
+            <ActivityPanel events={events} />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-4">
+            {stats && <ReportsPanel events={events} stats={stats} />}
+          </TabsContent>
+
+          <TabsContent value="alerts" className="mt-4">
+            <AlertsPanel events={events} />
+          </TabsContent>
 
           <TabsContent value="events" className="mt-4">
             <EventsPanel events={events} loading={eventsLoading} onChanged={refreshEvents} />

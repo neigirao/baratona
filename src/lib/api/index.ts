@@ -39,8 +39,10 @@ export {
   adminSetPlatformRoleApi,
   adminRemovePlatformRoleApi,
   adminGetPlatformStatsApi,
+  adminListUsersApi,
   type PlatformRoleRow,
   type PlatformStats,
+  type PlatformUserRow,
 } from './admin';
 export {
   getEventMemberCountApi,

@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,7 @@ import { createEventApi, ensureProfile, findEventBySlugApi, isReservedSlug, type
 import { getUserBarCatalogApi, type CatalogBar } from '@/lib/api';
 import { ImageUploader } from '@/components/admin/ImageUploader';
 import { toast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, MapPin, Plus, Trash2, AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
+import { Beer, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, MapPin, Plus, Trash2, AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -70,7 +70,23 @@ export default function CreateEvent() {
   }, [user]);
 
   if (loading) return <div className="p-8">Carregando...</div>;
-  if (!user) return <Navigate to="/" replace />;
+
+  if (!user) return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="max-w-sm w-full text-center space-y-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/15 text-primary">
+          <Beer className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">Criar baratona</h1>
+          <p className="text-muted-foreground">Faça login com o Google pra montar sua rota e chamar a galera.</p>
+        </div>
+        <Button onClick={signInWithGoogle} size="lg" className="w-full font-bold">
+          Entrar com Google
+        </Button>
+      </div>
+    </div>
+  );
 
   const addBar = () => {
     setBars((prev) => [

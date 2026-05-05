@@ -44,6 +44,15 @@ export async function ensureProfile(user: any) {
   });
 }
 
+export async function removeEventMemberApi(eventId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('event_members')
+    .delete()
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
 export async function isSuperAdminApi(userId: string) {
   const { data, error } = await supabase.rpc('has_platform_role', {
     _user_id: userId,

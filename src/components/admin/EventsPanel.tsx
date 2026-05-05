@@ -16,7 +16,7 @@ import { Loader2, Settings, Archive, ExternalLink, UserPlus, ChevronLeft, Chevro
 import {
   archiveEventApi, updateEventApi, adminUpdateEventOwnerApi,
 } from '@/lib/api';
-import type { PlatformEvent } from '@/lib/platformEvents';
+import type { PlatformEvent, EventStatus } from '@/lib/platformEvents';
 import { toast } from '@/hooks/use-toast';
 
 type EventRow = PlatformEvent & { barCount: number; memberCount: number };
@@ -32,14 +32,14 @@ const PAGE_SIZE = 15;
 export function EventsPanel({ events, loading, onChanged }: Props) {
   const [search, setSearch] = useState('');
   const [filterVisibility, setFilterVisibility] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<EventStatus | 'all'>('all');
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return events.filter((e) => {
       if (filterVisibility !== 'all' && e.visibility !== filterVisibility) return false;
-      if (filterStatus !== 'all' && (e as unknown as { status?: string }).status !== filterStatus) return false;
+      if (filterStatus !== 'all' && e.status !== filterStatus) return false;
       if (!q) return true;
       return (
         e.name.toLowerCase().includes(q) ||
@@ -119,7 +119,7 @@ export function EventsPanel({ events, loading, onChanged }: Props) {
             <SelectItem value="private">Privado</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as EventStatus | 'all')}>
           <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos status</SelectItem>
@@ -193,7 +193,7 @@ interface RowProps {
 function EventRowCard({ event, onStatus, onVisibility, onArchive, onTransfer }: RowProps) {
   const [transferOpen, setTransferOpen] = useState(false);
   const [newOwner, setNewOwner] = useState('');
-  const status = (event as unknown as { status?: string }).status as string | undefined;
+  const status = event.status;
 
   return (
     <Card>

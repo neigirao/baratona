@@ -839,6 +839,20 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_list_users: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          display_name: string
+          email: string
+          events_joined: number
+          events_owned: number
+          last_sign_in_at: string
+          roles: string[]
+          user_id: string
+        }[]
+      }
       admin_remove_platform_role: {
         Args: { _role: string; _user_id: string }
         Returns: undefined

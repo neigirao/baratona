@@ -95,3 +95,38 @@ export async function adminRemovePlatformRoleApi(userId: string, role: string): 
     _role: role,
   });
 }
+
+export interface PlatformUserRow {
+  userId: string;
+  email: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  lastSignInAt: string | null;
+  roles: string[];
+  eventsOwned: number;
+  eventsJoined: number;
+}
+
+export async function adminListUsersApi(
+  search?: string,
+  limit = 100,
+  offset = 0,
+): Promise<PlatformUserRow[]> {
+  const data = await callRpc<any>('admin_list_users', {
+    _search: search ?? null,
+    _limit: limit,
+    _offset: offset,
+  });
+  return data.map((r: any) => ({
+    userId: r.user_id,
+    email: r.email ?? null,
+    displayName: r.display_name ?? null,
+    avatarUrl: r.avatar_url ?? null,
+    createdAt: r.created_at,
+    lastSignInAt: r.last_sign_in_at ?? null,
+    roles: r.roles ?? [],
+    eventsOwned: Number(r.events_owned ?? 0),
+    eventsJoined: Number(r.events_joined ?? 0),
+  }));
+}

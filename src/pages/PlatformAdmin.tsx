@@ -15,6 +15,7 @@ import { StatsPanel } from '@/components/admin/StatsPanel';
 import { ActivityPanel } from '@/components/admin/ActivityPanel';
 import { ReportsPanel } from '@/components/admin/ReportsPanel';
 import { AlertsPanel } from '@/components/admin/AlertsPanel';
+import { UsersPanel } from '@/components/admin/UsersPanel';
 
 type EventRow = PlatformEvent & { barCount: number; memberCount: number };
 
@@ -89,6 +90,7 @@ export default function PlatformAdmin() {
             <TabsTrigger value="reports" className="text-xs sm:text-sm">Relatórios</TabsTrigger>
             <TabsTrigger value="alerts" className="text-xs sm:text-sm">Alertas</TabsTrigger>
             <TabsTrigger value="events" className="text-xs sm:text-sm">Eventos ({events.length})</TabsTrigger>
+            <TabsTrigger value="users" className="text-xs sm:text-sm">Usuários</TabsTrigger>
             <TabsTrigger value="roles" className="text-xs sm:text-sm">Papéis ({roles.length})</TabsTrigger>
           </TabsList>
 
@@ -116,6 +118,10 @@ export default function PlatformAdmin() {
 
           <TabsContent value="events" className="mt-4">
             <EventsPanel events={events} loading={eventsLoading} onChanged={refreshEvents} />
+          </TabsContent>
+
+          <TabsContent value="users" className="mt-4">
+            <UsersPanel />
           </TabsContent>
 
           <TabsContent value="roles" className="mt-4">

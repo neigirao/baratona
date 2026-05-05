@@ -142,7 +142,7 @@ export function BarCheckin({ onCheckinSuccess }: BarCheckinProps) {
                     size="sm"
                   />
                   <span
-                    className={`text-xs ${
+                    className={`text-xs truncate max-w-[80px] ${
                       p.id === currentUser.id
                         ? 'text-success font-semibold'
                         : 'text-foreground-2'

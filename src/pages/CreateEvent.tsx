@@ -260,7 +260,7 @@ export default function CreateEvent() {
             {(catalogLoading || catalog.length > 0) && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5" /> Bares cadastrados por você
+                  <BookOpen className="w-3.5 h-3.5" /> Bares dos circuitos e seus eventos anteriores
                 </p>
                 {catalogLoading ? (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">

@@ -17,11 +17,11 @@ const faqItems = [
   },
   {
     q: 'A plataforma é gratuita?',
-    a: 'Sim! Na versão 1 a Baratona é totalmente gratuita para criar e participar. Não tem taxa nem limite de participantes.',
+    a: 'Sim, 100% gratuita pra criar e participar. Sem taxa, sem limite de participantes, sem pegadinha.',
   },
   {
     q: 'Preciso criar conta?',
-    a: 'Para criar uma baratona, sim — basta entrar com sua conta Google. Para participar de um evento, depende do organizador: eventos públicos podem ter participação aberta.',
+    a: 'Para criar, sim — um clique com sua conta Google basta. Para participar, depende do organizador: eventos públicos são abertos pra qualquer um.',
   },
   {
     q: 'Posso criar uma baratona privada?',
@@ -45,7 +45,7 @@ const faqItems = [
   },
   {
     q: 'Funciona sem internet?',
-    a: 'O app é otimizado para cenários de rede ruim (comum em bares lotados). Ações são salvas localmente e sincronizadas quando a conexão voltar.',
+    a: 'Sim. A Baratona foi feita pra bar cheio com Wi-Fi ruim. O que você registrar fica salvo e sincroniza assim que a rede voltar.',
   },
   {
     q: 'Quem pode acessar o painel de administração?',
@@ -65,7 +65,7 @@ const faqItems = [
   },
   {
     q: 'Posso editar o evento depois de criado?',
-    a: 'O painel admin permite gerenciar o evento em andamento. Funcionalidades de edição de bares e dados do evento estão em desenvolvimento.',
+    a: 'Sim. O painel admin permite adicionar e remover bares, mudar o status do evento e fazer broadcast pra galera. Edição de dados gerais do evento (nome, cidade) está chegando em breve.',
   },
 ];
 

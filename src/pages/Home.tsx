@@ -94,7 +94,7 @@ function Hero() {
                 textShadow: '0 1px 8px rgba(0,0,0,0.8)',
               }}
             >
-              Ranking, check-in e votação com os amigos — em tempo real. Para quem leva buteco a sério.
+              A noite que todo grupo tem uma vez e nunca esquece. Roteiro, consumo, votação e o resumo de tudo — em tempo real, no seu bolso.
             </p>
 
             <div className="flex flex-wrap gap-3 items-center mb-8">
@@ -108,7 +108,7 @@ function Hero() {
                 to="/explorar"
                 className="inline-flex items-center gap-2 rounded-full bg-foreground/10 text-foreground px-6 py-3.5 text-[15px] font-medium border border-foreground/20 backdrop-blur-sm hover:bg-foreground/[0.18] hover:border-primary/50 transition-colors"
               >
-                Explorar baratonas <ArrowRight className="w-4 h-4" />
+                Ver o que rola <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -302,12 +302,12 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
 
 /* ── FEATURES ─────────────────────────────────────────────────── */
 const FEATURES = [
-  { icon: Zap, title: 'Consumo em tempo real', desc: 'Acompanhe bebidas e comidas por bar, com ranking de quem mandou mais.' },
-  { icon: Star, title: 'Votação e ranking', desc: 'Avalie cada bar em bebida, comida, ambiente e atendimento.' },
-  { icon: MapPin, title: 'Mapa e navegação', desc: 'Veja todos os bares no mapa e abra no Google Maps com 1 toque.' },
-  { icon: Users, title: 'Check-in por bar', desc: 'Registre presença. Quem visitar mais bares ganha o galão.' },
-  { icon: Trophy, title: 'Conquistas e Wrapped', desc: 'Desbloqueie conquistas e receba um resumo tipo Spotify Wrapped.' },
-  { icon: Zap, title: 'Admin em tempo real', desc: 'Painel do organizador com controle de status, broadcast e retrospectiva.' },
+  { icon: Zap, title: 'Consumo em tempo real', desc: 'Saiba exatamente quem está no topo do ranking — e pressione os retardatários.' },
+  { icon: Star, title: 'Votação e ranking', desc: 'Cada bar avaliado em bebida, comida, ambiente e atendimento. O campeão da noite não tem como fugir.' },
+  { icon: MapPin, title: 'Mapa e navegação', desc: 'Todos os bares no mapa. Um toque abre a rota no Google Maps. Sem se perder na madrugada.' },
+  { icon: Users, title: 'Check-in por bar', desc: 'Quem foi em todos os bares ganha respeito eterno. E o galão.' },
+  { icon: Trophy, title: 'Conquistas e Wrapped', desc: 'No fim da noite, cada um vai com o resumo da própria baratona. Tipo Spotify Wrapped, mas com chopp.' },
+  { icon: Zap, title: 'Admin em tempo real', desc: 'O organizador controla o ritmo da noite: muda o bar, manda recado pra galera, puxa o resumo.' },
 ];
 
 function Features() {
@@ -361,12 +361,12 @@ function HowItWorks() {
     >
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-16">
-          <p className="text-[11px] tracking-widest uppercase text-primary mb-3">Simples assim</p>
+          <p className="text-[11px] tracking-widest uppercase text-primary mb-3">Do zero à rua</p>
           <h2
             className="font-heading font-extrabold text-foreground"
             style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}
           >
-            Como funciona
+            Em 3 passos você tá na rua
           </h2>
         </div>
 
@@ -408,17 +408,17 @@ function FinalCta() {
           className="font-heading font-extrabold text-foreground mb-4"
           style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}
         >
-          Pronto pra montar sua rota?
+          Qual vai ser a próxima baratona?
         </h2>
         <p className="text-[17px] text-muted-foreground mb-10">
-          É grátis e leva menos de 2 minutos.
+          É grátis. Leva 2 minutos. Seus amigos vão agradecer.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
           <Link
             to="/criar"
             className="inline-flex items-center gap-2.5 rounded-full bg-primary text-primary-foreground px-8 py-4 text-base font-bold shadow-gold-md hover:-translate-y-0.5 hover:shadow-gold-lg transition-all"
           >
-            <Beer className="w-5 h-5" /> Começar agora
+            <Beer className="w-5 h-5" /> Criar agora
           </Link>
           <Link
             to="/faq"
@@ -484,10 +484,10 @@ function Footer() {
           ))}
         </div>
         <div className="border-t border-border pt-6 flex justify-between items-center flex-wrap gap-3">
-          <p className="text-[13px] text-muted-foreground/80">
+          <p className="text-[13px] text-muted-foreground">
             © 2026 Baratona. Feito para butequeiros de verdade.
           </p>
-          <p className="text-[13px] text-muted-foreground/80">
+          <p className="text-[13px] text-muted-foreground">
             🍺 Beba com responsabilidade
           </p>
         </div>
@@ -569,7 +569,7 @@ export default function Home() {
       {user && myEventsError && (
         <section className="px-5 sm:px-8 lg:px-16 py-6">
           <div className="max-w-[1200px] mx-auto">
-            <p className="text-sm text-muted-foreground">Não foi possível carregar suas baratonas. <Link to="/minhas-baratonas" className="text-primary underline">Tentar novamente</Link></p>
+            <p className="text-sm text-muted-foreground">A internet vacilou. <Link to="/minhas-baratonas" className="text-primary underline">Tentar de novo</Link></p>
           </div>
         </section>
       )}
@@ -640,7 +640,7 @@ export default function Home() {
       {featuredError && (
         <section className="px-5 sm:px-8 lg:px-16 py-6">
           <div className="max-w-[1200px] mx-auto">
-            <p className="text-sm text-muted-foreground">Não foi possível carregar os eventos em destaque. <Link to="/explorar" className="text-primary underline">Ver todos</Link></p>
+            <p className="text-sm text-muted-foreground">A internet vacilou. <Link to="/explorar" className="text-primary underline">Ver todos</Link></p>
           </div>
         </section>
       )}

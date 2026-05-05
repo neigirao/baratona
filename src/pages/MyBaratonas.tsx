@@ -105,7 +105,7 @@ export default function MyBaratonas() {
           icon={<Crown className="w-4 h-4" />}
           loading={loading}
           events={owned || []}
-          emptyMessage="Você ainda não criou nenhuma baratona."
+          emptyMessage="Nenhuma baratona criada ainda. Que tal mudar isso hoje?"
           emptyAction={
             <Button asChild>
               <Link to="/criar"><Plus className="w-4 h-4 mr-1" /> Criar minha primeira</Link>
@@ -119,7 +119,7 @@ export default function MyBaratonas() {
           icon={<UserCheck className="w-4 h-4" />}
           loading={loading}
           events={joined || []}
-          emptyMessage="Você ainda não entrou em nenhuma baratona criada por outras pessoas."
+          emptyMessage="Ainda sem rolê marcado. Explore o que tá acontecendo por aí."
           emptyAction={
             <Button asChild variant="outline">
               <Link to="/explorar">Explorar baratonas</Link>

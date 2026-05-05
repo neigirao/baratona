@@ -24,6 +24,7 @@ export default function PlatformAdmin() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [roles, setRoles] = useState<PlatformRoleRow[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [statsError, setStatsError] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
 
   const refreshEvents = async () => {
@@ -47,10 +48,11 @@ export default function PlatformAdmin() {
   };
 
   const refreshStats = async () => {
+    setStatsError(false);
     try {
       setStats(await adminGetPlatformStatsApi());
     } catch {
-      // ignore
+      setStatsError(true);
     }
   };
 
@@ -97,6 +99,13 @@ export default function PlatformAdmin() {
           <TabsContent value="stats" className="mt-4">
             {stats ? (
               <StatsPanel stats={stats} />
+            ) : statsError ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <p className="text-sm text-muted-foreground">Erro ao carregar estatísticas.</p>
+                <button onClick={refreshStats} className="text-xs text-primary underline underline-offset-2">
+                  Tentar novamente
+                </button>
+              </div>
             ) : (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -109,7 +118,17 @@ export default function PlatformAdmin() {
           </TabsContent>
 
           <TabsContent value="reports" className="mt-4">
-            {stats && <ReportsPanel events={events} stats={stats} />}
+            {stats ? (
+              <ReportsPanel events={events} stats={stats} />
+            ) : statsError ? (
+              <p className="text-sm text-muted-foreground italic py-8 text-center">
+                Estatísticas indisponíveis — recarregue a aba Visão Geral.
+              </p>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="alerts" className="mt-4">

@@ -38,7 +38,7 @@ function statusBadge(status: string) {
 }
 
 function EventRow({ event }: { event: EventRow }) {
-  const status = (event as any).status as string ?? 'draft';
+  const status = event.status ?? 'draft';
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
       <div className="flex-1 min-w-0">
@@ -66,10 +66,10 @@ export function ActivityPanel({ events }: Props) {
     (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
   );
 
-  const live = events.filter((e) => (e as any).status === 'published');
+  const live = events.filter((e) => e.status === 'published');
   const recent = sorted.slice(0, 15);
   const recentlyFinished = events
-    .filter((e) => (e as any).status === 'finished')
+    .filter((e) => e.status === 'finished')
     .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
     .slice(0, 8);
 

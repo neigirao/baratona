@@ -27,6 +27,7 @@ import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
 import { StatusTab } from '@/components/admin/StatusTab';
 import { BroadcastTab } from '@/components/admin/BroadcastTab';
 import { InvitesPanel } from '@/components/admin/InvitesPanel';
+import { MembersTab } from '@/components/admin/MembersTab';
 
 type EventConfigPatch = {
   current_bar_id?: string | null;
@@ -41,7 +42,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
   const {
     bars, appConfig, updateAppConfig, getCurrentBar, getNextBar, currentBarId,
   } = useBaratona();
-  const { members } = useEventMembers(event.id);
+  const { members, refetch: refetchMembers } = useEventMembers(event.id);
 
   const [activeTab, setActiveTab] = useState('status');
   const [scraping, setScraping] = useState(false);
@@ -154,7 +155,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
 
         {/* Admin tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto">
             <TabsTrigger value="info" className="flex flex-col gap-0.5 py-1.5" aria-label="Info">
               <Info className="w-3.5 h-3.5" />
               <span className="hidden sm:inline text-[10px]">Info</span>
@@ -170,6 +171,10 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
             <TabsTrigger value="bars" className="flex flex-col gap-0.5 py-1.5" aria-label={isCircuit ? 'Butecos' : 'Bares'}>
               <Beer className="w-3.5 h-3.5" />
               <span className="hidden sm:inline text-[10px]">{isCircuit ? 'Butecos' : 'Bares'}</span>
+            </TabsTrigger>
+            <TabsTrigger value="members" className="flex flex-col gap-0.5 py-1.5" aria-label="Participantes">
+              <Users className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">Pessoas</span>
             </TabsTrigger>
             <TabsTrigger value="retro" className="flex flex-col gap-0.5 py-1.5" aria-label="Retro">
               <BarChart3 className="w-3.5 h-3.5" />
@@ -216,6 +221,10 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
 
           <TabsContent value="bars" className="space-y-2 mt-4">
             <EventBarsEditor eventId={event.id} />
+          </TabsContent>
+
+          <TabsContent value="members" className="mt-4">
+            <MembersTab eventId={event.id} members={members} onChanged={refetchMembers} />
           </TabsContent>
 
           <TabsContent value="retro" className="space-y-3 mt-4">
@@ -273,7 +282,7 @@ export default function EventAdmin() {
   // Unauthenticated users → redirect to event landing
   if (!user) return <Navigate to={`/baratona/${slug}`} replace />;
 
-  const canEdit = user.id === event.ownerId || isSuperAdmin || user.email === 'neigirao@gmail.com';
+  const canEdit = user.id === event.ownerId || isSuperAdmin;
   if (!canEdit) return <Navigate to={`/baratona/${slug}`} replace />;
 
   return (

@@ -50,6 +50,7 @@ export {
   isEventMemberApi,
   ensureProfile,
   isSuperAdminApi,
+  removeEventMemberApi,
 } from './members';
 export { getDishRatingsApi, type DishRating } from './votes';
 export {

@@ -57,13 +57,13 @@ function TopTable({
 }
 
 export function ReportsPanel({ events, stats }: Props) {
-  const active = events.filter((e) => (e as any).status !== 'archived');
+  const active = events.filter((e) => e.status !== 'archived');
 
   // Funil
   const total = active.length;
-  const published = active.filter((e) => (e as any).status === 'published').length;
+  const published = active.filter((e) => e.status === 'published').length;
   const withMembers = active.filter((e) => e.memberCount > 1).length;
-  const finished = active.filter((e) => (e as any).status === 'finished').length;
+  const finished = active.filter((e) => e.status === 'finished').length;
 
   const funnelSteps = [
     { label: 'Criados', value: total, pct: 100 },

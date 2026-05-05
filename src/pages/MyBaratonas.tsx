@@ -58,7 +58,7 @@ export default function MyBaratonas() {
           </div>
           <h1 className="text-2xl font-bold">Minhas baratonas</h1>
           <p className="text-muted-foreground">
-            Faça login para ver as baratonas que você criou e em que está participando.
+            Faça login pra ver seus rolês e os que você tá participando.
           </p>
           <Button onClick={signInWithGoogle} size="lg" className="font-bold">
             Entrar com Google
@@ -84,7 +84,7 @@ export default function MyBaratonas() {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold">Minhas baratonas</h1>
-            <p className="text-sm text-muted-foreground">Eventos que você criou e em que participa.</p>
+            <p className="text-sm text-muted-foreground">Seus rolês e os que você tá participando.</p>
           </div>
           <Button asChild size="sm" className="font-bold">
             <Link to="/criar"><Plus className="w-4 h-4 mr-1" /> Criar</Link>
@@ -105,7 +105,7 @@ export default function MyBaratonas() {
           icon={<Crown className="w-4 h-4" />}
           loading={loading}
           events={owned || []}
-          emptyMessage="Você ainda não criou nenhuma baratona."
+          emptyMessage="Nenhuma baratona criada ainda. Que tal mudar isso hoje?"
           emptyAction={
             <Button asChild>
               <Link to="/criar"><Plus className="w-4 h-4 mr-1" /> Criar minha primeira</Link>
@@ -119,7 +119,7 @@ export default function MyBaratonas() {
           icon={<UserCheck className="w-4 h-4" />}
           loading={loading}
           events={joined || []}
-          emptyMessage="Você ainda não entrou em nenhuma baratona criada por outras pessoas."
+          emptyMessage="Ainda sem rolê marcado. Explore o que tá acontecendo por aí."
           emptyAction={
             <Button asChild variant="outline">
               <Link to="/explorar">Explorar baratonas</Link>

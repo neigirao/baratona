@@ -143,7 +143,7 @@ export default function CreateEvent() {
         },
         bars
       );
-      toast({ title: 'Baratona criada!', description: 'Agora configure os detalhes no painel de admin.' });
+      toast({ title: 'Baratona criada! 🎉', description: 'Agora adiciona os bares e chama a galera.' });
       navigate(`/baratona/${newEvent.slug}/admin`);
     } catch (err: unknown) {
       toast({ title: 'Erro ao criar', description: err instanceof Error ? err.message : 'Não foi possível criar a baratona agora.', variant: 'destructive' });

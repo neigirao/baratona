@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Users, MapPin, TrendingDown, ArrowRight } from 'lucide-react';
+import { Users, MapPin, TrendingDown, ArrowRight } from 'lucide-react';
 import type { PlatformEvent } from '@/lib/platformEvents';
-import type { PlatformStats } from '@/lib/api';
 
 type EventRow = PlatformEvent & { barCount: number; memberCount: number };
 
 interface Props {
   events: EventRow[];
-  stats: PlatformStats;
 }
 
 function TopTable({
@@ -56,7 +54,7 @@ function TopTable({
   );
 }
 
-export function ReportsPanel({ events, stats }: Props) {
+export function ReportsPanel({ events }: Props) {
   const active = events.filter((e) => e.status !== 'archived');
 
   // Funil

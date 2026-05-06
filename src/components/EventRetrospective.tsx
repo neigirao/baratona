@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useBaratona } from '@/contexts/BaratonaContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy, Beer, Utensils, Users, BarChart3, Crown, MapPin, Star } from 'lucide-react';
+import { Trophy, Beer, Utensils, BarChart3, Crown, MapPin, Star } from 'lucide-react';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const getMedal = (i: number) => MEDALS[i] || `${i + 1}º`;

@@ -1,4 +1,4 @@
-import { Bookmark, Star, MapPin } from 'lucide-react';
+import { Bookmark, MapPin } from 'lucide-react';
 import type { EventBar, DishRating } from '@/lib/platformApi';
 
 const ZONA_GRADIENTS: Record<string, [string, string]> = {

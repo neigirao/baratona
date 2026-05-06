@@ -17,7 +17,7 @@ export function usePlatformAdmin() {
     }
     isSuperAdminApi(user.id)
       .then((ok) => { if (!cancelled) setIsSuperAdmin(ok); })
-      .catch(() => { if (!cancelled) setIsSuperAdmin(false); })
+      .catch((e) => { console.error('[usePlatformAdmin] isSuperAdminApi failed', e); if (!cancelled) setIsSuperAdmin(false); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [user, authLoading]);

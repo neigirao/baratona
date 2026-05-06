@@ -25,7 +25,7 @@ const prefersReducedMotion = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function BaratonaHero({
-  title,
+  title: _title,
   subtitle,
   overlayChildren,
   asH1 = false,

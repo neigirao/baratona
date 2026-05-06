@@ -118,7 +118,7 @@ export default function PlatformAdmin() {
 
           <TabsContent value="reports" className="mt-4">
             {stats ? (
-              <ReportsPanel events={events} stats={stats} />
+              <ReportsPanel events={events} />
             ) : statsError ? (
               <p className="text-sm text-muted-foreground italic py-8 text-center">
                 Estatísticas indisponíveis — recarregue a aba Visão Geral.

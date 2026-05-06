@@ -1,0 +1,71 @@
+export const pt = {
+  // Legacy event strings (used via BaratonaContext → t.*)
+  drink: 'Bebida',
+  food: 'Comida',
+  vibe: 'Vibe',
+  service: 'Atendimento',
+  atBar: 'No Bar',
+  inTransit: 'Em Deslocamento',
+  selectName: 'Selecione seu nome',
+  welcome: 'Bem-vindo à Baratona!',
+  currentBar: 'Bar Atual',
+  nextBar: 'Próximo Bar',
+  arrivalProjection: 'Projeção de Chegada',
+  totalDrinks: 'Total de Bebidas',
+  totalFood: 'Total de Comida',
+  baratometer: 'Baratômetro',
+  vote: 'Votar',
+  admin: 'Admin',
+  delay: 'Atraso',
+  minutes: 'minutos',
+  broadcast: 'Comunicado',
+  callUber: 'Chamar Uber',
+  sosNei: 'SOS Nei',
+  map: 'Mapa',
+  completed: 'Concluído',
+  current: 'Atual',
+  upcoming: 'Próximo',
+
+  // Platform UI strings
+  createEvent: 'Criar baratona',
+  myEvents: 'Minhas baratonas',
+  explore: 'Explorar',
+  login: 'Entrar com Google',
+  logout: 'Sair',
+  loading: 'Carregando…',
+  error: 'Erro',
+  retry: 'Tentar novamente',
+  save: 'Salvar',
+  cancel: 'Cancelar',
+  confirm: 'Confirmar',
+  delete: 'Excluir',
+  remove: 'Remover',
+  add: 'Adicionar',
+  edit: 'Editar',
+  search: 'Buscar',
+  noResults: 'Nenhum resultado.',
+  empty: 'Nenhum item cadastrado.',
+
+  // Event status
+  statusDraft: 'Rascunho',
+  statusPublished: 'Publicado',
+  statusLive: 'Ao vivo',
+  statusFinished: 'Finalizado',
+  statusArchived: 'Arquivado',
+
+  // Checkin
+  checkin: 'Check-in',
+  checkout: 'Check-out',
+  checkedIn: 'Check-in realizado',
+
+  // Admin
+  adminTitle: 'Admin do evento',
+  superAdmin: 'Super admin',
+  members: 'Participantes',
+  bars: 'Bares',
+  consumption: 'Consumo',
+  votes: 'Votos',
+  settings: 'Configurações',
+} as const;
+
+export type I18nKey = keyof typeof pt;

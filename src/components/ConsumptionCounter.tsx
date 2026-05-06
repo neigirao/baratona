@@ -168,6 +168,7 @@ export function ConsumptionCounter() {
             <button
               key={type.key}
               onClick={() => handleAddDrink(1, type.key)}
+              aria-label={`Adicionar ${type.label}`}
               className={`
                 relative flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all duration-150
                 ${clickedDrinkType === type.key
@@ -214,10 +215,10 @@ export function ConsumptionCounter() {
             <span className="text-sm font-medium">{t.food}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleRemoveFood} className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10" disabled={displayFood === 0}>
+            <button onClick={handleRemoveFood} className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10" disabled={displayFood === 0} aria-label="Remover uma porção de comida">
               <Minus className="w-5 h-5 text-secondary-foreground" />
             </button>
-            <div className="flex flex-col items-center min-w-[3.5rem]">
+            <div className="flex flex-col items-center min-w-[3.5rem]" aria-live="polite" aria-atomic="true">
               <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingFood !== 0 ? 'scale-110' : ''}`}>
                 {displayFood}
               </span>
@@ -227,11 +228,11 @@ export function ConsumptionCounter() {
                 </span>
               )}
             </div>
-            <button onClick={() => handleAddFood(1)} className="counter-btn counter-btn-yellow w-10 h-10">
+            <button onClick={() => handleAddFood(1)} className="counter-btn counter-btn-yellow w-10 h-10" aria-label="Adicionar uma porção de comida">
               <Plus className="w-5 h-5 text-secondary-foreground" />
             </button>
           </div>
-          <button onClick={() => handleAddFood(5)} className="text-xs px-3 py-1.5 rounded-full bg-secondary/10 text-secondary font-semibold hover:bg-secondary/20 transition-colors">
+          <button onClick={() => handleAddFood(5)} className="text-xs px-3 py-1.5 rounded-full bg-secondary/10 text-secondary font-semibold hover:bg-secondary/20 transition-colors" aria-label="Adicionar 5 porções de comida">
             +5 🍴
           </button>
         </div>
@@ -243,10 +244,10 @@ export function ConsumptionCounter() {
             <span className="text-sm font-medium">{language === 'pt' ? 'Piadas' : 'Jokes'}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleRemoveJoke} className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10" disabled={displayJokes === 0}>
+            <button onClick={handleRemoveJoke} className="counter-btn counter-btn-yellow opacity-70 hover:opacity-100 w-10 h-10" disabled={displayJokes === 0} aria-label="Remover uma piada">
               <Minus className="w-5 h-5 text-secondary-foreground" />
             </button>
-            <div className="flex flex-col items-center min-w-[3.5rem]">
+            <div className="flex flex-col items-center min-w-[3.5rem]" aria-live="polite" aria-atomic="true">
               <span className={`font-display text-3xl font-bold text-foreground transition-transform ${pendingJokes !== 0 ? 'scale-110' : ''}`}>
                 {displayJokes}
               </span>
@@ -254,11 +255,11 @@ export function ConsumptionCounter() {
                 <span className="text-xs font-semibold text-baratona-green">+{pendingJokes}</span>
               )}
             </div>
-            <button onClick={() => handleAddJoke()} className="counter-btn counter-btn-yellow w-10 h-10">
+            <button onClick={() => handleAddJoke()} className="counter-btn counter-btn-yellow w-10 h-10" aria-label="Adicionar uma piada">
               <Plus className="w-5 h-5 text-secondary-foreground" />
             </button>
           </div>
-          <button onClick={() => handleAddJoke(5)} className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors">
+          <button onClick={() => handleAddJoke(5)} className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors" aria-label="Adicionar 5 piadas">
             +5 😂
           </button>
         </div>

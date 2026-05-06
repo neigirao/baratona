@@ -107,7 +107,7 @@ export function EventWrapped({ eventName, isCircuit = false, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {onClose && (
-        <button onClick={onClose} className="absolute top-4 right-4 z-30 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors" aria-label="Fechar">
+        <button onClick={onClose} className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label="Fechar retrospectiva">
           ✕
         </button>
       )}

@@ -4,6 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { lazy, Suspense, type ReactNode } from 'react';
+import { ThemeProvider } from 'next-themes';
 import { BaratonaProvider } from '@/contexts/BaratonaContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { FeatureErrorBoundary } from '@/components/FeatureErrorBoundary';
@@ -48,7 +49,9 @@ function PlatformLayout() {
   return (
     <>
       <Header />
-      <Outlet />
+      <main id="main-content">
+        <Outlet />
+      </main>
     </>
   );
 }
@@ -62,6 +65,7 @@ function RouteFallback() {
 }
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
   <QueryClientProvider client={queryClient}>
     <AppErrorBoundary>
       <TooltipProvider>
@@ -97,6 +101,7 @@ const App = () => (
       </TooltipProvider>
     </AppErrorBoundary>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

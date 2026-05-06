@@ -1,11 +1,12 @@
 import { useContext } from 'react';
+import { useTheme } from 'next-themes';
 import { BaratonaContext } from '@/contexts/BaratonaContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Globe, PartyPopper, ShieldCheck, LogIn, LogOut, Menu, Settings, HelpCircle, ListChecks, KeyRound, User } from 'lucide-react';
+import { Globe, PartyPopper, ShieldCheck, LogIn, LogOut, Menu, Settings, HelpCircle, ListChecks, KeyRound, User, Sun, Moon } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 import { HighContrastToggle } from '@/components/HighContrastToggle';
@@ -23,6 +24,7 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
 
   const { isSuperAdmin } = usePlatformAdmin();
   const { user: platformUser, signInWithGoogle, signOut: platformSignOut } = usePlatformAuth();
+  const { theme, setTheme } = useTheme();
   const { slug } = useParams<{ slug?: string }>();
   const adminPath = slug ? `/baratona/${slug}/admin` : '/admin';
   const displayName = (platformUser?.user_metadata?.full_name as string)?.split(' ')[0]
@@ -30,10 +32,17 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
     ?? null;
 
   return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-3 focus:py-1.5 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium"
+      >
+        Pular para o conteúdo
+      </a>
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       {/* Broadcast Banner */}
       {appConfig?.broadcast_msg && (
-        <div className="w-full bg-destructive/20 border-b border-destructive/50 px-4 py-2">
+        <div role="status" aria-live="polite" className="w-full bg-destructive/20 border-b border-destructive/50 px-4 py-2">
           <p className="text-center text-sm font-medium text-destructive animate-pulse">
             📢 {appConfig.broadcast_msg}
           </p>
@@ -63,6 +72,17 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
           >
             <Globe className="h-3.5 w-3.5" />
             <span className="uppercase">{language}</span>
+          </Button>
+
+          {/* Dark/light mode toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="h-8 w-8 p-0"
+            aria-label={theme === 'dark' ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+          >
+            {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
           </Button>
 
           {/* High contrast */}
@@ -130,7 +150,7 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
                 </DropdownMenuItem>
               )}
 
-              {/* Super admin — only for neigirao@gmail.com */}
+              {/* Super admin */}
               {isSuperAdmin && (
                 <DropdownMenuItem asChild>
                   <Link to="/admin/plataforma" className="flex items-center gap-2 text-primary">
@@ -169,5 +189,6 @@ export function Header({ onShowWrapped }: { onShowWrapped?: () => void }) {
         </div>
       </div>
     </header>
+    </>
   );
 }

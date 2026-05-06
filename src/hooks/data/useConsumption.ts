@@ -14,16 +14,20 @@ export function useConsumption(_currentBarId?: number | null) {
   const consumptionRef = useRef<Consumption[]>(consumption);
   useEffect(() => { consumptionRef.current = consumption; }, [consumption]);
 
+  const channelId = useRef(`consumption-${crypto.randomUUID()}`);
+  const fetchVersion = useRef(0);
+
   const fetchConsumption = useCallback(async () => {
+    const v = ++fetchVersion.current;
     const { data, error } = await supabase.from('consumption').select('*');
-    if (!error && data) setConsumption(data);
-    setLoading(false);
+    if (!error && data && v === fetchVersion.current) setConsumption(data);
+    if (v === fetchVersion.current) setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchConsumption();
     const channel = supabase
-      .channel('consumption-changes')
+      .channel(channelId.current)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'consumption' }, () => fetchConsumption())
       .subscribe();
     return () => { supabase.removeChannel(channel); };

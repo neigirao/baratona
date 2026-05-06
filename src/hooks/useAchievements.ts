@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { isLegacyReadOnly } from '@/lib/legacyMode';
@@ -97,6 +97,7 @@ interface UnlockedAchievement {
 export function useAchievements(participantId: string | undefined) {
   const [unlockedAchievements, setUnlockedAchievements] = useState<UnlockedAchievement[]>([]);
   const [loading, setLoading] = useState(true);
+  const channelId = useRef(`achievements-${crypto.randomUUID()}`);
 
   // Fetch unlocked achievements
   useEffect(() => {
@@ -122,7 +123,7 @@ export function useAchievements(participantId: string | undefined) {
 
     // Subscribe to realtime updates
     const channel = supabase
-      .channel('achievements-changes')
+      .channel(channelId.current)
       .on(
         'postgres_changes',
         {

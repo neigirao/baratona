@@ -1,33 +1,15 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { withRetry } from '@/hooks/useRetry';
 import { isLegacyReadOnly } from '@/lib/legacyMode';
 import { toast } from 'sonner';
+import { useLegacyTable } from './useLegacyTable';
 
 type Vote = Database['public']['Tables']['votes']['Row'];
 
 export function useVotes() {
-  const [votes, setVotes] = useState<Vote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const channelId = useRef(`votes-${crypto.randomUUID()}`);
-  const fetchVersion = useRef(0);
-
-  const fetchVotes = useCallback(async () => {
-    const v = ++fetchVersion.current;
-    const { data, error } = await supabase.from('votes').select('*');
-    if (!error && data && v === fetchVersion.current) setVotes(data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchVotes();
-    const channel = supabase
-      .channel(channelId.current)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => fetchVotes())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchVotes]);
+  const { data: votes, loading, refetch } = useLegacyTable<Vote>('votes');
 
   const submitVote = useCallback(async (
     participantId: string,
@@ -62,5 +44,5 @@ export function useVotes() {
 
   const getBarVotes = useCallback((barId: number | string) => votes.filter(v => v.bar_id === Number(barId)), [votes]);
 
-  return { votes, loading, submitVote, getBarVotes, refetch: fetchVotes };
+  return { votes, loading, submitVote, getBarVotes, refetch };
 }

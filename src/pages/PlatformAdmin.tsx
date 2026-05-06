@@ -25,6 +25,7 @@ export default function PlatformAdmin() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [statsError, setStatsError] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const refreshEvents = async () => {
     setEventsLoading(true);
@@ -42,7 +43,7 @@ export default function PlatformAdmin() {
     try {
       setRoles(await adminListPlatformRolesApi());
     } catch {
-      // ignore
+      // non-critical, list stays empty
     }
   };
 
@@ -57,12 +58,12 @@ export default function PlatformAdmin() {
 
   useEffect(() => {
     if (!isSuperAdmin) return;
-    refreshEvents();
-    refreshRoles();
-    refreshStats();
+    setDataLoading(true);
+    Promise.all([refreshEvents(), refreshRoles(), refreshStats()])
+      .finally(() => setDataLoading(false));
   }, [isSuperAdmin]);
 
-  if (loading) {
+  if (loading || (isSuperAdmin && dataLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />

@@ -215,6 +215,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
           <TabsContent value="broadcast" className="mt-4">
             <BroadcastTab
               broadcastMsg={appConfig?.broadcast_msg}
+              memberCount={members.length}
               onUpdateConfig={updateConfig}
             />
           </TabsContent>

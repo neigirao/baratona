@@ -20,6 +20,7 @@ export interface PlatformEvent {
   ownerId: string;
   ownerName: string;
   createdAt: string;
+  updatedAt?: string | null;
   eventDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;

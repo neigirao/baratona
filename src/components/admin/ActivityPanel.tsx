@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExternalLink, Radio, Clock } from 'lucide-react';
 import type { PlatformEvent } from '@/lib/platformEvents';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 
 type EventRow = PlatformEvent & { barCount: number; memberCount: number };
 
@@ -20,23 +20,6 @@ function timeAgo(dateStr: string): string {
   return `${days}d atrás`;
 }
 
-function statusBadge(status: string) {
-  const map: Record<string, string> = {
-    published: 'bg-green-500/15 text-green-600 border-green-500/30',
-    finished: 'bg-muted text-muted-foreground border-border',
-    draft: 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30',
-    archived: 'bg-destructive/10 text-destructive border-destructive/20',
-  };
-  const labels: Record<string, string> = {
-    published: 'Publicado', finished: 'Finalizado', draft: 'Rascunho', archived: 'Arquivado',
-  };
-  return (
-    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${map[status] ?? 'bg-muted'}`}>
-      {labels[status] ?? status}
-    </span>
-  );
-}
-
 function EventRow({ event }: { event: EventRow }) {
   const status = event.status ?? 'draft';
   return (
@@ -44,7 +27,7 @@ function EventRow({ event }: { event: EventRow }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium truncate">{event.name}</span>
-          {statusBadge(status)}
+          <StatusBadge status={status} />
           {event.eventType === 'special_circuit' && (
             <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-full">Circuito</span>
           )}
@@ -76,9 +59,9 @@ export function ActivityPanel({ events }: Props) {
   return (
     <div className="space-y-6">
       {/* Ao vivo agora */}
-      <Card className="border-green-500/30">
+      <Card className="border-success/30">
         <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm flex items-center gap-2 text-green-600">
+          <CardTitle className="text-sm flex items-center gap-2 text-success">
             <Radio className="w-4 h-4 animate-pulse" /> Publicados agora ({live.length})
           </CardTitle>
         </CardHeader>

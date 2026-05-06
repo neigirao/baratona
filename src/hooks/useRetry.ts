@@ -53,7 +53,7 @@ export async function withRetry<T>(
 export function useRetry() {
   const retryCountRef = useRef<Map<string, number>>(new Map());
   
-  const executeWithRetry = useCallback(async <T>(
+  const executeWithRetry = useCallback(async (
     operationId: string,
     operation: () => Promise<{ success: boolean; error?: Error }>,
     options: RetryOptions & { 

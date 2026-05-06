@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export function useSyncStatus() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());

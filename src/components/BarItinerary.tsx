@@ -59,10 +59,6 @@ export function BarItinerary({ onNavigateToConsumption }: BarItineraryProps) {
   
   const selectedBar = bars.find(b => b.id === selectedBarId);
   const selectedBarVotes = selectedBarId ? getBarVotes(selectedBarId) : [];
-  const hasUserVotedForSelectedBar = selectedBarId && currentUser 
-    ? !!getUserVoteForBar(currentUser.id, selectedBarId)
-    : true;
-  
   // Check if user is checked in at the selected bar (only if it's the current bar)
   const isUserCheckedInAtSelectedBar = selectedBarId && currentUser && selectedBarId === currentBarId
     ? isCheckedIn(currentUser.id, selectedBarId)

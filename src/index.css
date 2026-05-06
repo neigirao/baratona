@@ -46,6 +46,8 @@
     --destructive-foreground: 0 0% 100%;
     --success: 145 63% 49%;          /* #2ECC71 — check-in, visited */
     --success-foreground: 0 0% 0%;
+    --warning: 38 92% 50%;           /* #F59E0B — draft, alert */
+    --warning-foreground: 0 0% 0%;
 
     --border: 240 16% 14%;           /* #1E1E2A */
     --border-2: 240 13% 17%;         /* #252530 — hover borders */

@@ -114,12 +114,12 @@ function Hero() {
 
             <div className="flex items-center gap-3.5">
               <div className="flex">
-                {['hsl(33 91% 47%)', 'hsl(36 91% 55%)', 'hsl(42 100% 70%)', 'hsl(33 91% 47%)'].map((c, i) => (
+                {[1, 0.85, 0.6, 1].map((opacity, i) => (
                   <div
                     key={i}
                     className="w-[30px] h-[30px] rounded-full border-2 border-background/80"
                     style={{
-                      background: `radial-gradient(circle at 35% 35%, ${c}, ${c}66)`,
+                      background: `radial-gradient(circle at 35% 35%, hsl(var(--primary) / ${opacity}), hsl(var(--primary) / ${opacity * 0.4}))`,
                       marginLeft: i === 0 ? 0 : -8,
                     }}
                   />

@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { Language, TRANSLATIONS } from '@/lib/constants';
+import { withTimeout } from '@/lib/withTimeout';
 import { BaratonaContext } from '@/contexts/BaratonaContext';
 import { useEventBars, useEventAppConfig, useEventVotes, useEventConsumption, useEventCheckins, useEventMembers } from '@/hooks/useEventData';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
@@ -34,7 +35,7 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
   const { appConfig, loading: appConfigLoading, updateConfig, refetch: refetchAppConfig } = useEventAppConfig(eventId);
   const { votes, submitVote: submitVoteRaw, getBarVotes: getBarVotesRaw, refetch: refetchVotes } = useEventVotes(eventId);
   const { members, loading: membersLoading, refetch: refetchMembers } = useEventMembers(eventId);
-  const { checkins, checkIn, checkOut, isCheckedIn, getBarCheckins, refetch: refetchCheckins } = useEventCheckins(eventId);
+  const { checkIn, checkOut, isCheckedIn, getBarCheckins, refetch: refetchCheckins } = useEventCheckins(eventId);
 
   const currentBarId = appConfig?.current_bar_id ?? null;
 
@@ -52,7 +53,9 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
   const refreshAll = useCallback(async () => {
     startRefresh();
     try {
-      await Promise.all([refetchBars(), refetchAppConfig(), refetchVotes(), refetchConsumption(), refetchMembers(), refetchCheckins()]);
+      await withTimeout(
+        Promise.all([refetchBars(), refetchAppConfig(), refetchVotes(), refetchConsumption(), refetchMembers(), refetchCheckins()]),
+      );
     } finally { endRefresh(); }
   }, [refetchBars, refetchAppConfig, refetchVotes, refetchConsumption, refetchMembers, refetchCheckins, startRefresh, endRefresh]);
 

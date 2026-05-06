@@ -29,6 +29,10 @@ export default {
           DEFAULT: 'hsl(var(--success))',
           foreground: 'hsl(var(--success-foreground))',
         },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
+        },
         'green-check': 'hsl(var(--success))',
         border: "hsl(var(--border))",
         'border-2': "hsl(var(--border-2))",

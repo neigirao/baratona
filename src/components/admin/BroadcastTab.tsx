@@ -15,10 +15,11 @@ type EventConfigPatch = {
 
 interface BroadcastTabProps {
   broadcastMsg: string | null | undefined;
+  memberCount?: number;
   onUpdateConfig: (patch: EventConfigPatch) => Promise<boolean>;
 }
 
-export function BroadcastTab({ broadcastMsg, onUpdateConfig }: BroadcastTabProps) {
+export function BroadcastTab({ broadcastMsg, memberCount, onUpdateConfig }: BroadcastTabProps) {
   const [draft, setDraft] = useState('');
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -56,6 +57,11 @@ export function BroadcastTab({ broadcastMsg, onUpdateConfig }: BroadcastTabProps
             onChange={(e) => setDraft(e.target.value)}
             rows={2}
           />
+          {memberCount !== undefined && (
+            <p className="text-xs text-muted-foreground">
+              Será visível para <span className="font-semibold text-foreground">{memberCount}</span> participante(s) em tempo real.
+            </p>
+          )}
           <Button onClick={handleSend} className="w-full">Enviar Broadcast</Button>
         </CardContent>
       </Card>

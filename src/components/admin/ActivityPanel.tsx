@@ -70,7 +70,7 @@ export function ActivityPanel({ events }: Props) {
   const recent = sorted.slice(0, 15);
   const recentlyFinished = events
     .filter((e) => e.status === 'finished')
-    .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+    .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
     .slice(0, 8);
 
   return (

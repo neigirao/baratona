@@ -39,6 +39,7 @@ export function mapEventRow(row: any): PlatformEvent {
     endDate: row.end_date || null,
     coverImageUrl: row.cover_image_url || null,
     externalSourceUrl: row.external_source_url || null,
+    updatedAt: row.updated_at || null,
   };
 }
 

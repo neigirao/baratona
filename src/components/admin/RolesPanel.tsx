@@ -3,6 +3,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { UserPlus, Trash2, Search } from 'lucide-react';
 import {
   adminSetPlatformRoleApi, adminRemovePlatformRoleApi,
@@ -17,6 +20,7 @@ interface Props {
 
 export function RolesPanel({ roles, onChanged }: Props) {
   const [newRoleUserId, setNewRoleUserId] = useState('');
+  const [newRoleType, setNewRoleType] = useState('super_admin');
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -32,8 +36,8 @@ export function RolesPanel({ roles, onChanged }: Props) {
   const handleAddRole = async () => {
     if (!newRoleUserId.trim()) return;
     try {
-      await adminSetPlatformRoleApi(newRoleUserId.trim(), 'super_admin');
-      toast({ title: 'Super-admin adicionado' });
+      await adminSetPlatformRoleApi(newRoleUserId.trim(), newRoleType);
+      toast({ title: `Papel "${newRoleType}" adicionado` });
       setNewRoleUserId('');
       onChanged();
     } catch (e) {
@@ -58,14 +62,22 @@ export function RolesPanel({ roles, onChanged }: Props) {
       <Card>
         <CardContent className="py-4 space-y-3">
           <h3 className="font-semibold text-sm flex items-center gap-2">
-            <UserPlus className="w-4 h-4" /> Promover novo super-admin
+            <UserPlus className="w-4 h-4" /> Adicionar papel de plataforma
           </h3>
           <div className="flex gap-2">
             <Input
               placeholder="user_id (UUID)"
               value={newRoleUserId}
               onChange={(e) => setNewRoleUserId(e.target.value)}
+              className="flex-1"
             />
+            <Select value={newRoleType} onValueChange={setNewRoleType}>
+              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="super_admin">super_admin</SelectItem>
+                <SelectItem value="moderator">moderator</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={handleAddRole}>Adicionar</Button>
           </div>
           <p className="text-[10px] text-muted-foreground">

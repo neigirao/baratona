@@ -125,6 +125,7 @@ export function EventsPanel({ events, loading, onChanged }: Props) {
             <SelectItem value="all">Todos status</SelectItem>
             <SelectItem value="draft">Rascunho</SelectItem>
             <SelectItem value="published">Publicado</SelectItem>
+            <SelectItem value="live">Ao vivo</SelectItem>
             <SelectItem value="finished">Finalizado</SelectItem>
             <SelectItem value="archived">Arquivado</SelectItem>
           </SelectContent>
@@ -211,7 +212,9 @@ function EventRowCard({ event, onStatus, onVisibility, onArchive, onTransfer }: 
             <p className="text-xs text-muted-foreground truncate">
               /{event.slug} · {event.city} · {event.barCount} bares · {event.memberCount} membros
             </p>
-            <p className="text-[10px] text-muted-foreground font-mono truncate">owner: {event.ownerId}</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              {event.ownerName} <span className="font-mono">({event.ownerId})</span>
+            </p>
           </div>
         </div>
 

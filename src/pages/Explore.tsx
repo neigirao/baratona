@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,10 +27,43 @@ export default function Explore() {
       keywords: 'explorar baratonas, circuitos de butecos, eventos de bar, rota gastronômica',
     }
   );
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<FilterType>('all');
-  const [page, setPage] = useState(1);
   const PAGE_SIZE = 12;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') ?? '';
+  const typeRaw = searchParams.get('type');
+  const typeFilter: FilterType =
+    typeRaw === 'open_baratona' || typeRaw === 'special_circuit' ? typeRaw : 'all';
+  const pageRaw = parseInt(searchParams.get('page') ?? '1', 10);
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+
+  const updateParams = (patch: Partial<{ q: string; type: FilterType; page: number }>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if ('q' in patch) {
+          if (patch.q) next.set('q', patch.q);
+          else next.delete('q');
+        }
+        if ('type' in patch) {
+          if (patch.type && patch.type !== 'all') next.set('type', patch.type);
+          else next.delete('type');
+        }
+        if ('page' in patch) {
+          if (patch.page && patch.page > 1) next.set('page', String(patch.page));
+          else next.delete('page');
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  const setSearch = (q: string) => updateParams({ q, page: 1 });
+  const setTypeFilter = (type: FilterType) => updateParams({ type, page: 1 });
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const next = typeof updater === 'function' ? updater(page) : updater;
+    updateParams({ page: next });
+  };
 
   const eventsQuery = useQuery({
     queryKey: ['public-events'],

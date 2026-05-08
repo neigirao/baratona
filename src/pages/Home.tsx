@@ -49,18 +49,9 @@ function Hero() {
         </picture>
       </div>
 
-      <div
-        className="absolute top-0 left-0 right-0 h-[35%] z-[1] pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, hsl(var(--background) / 0.75) 0%, transparent 100%)' }}
-      />
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[65%] z-[1] pointer-events-none"
-        style={{ background: 'linear-gradient(0deg, hsl(var(--background) / 0.97) 0%, hsl(var(--background) / 0.85) 35%, hsl(var(--background) / 0.4) 65%, transparent 100%)' }}
-      />
-      <div
-        className="absolute inset-0 z-[1] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 120% 100% at 50% 50%, transparent 50%, hsl(var(--background) / 0.5) 100%)' }}
-      />
+      <div className="absolute top-0 left-0 right-0 h-[35%] z-[1] pointer-events-none bg-[linear-gradient(180deg,hsl(var(--background)/0.75)_0%,transparent_100%)]" />
+      <div className="absolute bottom-0 left-0 right-0 h-[65%] z-[1] pointer-events-none bg-[linear-gradient(0deg,hsl(var(--background)/0.97)_0%,hsl(var(--background)/0.85)_35%,hsl(var(--background)/0.4)_65%,transparent_100%)]" />
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_120%_100%_at_50%_50%,transparent_50%,hsl(var(--background)/0.5)_100%)]" />
 
       <div className="relative z-[2] w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-16">
         <div className="flex items-end justify-between gap-10 flex-wrap">

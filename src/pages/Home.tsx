@@ -569,10 +569,7 @@ export default function Home() {
                   <span className="w-5 h-px bg-primary inline-block" />
                   Em destaque
                 </p>
-                <h2
-                  className="font-heading font-extrabold text-foreground"
-                  style={{ fontSize: 'clamp(22px, 3vw, 30px)' }}
-                >
+                <h2 className="font-heading font-extrabold text-foreground text-[clamp(22px,3vw,30px)]">
                   Eventos pra você curtir
                 </h2>
               </div>

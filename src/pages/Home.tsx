@@ -182,32 +182,16 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
   return (
     <Link
       to={`/baratona/${event.slug}`}
-      className="group block rounded-xl overflow-hidden border border-primary/20 transition-all hover:-translate-y-1 hover:shadow-gold-md"
-      style={{
-        background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 50%, hsl(var(--background)) 100%)',
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr',
-      }}
+      className="group grid grid-cols-[auto_1fr] rounded-xl overflow-hidden border border-primary/20 transition-all hover:-translate-y-1 hover:shadow-gold-md bg-[linear-gradient(135deg,hsl(var(--background))_0%,hsl(var(--card))_50%,hsl(var(--background))_100%)]"
     >
-      <div
-        className="w-1"
-        style={{ background: 'linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary-dark)))' }}
-      />
+      <div className="w-1 bg-[linear-gradient(180deg,hsl(var(--primary)),hsl(var(--primary-dark)))]" />
       <div className="p-6 sm:p-8 lg:p-10 flex gap-5 sm:gap-8 lg:gap-12 items-center flex-wrap">
-        <div
-          className="rounded-xl flex-shrink-0 flex items-center justify-center p-2 overflow-hidden border border-primary/20"
-          style={{
-            width: 'clamp(100px, 13vw, 130px)',
-            height: 'clamp(100px, 13vw, 130px)',
-            background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--card) / 0.6))',
-          }}
-        >
+        <div className="rounded-xl flex-shrink-0 flex items-center justify-center p-2 overflow-hidden border border-primary/20 w-[clamp(100px,13vw,130px)] h-[clamp(100px,13vw,130px)] bg-[linear-gradient(135deg,hsl(var(--card)),hsl(var(--card)/0.6))]">
           {coverSrc ? (
             <img
               src={coverSrc}
               alt={event.name}
-              className="w-full h-full object-contain"
-              style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }}
+              className="w-full h-full object-contain [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.5))]"
             />
           ) : (
             <Beer className="w-12 h-12 text-primary/60" />
@@ -223,10 +207,7 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
               ● Ativo
             </span>
           </div>
-          <h3
-            className="font-heading font-extrabold text-foreground mb-2"
-            style={{ fontSize: 'clamp(20px, 2.5vw, 28px)' }}
-          >
+          <h3 className="font-heading font-extrabold text-foreground mb-2 text-[clamp(20px,2.5vw,28px)]">
             {event.name}
           </h3>
           {event.description && (

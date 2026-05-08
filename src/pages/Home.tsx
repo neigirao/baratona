@@ -312,22 +312,16 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section
-      className="py-16 md:py-24 px-5 sm:px-8 lg:px-16"
-      style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--primary) / 0.03) 50%, transparent)' }}
-    >
+    <section className="py-16 md:py-24 px-5 sm:px-8 lg:px-16 bg-[linear-gradient(180deg,transparent,hsl(var(--primary)/0.03)_50%,transparent)]">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-14">
           <p className="text-[11px] tracking-widest uppercase text-primary mb-3">O que você ganha</p>
-          <h2
-            className="font-heading font-extrabold text-foreground"
-            style={{ fontSize: 'clamp(28px, 4vw, 44px)', lineHeight: 1.1 }}
-          >
+          <h2 className="font-heading font-extrabold text-foreground text-[clamp(28px,4vw,44px)] leading-[1.1]">
             Tudo que você precisa pra uma <span className="text-primary">baratona épica</span>
           </h2>
         </div>
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
@@ -362,21 +356,15 @@ function HowItWorks() {
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-16">
           <p className="text-[11px] tracking-widest uppercase text-primary mb-3">Do zero à rua</p>
-          <h2
-            className="font-heading font-extrabold text-foreground"
-            style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}
-          >
+          <h2 className="font-heading font-extrabold text-foreground text-[clamp(28px,4vw,44px)]">
             Em 3 passos você tá na rua
           </h2>
         </div>
 
-        <div className="grid gap-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+        <div className="grid gap-8 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
           {STEPS.map((s) => (
             <div key={s.num} className="text-center">
-              <div
-                className="w-[72px] h-[72px] rounded-full mx-auto mb-6 flex items-center justify-center border border-primary/25"
-                style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))' }}
-              >
+              <div className="w-[72px] h-[72px] rounded-full mx-auto mb-6 flex items-center justify-center border border-primary/25 bg-[linear-gradient(135deg,hsl(var(--primary)/0.15),hsl(var(--primary)/0.05))]">
                 <span className="font-heading font-extrabold text-primary text-2xl">{s.num}</span>
               </div>
               <h3 className="font-heading font-bold text-foreground text-xl mb-3">{s.title}</h3>
@@ -395,19 +383,9 @@ function HowItWorks() {
 function FinalCta() {
   return (
     <section className="py-20 md:py-28 px-5 text-center relative overflow-hidden">
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-full"
-        style={{
-          width: 600,
-          height: 400,
-          background: 'radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%)',
-        }}
-      />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-full w-[600px] h-[400px] bg-[radial-gradient(circle,hsl(var(--primary)/0.08)_0%,transparent_70%)]" />
       <div className="max-w-[600px] mx-auto relative z-[1]">
-        <h2
-          className="font-heading font-extrabold text-foreground mb-4"
-          style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}
-        >
+        <h2 className="font-heading font-extrabold text-foreground mb-4 text-[clamp(28px,4vw,44px)]">
           Qual vai ser a próxima baratona?
         </h2>
         <p className="text-[17px] text-muted-foreground mb-10">
@@ -452,12 +430,9 @@ function Footer() {
   return (
     <footer className="bg-background border-t border-border px-5 sm:px-8 lg:px-16 pt-12 md:pt-16 pb-8">
       <div className="max-w-[1200px] mx-auto">
-        <div className="grid gap-12 mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className="grid gap-12 mb-12 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
           <div>
-            <div
-              className="font-display text-primary mb-3"
-              style={{ fontSize: 28, letterSpacing: 3 }}
-            >
+            <div className="font-display text-primary mb-3 text-[28px] tracking-[3px]">
               BARATONA
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[220px]">

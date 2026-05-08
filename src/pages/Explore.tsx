@@ -9,8 +9,9 @@ import { EventCardSkeletonGrid } from '@/components/ui/list-skeletons';
 import { type PlatformEvent } from '@/lib/platformEvents';
 import { listPublicEventsWithBarCountApi } from '@/lib/platformApi';
 import { useSeo } from '@/hooks/useSeo';
-import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar } from 'lucide-react';
+import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar, Link2 } from 'lucide-react';
 import { PLATFORM_BASE_URL } from '@/lib/constants';
+import { toast } from 'sonner';
 
 type EnrichedEvent = PlatformEvent & { barCount: number; memberCount: number };
 type FilterType = 'all' | 'open_baratona' | 'special_circuit';
@@ -65,6 +66,16 @@ export default function Explore() {
     updateParams({ page: next });
   };
 
+  const handleCopyLink = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copiado! Filtros e página preservados.', { duration: 2500 });
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
+  };
+
   const eventsQuery = useQuery({
     queryKey: ['public-events'],
     queryFn: listPublicEventsWithBarCountApi,
@@ -100,6 +111,9 @@ export default function Explore() {
             <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">Explorar</h1>
             <p className="text-sm text-foreground-2">Baratonas e circuitos especiais abertos.</p>
           </div>
+          <Button variant="ghost" size="icon" onClick={handleCopyLink} aria-label="Copiar link" className="text-foreground-2 hover:text-primary">
+            <Link2 className="w-5 h-5" />
+          </Button>
           <Button asChild variant="gold-outline" size="sm" className="hidden sm:inline-flex">
             <Link to="/minhas-baratonas">Minhas baratonas</Link>
           </Button>

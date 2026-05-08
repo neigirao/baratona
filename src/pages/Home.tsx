@@ -57,34 +57,17 @@ function Hero() {
         <div className="flex items-end justify-between gap-10 flex-wrap">
           <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-6 bg-primary/15 border border-primary/35 backdrop-blur-sm">
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
-                style={{ boxShadow: '0 0 8px hsl(var(--primary))' }}
-              />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse [box-shadow:0_0_8px_hsl(var(--primary))]" />
               <span className="text-xs font-semibold tracking-wide text-primary">
                 Circuito Comida di Buteco RJ 2026 ativo
               </span>
             </div>
 
-            <h1
-              className="font-heading font-extrabold text-foreground mb-5"
-              style={{
-                fontSize: 'clamp(40px, 6vw, 76px)',
-                lineHeight: 1.05,
-                letterSpacing: '-1px',
-                textShadow: '0 2px 20px rgba(0,0,0,0.6)',
-              }}
-            >
+            <h1 className="font-heading font-extrabold text-foreground mb-5 text-[clamp(40px,6vw,76px)] leading-[1.05] tracking-[-1px] [text-shadow:0_2px_20px_rgba(0,0,0,0.6)]">
               Monte sua <span className="text-primary">baratona épica</span>
             </h1>
 
-            <p
-              className="text-foreground-2 mb-9 max-w-[460px] leading-relaxed"
-              style={{
-                fontSize: 'clamp(15px, 1.8vw, 18px)',
-                textShadow: '0 1px 8px rgba(0,0,0,0.8)',
-              }}
-            >
+            <p className="text-foreground-2 mb-9 max-w-[460px] leading-relaxed text-[clamp(15px,1.8vw,18px)] [text-shadow:0_1px_8px_rgba(0,0,0,0.8)]">
               A noite que todo grupo tem uma vez e nunca esquece. Roteiro, consumo, votação e o resumo de tudo — em tempo real, no seu bolso.
             </p>
 
@@ -108,18 +91,14 @@ function Hero() {
                 {[1, 0.85, 0.6, 1].map((opacity, i) => (
                   <div
                     key={i}
-                    className="w-[30px] h-[30px] rounded-full border-2 border-background/80"
+                    className={`w-[30px] h-[30px] rounded-full border-2 border-background/80 ${i === 0 ? '' : '-ml-2'}`}
                     style={{
                       background: `radial-gradient(circle at 35% 35%, hsl(var(--primary) / ${opacity}), hsl(var(--primary) / ${opacity * 0.4}))`,
-                      marginLeft: i === 0 ? 0 : -8,
                     }}
                   />
                 ))}
               </div>
-              <p
-                className="text-[13px] text-muted-foreground"
-                style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}
-              >
+              <p className="text-[13px] text-muted-foreground [text-shadow:0_1px_6px_rgba(0,0,0,0.8)]">
                 <span className="text-foreground font-semibold">+2.400 baratoneiros</span> já usam o app
               </p>
             </div>

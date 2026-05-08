@@ -49,51 +49,25 @@ function Hero() {
         </picture>
       </div>
 
-      <div
-        className="absolute top-0 left-0 right-0 h-[35%] z-[1] pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, hsl(var(--background) / 0.75) 0%, transparent 100%)' }}
-      />
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[65%] z-[1] pointer-events-none"
-        style={{ background: 'linear-gradient(0deg, hsl(var(--background) / 0.97) 0%, hsl(var(--background) / 0.85) 35%, hsl(var(--background) / 0.4) 65%, transparent 100%)' }}
-      />
-      <div
-        className="absolute inset-0 z-[1] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 120% 100% at 50% 50%, transparent 50%, hsl(var(--background) / 0.5) 100%)' }}
-      />
+      <div className="absolute top-0 left-0 right-0 h-[35%] z-[1] pointer-events-none bg-[linear-gradient(180deg,hsl(var(--background)/0.75)_0%,transparent_100%)]" />
+      <div className="absolute bottom-0 left-0 right-0 h-[65%] z-[1] pointer-events-none bg-[linear-gradient(0deg,hsl(var(--background)/0.97)_0%,hsl(var(--background)/0.85)_35%,hsl(var(--background)/0.4)_65%,transparent_100%)]" />
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_120%_100%_at_50%_50%,transparent_50%,hsl(var(--background)/0.5)_100%)]" />
 
       <div className="relative z-[2] w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-16">
         <div className="flex items-end justify-between gap-10 flex-wrap">
           <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-6 bg-primary/15 border border-primary/35 backdrop-blur-sm">
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
-                style={{ boxShadow: '0 0 8px hsl(var(--primary))' }}
-              />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse [box-shadow:0_0_8px_hsl(var(--primary))]" />
               <span className="text-xs font-semibold tracking-wide text-primary">
                 Circuito Comida di Buteco RJ 2026 ativo
               </span>
             </div>
 
-            <h1
-              className="font-heading font-extrabold text-foreground mb-5"
-              style={{
-                fontSize: 'clamp(40px, 6vw, 76px)',
-                lineHeight: 1.05,
-                letterSpacing: '-1px',
-                textShadow: '0 2px 20px rgba(0,0,0,0.6)',
-              }}
-            >
+            <h1 className="font-heading font-extrabold text-foreground mb-5 text-[clamp(40px,6vw,76px)] leading-[1.05] tracking-[-1px] [text-shadow:0_2px_20px_rgba(0,0,0,0.6)]">
               Monte sua <span className="text-primary">baratona épica</span>
             </h1>
 
-            <p
-              className="text-foreground-2 mb-9 max-w-[460px] leading-relaxed"
-              style={{
-                fontSize: 'clamp(15px, 1.8vw, 18px)',
-                textShadow: '0 1px 8px rgba(0,0,0,0.8)',
-              }}
-            >
+            <p className="text-foreground-2 mb-9 max-w-[460px] leading-relaxed text-[clamp(15px,1.8vw,18px)] [text-shadow:0_1px_8px_rgba(0,0,0,0.8)]">
               A noite que todo grupo tem uma vez e nunca esquece. Roteiro, consumo, votação e o resumo de tudo — em tempo real, no seu bolso.
             </p>
 
@@ -117,18 +91,14 @@ function Hero() {
                 {[1, 0.85, 0.6, 1].map((opacity, i) => (
                   <div
                     key={i}
-                    className="w-[30px] h-[30px] rounded-full border-2 border-background/80"
+                    className={`w-[30px] h-[30px] rounded-full border-2 border-background/80 ${i === 0 ? '' : '-ml-2'}`}
                     style={{
                       background: `radial-gradient(circle at 35% 35%, hsl(var(--primary) / ${opacity}), hsl(var(--primary) / ${opacity * 0.4}))`,
-                      marginLeft: i === 0 ? 0 : -8,
                     }}
                   />
                 ))}
               </div>
-              <p
-                className="text-[13px] text-muted-foreground"
-                style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}
-              >
+              <p className="text-[13px] text-muted-foreground [text-shadow:0_1px_6px_rgba(0,0,0,0.8)]">
                 <span className="text-foreground font-semibold">+2.400 baratoneiros</span> já usam o app
               </p>
             </div>
@@ -150,15 +120,7 @@ function HeroPreviewCard() {
     { name: 'Rio Top Beer', bairro: 'Flamengo', score: null as number | null, visited: false },
   ];
   return (
-    <div
-      className="rounded-xl p-6 backdrop-blur-xl"
-      style={{
-        background: 'hsl(var(--card) / 0.8)',
-        border: '1px solid hsl(var(--foreground) / 0.08)',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-        width: 320,
-      }}
-    >
+    <div className="rounded-xl p-6 backdrop-blur-xl w-[320px] bg-card/80 border border-foreground/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
       <div className="flex items-center justify-between mb-5">
         <div>
           <p className="text-[11px] tracking-widest uppercase text-muted-foreground mb-1">Sua baratona</p>
@@ -174,17 +136,14 @@ function HeroPreviewCard() {
           className={`flex items-center gap-3 py-2.5 ${i < bars.length - 1 ? 'border-b border-foreground/5' : ''}`}
         >
           <div
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{
-              background: bar.visited ? 'hsl(var(--success))' : 'hsl(var(--border-2))',
-              boxShadow: bar.visited ? '0 0 8px hsl(var(--success))' : 'none',
-            }}
+            className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              bar.visited
+                ? 'bg-success [box-shadow:0_0_8px_hsl(var(--success))]'
+                : 'bg-border-2'
+            }`}
           />
           <div className="flex-1">
-            <p
-              className="text-[13px] font-semibold"
-              style={{ color: bar.visited ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}
-            >
+            <p className={`text-[13px] font-semibold ${bar.visited ? 'text-foreground' : 'text-muted-foreground'}`}>
               {bar.name}
             </p>
             <p className="text-[11px] text-muted-foreground">{bar.bairro}</p>
@@ -223,32 +182,16 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
   return (
     <Link
       to={`/baratona/${event.slug}`}
-      className="group block rounded-xl overflow-hidden border border-primary/20 transition-all hover:-translate-y-1 hover:shadow-gold-md"
-      style={{
-        background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 50%, hsl(var(--background)) 100%)',
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr',
-      }}
+      className="group grid grid-cols-[auto_1fr] rounded-xl overflow-hidden border border-primary/20 transition-all hover:-translate-y-1 hover:shadow-gold-md bg-[linear-gradient(135deg,hsl(var(--background))_0%,hsl(var(--card))_50%,hsl(var(--background))_100%)]"
     >
-      <div
-        className="w-1"
-        style={{ background: 'linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary-dark)))' }}
-      />
+      <div className="w-1 bg-[linear-gradient(180deg,hsl(var(--primary)),hsl(var(--primary-dark)))]" />
       <div className="p-6 sm:p-8 lg:p-10 flex gap-5 sm:gap-8 lg:gap-12 items-center flex-wrap">
-        <div
-          className="rounded-xl flex-shrink-0 flex items-center justify-center p-2 overflow-hidden border border-primary/20"
-          style={{
-            width: 'clamp(100px, 13vw, 130px)',
-            height: 'clamp(100px, 13vw, 130px)',
-            background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--card) / 0.6))',
-          }}
-        >
+        <div className="rounded-xl flex-shrink-0 flex items-center justify-center p-2 overflow-hidden border border-primary/20 w-[clamp(100px,13vw,130px)] h-[clamp(100px,13vw,130px)] bg-[linear-gradient(135deg,hsl(var(--card)),hsl(var(--card)/0.6))]">
           {coverSrc ? (
             <img
               src={coverSrc}
               alt={event.name}
-              className="w-full h-full object-contain"
-              style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }}
+              className="w-full h-full object-contain [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.5))]"
             />
           ) : (
             <Beer className="w-12 h-12 text-primary/60" />
@@ -264,10 +207,7 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
               ● Ativo
             </span>
           </div>
-          <h3
-            className="font-heading font-extrabold text-foreground mb-2"
-            style={{ fontSize: 'clamp(20px, 2.5vw, 28px)' }}
-          >
+          <h3 className="font-heading font-extrabold text-foreground mb-2 text-[clamp(20px,2.5vw,28px)]">
             {event.name}
           </h3>
           {event.description && (
@@ -312,22 +252,16 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section
-      className="py-16 md:py-24 px-5 sm:px-8 lg:px-16"
-      style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--primary) / 0.03) 50%, transparent)' }}
-    >
+    <section className="py-16 md:py-24 px-5 sm:px-8 lg:px-16 bg-[linear-gradient(180deg,transparent,hsl(var(--primary)/0.03)_50%,transparent)]">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-14">
           <p className="text-[11px] tracking-widest uppercase text-primary mb-3">O que você ganha</p>
-          <h2
-            className="font-heading font-extrabold text-foreground"
-            style={{ fontSize: 'clamp(28px, 4vw, 44px)', lineHeight: 1.1 }}
-          >
+          <h2 className="font-heading font-extrabold text-foreground text-[clamp(28px,4vw,44px)] leading-[1.1]">
             Tudo que você precisa pra uma <span className="text-primary">baratona épica</span>
           </h2>
         </div>
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
@@ -362,21 +296,15 @@ function HowItWorks() {
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-16">
           <p className="text-[11px] tracking-widest uppercase text-primary mb-3">Do zero à rua</p>
-          <h2
-            className="font-heading font-extrabold text-foreground"
-            style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}
-          >
+          <h2 className="font-heading font-extrabold text-foreground text-[clamp(28px,4vw,44px)]">
             Em 3 passos você tá na rua
           </h2>
         </div>
 
-        <div className="grid gap-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+        <div className="grid gap-8 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
           {STEPS.map((s) => (
             <div key={s.num} className="text-center">
-              <div
-                className="w-[72px] h-[72px] rounded-full mx-auto mb-6 flex items-center justify-center border border-primary/25"
-                style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))' }}
-              >
+              <div className="w-[72px] h-[72px] rounded-full mx-auto mb-6 flex items-center justify-center border border-primary/25 bg-[linear-gradient(135deg,hsl(var(--primary)/0.15),hsl(var(--primary)/0.05))]">
                 <span className="font-heading font-extrabold text-primary text-2xl">{s.num}</span>
               </div>
               <h3 className="font-heading font-bold text-foreground text-xl mb-3">{s.title}</h3>
@@ -395,19 +323,9 @@ function HowItWorks() {
 function FinalCta() {
   return (
     <section className="py-20 md:py-28 px-5 text-center relative overflow-hidden">
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-full"
-        style={{
-          width: 600,
-          height: 400,
-          background: 'radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%)',
-        }}
-      />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-full w-[600px] h-[400px] bg-[radial-gradient(circle,hsl(var(--primary)/0.08)_0%,transparent_70%)]" />
       <div className="max-w-[600px] mx-auto relative z-[1]">
-        <h2
-          className="font-heading font-extrabold text-foreground mb-4"
-          style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}
-        >
+        <h2 className="font-heading font-extrabold text-foreground mb-4 text-[clamp(28px,4vw,44px)]">
           Qual vai ser a próxima baratona?
         </h2>
         <p className="text-[17px] text-muted-foreground mb-10">
@@ -452,12 +370,9 @@ function Footer() {
   return (
     <footer className="bg-background border-t border-border px-5 sm:px-8 lg:px-16 pt-12 md:pt-16 pb-8">
       <div className="max-w-[1200px] mx-auto">
-        <div className="grid gap-12 mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className="grid gap-12 mb-12 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
           <div>
-            <div
-              className="font-display text-primary mb-3"
-              style={{ fontSize: 28, letterSpacing: 3 }}
-            >
+            <div className="font-display text-primary mb-3 text-[28px] tracking-[3px]">
               BARATONA
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[220px]">
@@ -654,10 +569,7 @@ export default function Home() {
                   <span className="w-5 h-px bg-primary inline-block" />
                   Em destaque
                 </p>
-                <h2
-                  className="font-heading font-extrabold text-foreground"
-                  style={{ fontSize: 'clamp(22px, 3vw, 30px)' }}
-                >
+                <h2 className="font-heading font-extrabold text-foreground text-[clamp(22px,3vw,30px)]">
                   Eventos pra você curtir
                 </h2>
               </div>

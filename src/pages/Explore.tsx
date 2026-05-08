@@ -111,6 +111,9 @@ export default function Explore() {
             <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">Explorar</h1>
             <p className="text-sm text-foreground-2">Baratonas e circuitos especiais abertos.</p>
           </div>
+          <Button variant="ghost" size="icon" onClick={handleCopyLink} aria-label="Copiar link" className="text-foreground-2 hover:text-primary">
+            <Link2 className="w-5 h-5" />
+          </Button>
           <Button asChild variant="gold-outline" size="sm" className="hidden sm:inline-flex">
             <Link to="/minhas-baratonas">Minhas baratonas</Link>
           </Button>

@@ -120,15 +120,7 @@ function HeroPreviewCard() {
     { name: 'Rio Top Beer', bairro: 'Flamengo', score: null as number | null, visited: false },
   ];
   return (
-    <div
-      className="rounded-xl p-6 backdrop-blur-xl"
-      style={{
-        background: 'hsl(var(--card) / 0.8)',
-        border: '1px solid hsl(var(--foreground) / 0.08)',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-        width: 320,
-      }}
-    >
+    <div className="rounded-xl p-6 backdrop-blur-xl w-[320px] bg-card/80 border border-foreground/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
       <div className="flex items-center justify-between mb-5">
         <div>
           <p className="text-[11px] tracking-widest uppercase text-muted-foreground mb-1">Sua baratona</p>
@@ -144,17 +136,14 @@ function HeroPreviewCard() {
           className={`flex items-center gap-3 py-2.5 ${i < bars.length - 1 ? 'border-b border-foreground/5' : ''}`}
         >
           <div
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{
-              background: bar.visited ? 'hsl(var(--success))' : 'hsl(var(--border-2))',
-              boxShadow: bar.visited ? '0 0 8px hsl(var(--success))' : 'none',
-            }}
+            className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              bar.visited
+                ? 'bg-success [box-shadow:0_0_8px_hsl(var(--success))]'
+                : 'bg-border-2'
+            }`}
           />
           <div className="flex-1">
-            <p
-              className="text-[13px] font-semibold"
-              style={{ color: bar.visited ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}
-            >
+            <p className={`text-[13px] font-semibold ${bar.visited ? 'text-foreground' : 'text-muted-foreground'}`}>
               {bar.name}
             </p>
             <p className="text-[11px] text-muted-foreground">{bar.bairro}</p>

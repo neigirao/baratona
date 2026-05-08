@@ -66,6 +66,16 @@ export default function Explore() {
     updateParams({ page: next });
   };
 
+  const handleCopyLink = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copiado! Filtros e página preservados.', { duration: 2500 });
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
+  };
+
   const eventsQuery = useQuery({
     queryKey: ['public-events'],
     queryFn: listPublicEventsWithBarCountApi,

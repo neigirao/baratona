@@ -9,8 +9,9 @@ import { EventCardSkeletonGrid } from '@/components/ui/list-skeletons';
 import { type PlatformEvent } from '@/lib/platformEvents';
 import { listPublicEventsWithBarCountApi } from '@/lib/platformApi';
 import { useSeo } from '@/hooks/useSeo';
-import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar } from 'lucide-react';
+import { MapPin, Beer, ChevronLeft, Search, Plus, Users, Calendar, Link2 } from 'lucide-react';
 import { PLATFORM_BASE_URL } from '@/lib/constants';
+import { toast } from 'sonner';
 
 type EnrichedEvent = PlatformEvent & { barCount: number; memberCount: number };
 type FilterType = 'all' | 'open_baratona' | 'special_circuit';

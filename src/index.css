@@ -256,6 +256,17 @@
     border: 2px solid hsl(45 100% 50% / 0.5);
     box-shadow: 0 0 40px hsl(45 100% 50% / 0.15), inset 0 2px 0 hsl(0 0% 100% / 0.05);
   }
+
+  /* Avatar radial gradients — static classes to avoid inline styles */
+  .avatar-glow-full {
+    background: radial-gradient(circle at 35% 35%, hsl(var(--primary) / 1), hsl(var(--primary) / 0.4));
+  }
+  .avatar-glow-85 {
+    background: radial-gradient(circle at 35% 35%, hsl(var(--primary) / 0.85), hsl(var(--primary) / 0.34));
+  }
+  .avatar-glow-60 {
+    background: radial-gradient(circle at 35% 35%, hsl(var(--primary) / 0.6), hsl(var(--primary) / 0.24));
+  }
 }
 
 @keyframes pulse-glow {

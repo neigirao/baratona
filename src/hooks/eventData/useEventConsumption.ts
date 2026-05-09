@@ -40,6 +40,7 @@ export function useEventConsumption(eventId: string | null, _currentBarId?: stri
   ) => {
     if (!eventId) return false;
     const effectiveBarId = barId ?? null;
+    const safeSubtype = (subtype || null) as EventConsumption['subtype'];
     const current = consumptionRef.current.find(c =>
       c.user_id === userId && c.type === type && c.bar_id === effectiveBarId
     );
@@ -49,15 +50,15 @@ export function useEventConsumption(eventId: string | null, _currentBarId?: stri
       const optimistic = {
         id: crypto.randomUUID(), event_id: eventId, user_id: userId,
         type, count: newCount, bar_id: effectiveBarId,
-        updated_at: new Date().toISOString(), subtype: subtype || null,
+        updated_at: new Date().toISOString(), subtype: safeSubtype,
       } as EventConsumption;
       setConsumption(prev => [...prev, optimistic]);
       try {
         await withRetry(async () => {
-          const { error } = await supabase.from('event_consumption').insert({
+          const { error } = await supabase.from('event_consumption').insert([{
             event_id: eventId, user_id: userId, type, count: newCount,
-            bar_id: effectiveBarId, subtype: subtype || null,
-          });
+            bar_id: effectiveBarId, subtype: safeSubtype,
+          }]);
           if (error) throw error;
         }, { maxAttempts: 3, baseDelay: 1000 });
         fetch();
@@ -78,7 +79,7 @@ export function useEventConsumption(eventId: string | null, _currentBarId?: stri
     try {
       await withRetry(async () => {
         let query = supabase.from('event_consumption')
-          .update({ count: newCount, ...(subtype ? { subtype } : {}) })
+          .update({ count: newCount, ...(safeSubtype ? { subtype: safeSubtype } : {}) })
           .eq('event_id', eventId).eq('user_id', userId).eq('type', type);
         if (effectiveBarId === null) query = query.is('bar_id', null);
         else query = query.eq('bar_id', effectiveBarId);

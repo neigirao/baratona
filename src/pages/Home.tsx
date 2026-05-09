@@ -88,13 +88,10 @@ function Hero() {
 
             <div className="flex items-center gap-3.5">
               <div className="flex">
-                {[1, 0.85, 0.6, 1].map((opacity, i) => (
+                {['avatar-glow-full', 'avatar-glow-85', 'avatar-glow-60', 'avatar-glow-full'].map((glowClass, i) => (
                   <div
                     key={i}
-                    className={`w-[30px] h-[30px] rounded-full border-2 border-background/80 ${i === 0 ? '' : '-ml-2'}`}
-                    style={{
-                      background: `radial-gradient(circle at 35% 35%, hsl(var(--primary) / ${opacity}), hsl(var(--primary) / ${opacity * 0.4}))`,
-                    }}
+                    className={`w-[30px] h-[30px] rounded-full border-2 border-background/80 ${i === 0 ? '' : '-ml-2'} ${glowClass}`}
                   />
                 ))}
               </div>

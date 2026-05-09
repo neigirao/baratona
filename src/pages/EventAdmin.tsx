@@ -20,7 +20,7 @@ import { useEventMembers } from '@/hooks/useEventData';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { EventRetrospective } from '@/components/EventRetrospective';
-import { FEATURED_EVENT_SLUG } from '@/lib/constants';
+
 import { EventWrapped } from '@/components/EventWrapped';
 import { EventInfoEditor } from '@/components/admin/EventInfoEditor';
 import { EventBarsEditor } from '@/components/admin/EventBarsEditor';
@@ -50,7 +50,7 @@ function EventAdminInner({ event, slug, isSuperAdmin }: { event: PlatformEvent; 
   const [showFinishDialog, setShowFinishDialog] = useState(false);
 
   const isCircuit = event.eventType === 'special_circuit';
-  const isComidaDiButeco = event.slug === FEATURED_EVENT_SLUG;
+  const isComidaDiButeco = !!event.isFeatured;
   const isPrivate = event.visibility === 'private';
 
   const updateConfig = updateAppConfig as unknown as (p: EventConfigPatch) => Promise<boolean>;

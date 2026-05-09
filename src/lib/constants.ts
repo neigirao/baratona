@@ -4,7 +4,7 @@ export const PLATFORM_BASE_URL =
 
 export const PLATFORM_OG_IMAGE = `${PLATFORM_BASE_URL}/assets/hero-illustration.png`;
 
-/** Slug fixo do evento em destaque na home. Mover para tabela events.is_featured quando necessário. */
+/** @deprecated Use `event.isFeatured` (coluna `events.is_featured`). Mantido só para compatibilidade. */
 export const FEATURED_EVENT_SLUG = 'comida-di-buteco-rj-2026';
 
 export const PARTICIPANTS = [

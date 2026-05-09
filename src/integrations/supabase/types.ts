@@ -51,7 +51,7 @@ export type Database = {
           global_delay_minutes: number
           id: number
           origin_bar_id: number | null
-          status: string
+          status: Database["public"]["Enums"]["van_status_t"]
           updated_at: string
         }
         Insert: {
@@ -61,7 +61,7 @@ export type Database = {
           global_delay_minutes?: number
           id?: number
           origin_bar_id?: number | null
-          status?: string
+          status?: Database["public"]["Enums"]["van_status_t"]
           updated_at?: string
         }
         Update: {
@@ -71,7 +71,7 @@ export type Database = {
           global_delay_minutes?: number
           id?: number
           origin_bar_id?: number | null
-          status?: string
+          status?: Database["public"]["Enums"]["van_status_t"]
           updated_at?: string
         }
         Relationships: [
@@ -170,8 +170,8 @@ export type Database = {
           count: number
           id: string
           participant_id: string
-          subtype: string | null
-          type: string
+          subtype: Database["public"]["Enums"]["drink_subtype_t"] | null
+          type: Database["public"]["Enums"]["consumption_type_t"]
           updated_at: string
         }
         Insert: {
@@ -179,8 +179,8 @@ export type Database = {
           count?: number
           id?: string
           participant_id: string
-          subtype?: string | null
-          type: string
+          subtype?: Database["public"]["Enums"]["drink_subtype_t"] | null
+          type: Database["public"]["Enums"]["consumption_type_t"]
           updated_at?: string
         }
         Update: {
@@ -188,8 +188,8 @@ export type Database = {
           count?: number
           id?: string
           participant_id?: string
-          subtype?: string | null
-          type?: string
+          subtype?: Database["public"]["Enums"]["drink_subtype_t"] | null
+          type?: Database["public"]["Enums"]["consumption_type_t"]
           updated_at?: string
         }
         Relationships: [
@@ -250,7 +250,7 @@ export type Database = {
           global_delay_minutes: number
           id: string
           origin_bar_id: string | null
-          status: string
+          status: Database["public"]["Enums"]["van_status_t"]
           updated_at: string
         }
         Insert: {
@@ -261,7 +261,7 @@ export type Database = {
           global_delay_minutes?: number
           id?: string
           origin_bar_id?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["van_status_t"]
           updated_at?: string
         }
         Update: {
@@ -272,7 +272,7 @@ export type Database = {
           global_delay_minutes?: number
           id?: string
           origin_bar_id?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["van_status_t"]
           updated_at?: string
         }
         Relationships: [
@@ -455,8 +455,8 @@ export type Database = {
           count: number
           event_id: string
           id: string
-          subtype: string | null
-          type: string
+          subtype: Database["public"]["Enums"]["drink_subtype_t"] | null
+          type: Database["public"]["Enums"]["consumption_type_t"]
           updated_at: string
           user_id: string
         }
@@ -465,8 +465,8 @@ export type Database = {
           count?: number
           event_id: string
           id?: string
-          subtype?: string | null
-          type: string
+          subtype?: Database["public"]["Enums"]["drink_subtype_t"] | null
+          type: Database["public"]["Enums"]["consumption_type_t"]
           updated_at?: string
           user_id: string
         }
@@ -475,8 +475,8 @@ export type Database = {
           count?: number
           event_id?: string
           id?: string
-          subtype?: string | null
-          type?: string
+          subtype?: Database["public"]["Enums"]["drink_subtype_t"] | null
+          type?: Database["public"]["Enums"]["consumption_type_t"]
           updated_at?: string
           user_id?: string
         }
@@ -541,7 +541,7 @@ export type Database = {
           display_name: string | null
           event_id: string
           id: string
-          role: string
+          role: Database["public"]["Enums"]["event_member_role"]
           user_id: string
         }
         Insert: {
@@ -549,7 +549,7 @@ export type Database = {
           display_name?: string | null
           event_id: string
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["event_member_role"]
           user_id: string
         }
         Update: {
@@ -557,7 +557,7 @@ export type Database = {
           display_name?: string | null
           event_id?: string
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["event_member_role"]
           user_id?: string
         }
         Relationships: [
@@ -632,17 +632,18 @@ export type Database = {
           description: string | null
           end_date: string | null
           event_date: string | null
-          event_type: string
+          event_type: Database["public"]["Enums"]["event_type_t"]
           external_source_url: string | null
           id: string
+          is_featured: boolean
           name: string
           owner_name: string | null
           owner_user_id: string
           slug: string
           start_date: string | null
-          status: string
+          status: Database["public"]["Enums"]["event_status_t"]
           updated_at: string
-          visibility: string
+          visibility: Database["public"]["Enums"]["event_visibility_t"]
         }
         Insert: {
           city?: string | null
@@ -651,17 +652,18 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_date?: string | null
-          event_type?: string
+          event_type?: Database["public"]["Enums"]["event_type_t"]
           external_source_url?: string | null
           id?: string
+          is_featured?: boolean
           name: string
           owner_name?: string | null
           owner_user_id: string
           slug: string
           start_date?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["event_status_t"]
           updated_at?: string
-          visibility?: string
+          visibility?: Database["public"]["Enums"]["event_visibility_t"]
         }
         Update: {
           city?: string | null
@@ -670,17 +672,18 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_date?: string | null
-          event_type?: string
+          event_type?: Database["public"]["Enums"]["event_type_t"]
           external_source_url?: string | null
           id?: string
+          is_featured?: boolean
           name?: string
           owner_name?: string | null
           owner_user_id?: string
           slug?: string
           start_date?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["event_status_t"]
           updated_at?: string
-          visibility?: string
+          visibility?: Database["public"]["Enums"]["event_visibility_t"]
         }
         Relationships: []
       }
@@ -709,19 +712,19 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          role: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -819,6 +822,7 @@ export type Database = {
           event_type: string
           external_source_url: string
           id: string
+          is_featured: boolean
           member_count: number
           name: string
           owner_name: string
@@ -893,6 +897,7 @@ export type Database = {
           event_type: string
           external_source_url: string
           id: string
+          is_featured: boolean
           member_count: number
           name: string
           owner_name: string
@@ -918,7 +923,20 @@ export type Database = {
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "user"
+      consumption_type_t: "drink" | "food" | "joke"
+      drink_subtype_t: "cerveja" | "cachaca" | "drink" | "batida"
+      event_member_role: "event_owner" | "organizer" | "participant"
+      event_status_t:
+        | "draft"
+        | "published"
+        | "active"
+        | "live"
+        | "finished"
+        | "archived"
+      event_type_t: "open_baratona" | "special_circuit"
+      event_visibility_t: "public" | "private"
+      van_status_t: "at_bar" | "in_transit" | "finished"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1045,6 +1063,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "user"],
+      consumption_type_t: ["drink", "food", "joke"],
+      drink_subtype_t: ["cerveja", "cachaca", "drink", "batida"],
+      event_member_role: ["event_owner", "organizer", "participant"],
+      event_status_t: [
+        "draft",
+        "published",
+        "active",
+        "live",
+        "finished",
+        "archived",
+      ],
+      event_type_t: ["open_baratona", "special_circuit"],
+      event_visibility_t: ["public", "private"],
+      van_status_t: ["at_bar", "in_transit", "finished"],
+    },
   },
 } as const

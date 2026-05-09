@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { supabase, callRpc } from './client';
 import { mapEventRow, mapEnrichedEventRow, type EventBar } from './mappers';
 import { isEventStatus, type EventStatus, type PlatformEvent } from '@/lib/platformEvents';
-import { FEATURED_EVENT_SLUG } from '@/lib/constants';
+
 
 // ── Zod schemas ──────────────────────────────────────────────────────────────
 
@@ -18,7 +18,7 @@ const CreateEventSchema = z.object({
   eventDate: z.string().nullable().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
-  status: z.enum(['draft', 'published', 'live', 'finished', 'archived']).optional(),
+  status: z.enum(['draft', 'published', 'active', 'live', 'finished', 'archived']).optional(),
   coverImageUrl: z.string().url().nullable().optional(),
   externalSourceUrl: z.string().url().nullable().optional(),
 });
@@ -102,8 +102,8 @@ export async function listPublicEventsWithBarCountApi(): Promise<(PlatformEvent 
 export async function listFeaturedEventsApi(limit = 3): Promise<(PlatformEvent & { barCount: number; memberCount: number })[]> {
   const all = await listPublicEventsWithBarCountApi();
   const sorted = [
-    ...all.filter((e) => e.slug === FEATURED_EVENT_SLUG),
-    ...all.filter((e) => e.slug !== FEATURED_EVENT_SLUG),
+    ...all.filter((e) => e.isFeatured),
+    ...all.filter((e) => !e.isFeatured),
   ];
   return sorted.slice(0, limit);
 }

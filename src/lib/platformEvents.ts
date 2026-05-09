@@ -1,8 +1,8 @@
 export type EventVisibility = 'public' | 'private';
 export type EventType = 'open_baratona' | 'special_circuit';
-export type EventStatus = 'draft' | 'published' | 'live' | 'finished' | 'archived';
+export type EventStatus = 'draft' | 'published' | 'active' | 'live' | 'finished' | 'archived';
 
-export const EVENT_STATUSES: readonly EventStatus[] = ['draft', 'published', 'live', 'finished', 'archived'] as const;
+export const EVENT_STATUSES: readonly EventStatus[] = ['draft', 'published', 'active', 'live', 'finished', 'archived'] as const;
 
 export function isEventStatus(value: unknown): value is EventStatus {
   return typeof value === 'string' && (EVENT_STATUSES as readonly string[]).includes(value);
@@ -26,6 +26,7 @@ export interface PlatformEvent {
   endDate?: string | null;
   coverImageUrl?: string | null;
   externalSourceUrl?: string | null;
+  isFeatured?: boolean;
 }
 
 export function normalizeSlug(value: string) {

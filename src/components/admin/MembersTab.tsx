@@ -100,12 +100,12 @@ export function MembersTab({ eventId, members, onChanged }: Props) {
                   <p className="text-[10px] text-muted-foreground font-mono truncate">{m.user_id}</p>
                 </div>
                 <Badge
-                  variant={m.role === 'owner' ? 'default' : 'secondary'}
+                  variant={m.role === 'event_owner' ? 'default' : 'secondary'}
                   className="text-[10px] shrink-0"
                 >
                   {m.role}
                 </Badge>
-                {m.role !== 'owner' && (
+                {m.role !== 'event_owner' && (
                   <Button
                     size="icon"
                     variant="ghost"

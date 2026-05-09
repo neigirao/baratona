@@ -40,6 +40,7 @@ export function mapEventRow(row: any): PlatformEvent {
     coverImageUrl: row.cover_image_url || null,
     externalSourceUrl: row.external_source_url || null,
     updatedAt: row.updated_at || null,
+    isFeatured: !!row.is_featured,
   };
 }
 

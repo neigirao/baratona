@@ -125,10 +125,10 @@ export default function EventLanding() {
       }
     : null;
 
-  const isComidaDiButeco = event?.slug === 'comida-di-buteco-rj-2026';
+  const isFeaturedEvent = !!event?.isFeatured;
   const ogImage =
     event?.coverImageUrl ||
-    (isComidaDiButeco
+    (isFeaturedEvent
       ? 'https://baratona.lovable.app/og-comida-di-buteco.jpg'
       : 'https://baratona.lovable.app/og-cover.jpg');
 
@@ -149,7 +149,7 @@ export default function EventLanding() {
     }
   );
 
-  useDynamicFavicon(isComidaDiButeco ? '/comida-di-buteco-favicon.png' : null);
+  useDynamicFavicon(isFeaturedEvent ? '/comida-di-buteco-favicon.png' : null);
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;
   if (loading) return <EventLandingSkeleton />;

@@ -22,10 +22,9 @@ function formatDateRange(start?: string | null, end?: string | null, fallback?: 
 export function FeaturedEventCard({ event }: Props) {
   const isCircuit = event.eventType === 'special_circuit';
   const dateLabel = formatDateRange(event.startDate, event.endDate, event.eventDate);
-  const isComidaDiButeco =
-    event.slug.includes('comida') || event.name.toLowerCase().includes('comida di buteco');
-  const coverSrc = isComidaDiButeco ? comidaDiButecoLogo : event.coverImageUrl;
-  const useContain = isComidaDiButeco;
+  const useFeaturedLogo = !!event.isFeatured && !event.coverImageUrl;
+  const coverSrc = useFeaturedLogo ? comidaDiButecoLogo : event.coverImageUrl;
+  const useContain = useFeaturedLogo;
 
   return (
     <Card className="group relative overflow-hidden border-border/60 hover:border-primary/50 transition-all bg-card/60">

@@ -4,9 +4,6 @@ export const PLATFORM_BASE_URL =
 
 export const PLATFORM_OG_IMAGE = `${PLATFORM_BASE_URL}/assets/hero-illustration.png`;
 
-/** @deprecated Use `event.isFeatured` (coluna `events.is_featured`). Mantido só para compatibilidade. */
-export const FEATURED_EVENT_SLUG = 'comida-di-buteco-rj-2026';
-
 export const PARTICIPANTS = [
   "Nei", "Carmen", "Thiago", "Aneta", "Alexandre", "Neide", 
   "Marcão", "Pedrinho", "Mari", "Felipe Messner", "Roberto", 

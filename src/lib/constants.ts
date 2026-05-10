@@ -3,6 +3,19 @@ export const PLATFORM_BASE_URL =
   typeof window !== 'undefined' ? window.location.origin : 'https://baratona.lovable.app';
 
 export const PLATFORM_OG_IMAGE = `${PLATFORM_BASE_URL}/assets/hero-illustration.png`;
+export const PLATFORM_DEFAULT_OG = 'https://baratona.lovable.app/og-cover.jpg';
+
+/**
+ * Brand-specific overrides keyed by event slug.
+ * Use ONLY for events with bespoke favicon/OG assets shipped with the app.
+ * For generic featured events, rely on `event.coverImageUrl` + platform defaults.
+ */
+export const EVENT_BRAND_ASSETS: Record<string, { ogImage?: string; favicon?: string }> = {
+  'comida-di-buteco-rj-2026': {
+    ogImage: 'https://baratona.lovable.app/og-comida-di-buteco.jpg',
+    favicon: '/comida-di-buteco-favicon.png',
+  },
+};
 
 export const PARTICIPANTS = [
   "Nei", "Carmen", "Thiago", "Aneta", "Alexandre", "Neide", 

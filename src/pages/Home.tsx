@@ -163,9 +163,8 @@ function HeroPreviewCard() {
 
 /* ── FEATURED EVENT BANNER ────────────────────────────────────── */
 function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
-  const isComidaDiButeco =
-    event.slug.includes('comida') || event.name.toLowerCase().includes('comida di buteco');
-  const coverSrc = isComidaDiButeco ? comidaDiButecoLogo : event.coverImageUrl;
+  const useFeaturedLogo = !!event.isFeatured && !event.coverImageUrl;
+  const coverSrc = useFeaturedLogo ? comidaDiButecoLogo : event.coverImageUrl;
 
   const dateLabel = (() => {
     const fmt = (d: string) =>

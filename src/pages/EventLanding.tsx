@@ -15,6 +15,7 @@ import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';
 import { EventLandingSkeleton } from '@/components/ui/list-skeletons';
 import { useDynamicFavicon } from '@/hooks/useDynamicFavicon';
+import { EVENT_BRAND_ASSETS, PLATFORM_DEFAULT_OG } from '@/lib/constants';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();

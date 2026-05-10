@@ -15,6 +15,7 @@ import { track } from '@/lib/analytics';
 import { LoadError } from '@/components/ui/load-error';
 import { EventLandingSkeleton } from '@/components/ui/list-skeletons';
 import { useDynamicFavicon } from '@/hooks/useDynamicFavicon';
+import { EVENT_BRAND_ASSETS, PLATFORM_DEFAULT_OG } from '@/lib/constants';
 
 export default function EventLanding() {
   const { slug = '' } = useParams();
@@ -125,12 +126,9 @@ export default function EventLanding() {
       }
     : null;
 
-  const isFeaturedEvent = !!event?.isFeatured;
+  const brand = event ? EVENT_BRAND_ASSETS[event.slug] : undefined;
   const ogImage =
-    event?.coverImageUrl ||
-    (isFeaturedEvent
-      ? 'https://baratona.lovable.app/og-comida-di-buteco.jpg'
-      : 'https://baratona.lovable.app/og-cover.jpg');
+    event?.coverImageUrl || brand?.ogImage || PLATFORM_DEFAULT_OG;
 
   useSeo(
     event ? `${event.name} | Baratona` : 'Baratona não encontrada',
@@ -149,7 +147,7 @@ export default function EventLanding() {
     }
   );
 
-  useDynamicFavicon(isFeaturedEvent ? '/comida-di-buteco-favicon.png' : null);
+  useDynamicFavicon(brand?.favicon ?? null);
 
   if (slug === 'nei') return <Navigate to="/nei" replace />;
   if (loading) return <EventLandingSkeleton />;

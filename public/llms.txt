@@ -1,0 +1,43 @@
+# Baratona
+
+Plataforma brasileira para criar, descobrir e viver baratonas — roteiros noturnos por bares com check-in, votação em tempo real, ranking de consumo e retrospectiva "Wrapped" no fim da noite.
+
+## O que é uma baratona
+
+Uma baratona é um roteiro festivo por vários bares em sequência. Os participantes fazem check-in em cada bar, registram o que beberam e comeram, votam nos estabelecimentos e acompanham um ranking coletivo ao vivo.
+
+## Funcionalidades principais
+
+- Criar e gerenciar baratonas e circuitos especiais de butecos (ex.: Comida di Buteco)
+- Participar via convite ou link público
+- Check-in em bares durante o evento
+- Registro de consumo (bebidas e comidas por tipo)
+- Votação e notas por bar (drink, comida, ambiente, serviço)
+- Mapa interativo com localização dos bares do roteiro
+- Ranking de consumo em tempo real
+- Conquistas desbloqueáveis
+- Retrospectiva "Wrapped" ao final do evento
+- Painel de administração para o organizador (controle de status, transmissão de mensagens, reordenação de bares)
+
+## Páginas principais
+
+- `/` — Home com eventos em destaque e acesso rápido
+- `/explorar` — Descobrir baratonas e circuitos ativos
+- `/criar` — Criar um novo evento
+- `/minhas-baratonas` — Eventos criados e participados pelo usuário
+- `/baratona/:slug` — Página pública do evento (roteiro, mapa, participar)
+- `/baratona/:slug/live` — Modo ao vivo (check-in, consumo, votação, mapa)
+- `/baratona/:slug/admin` — Painel do organizador
+- `/faq` — Perguntas frequentes
+
+## Stack técnica
+
+- Frontend: React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui
+- Backend: Supabase (Postgres + Auth + Realtime + Storage)
+- Autenticação: Google OAuth via Supabase Auth
+- Evento legado: `/nei` — baratona original do criador da plataforma
+
+## Contato e repositório
+
+- Site: https://baratona.lovable.app
+- Repositório: https://github.com/neigirao/baratona

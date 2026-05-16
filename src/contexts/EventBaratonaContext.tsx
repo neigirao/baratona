@@ -7,6 +7,7 @@ import { Language, TRANSLATIONS } from '@/lib/constants';
 import { withTimeout } from '@/lib/withTimeout';
 import { BaratonaContext } from '@/contexts/BaratonaContext';
 import { useEventBars, useEventAppConfig, useEventVotes, useEventConsumption, useEventCheckins, useEventMembers } from '@/hooks/useEventData';
+import { useEventAchievements } from '@/hooks/eventData/useEventAchievements';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import { useBaratonaComputed } from '@/hooks/useBaratonaComputed';
@@ -46,6 +47,13 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
     getTotalParticipantConsumption, totalDrinks, totalFood,
     refetch: refetchConsumption,
   } = useEventConsumption(eventId, currentBarId);
+
+  const {
+    unlockedKeys: unlockedAchievements,
+    loading: achievementsLoading,
+    unlockAchievement,
+    isUnlocked: isAchievementUnlocked,
+  } = useEventAchievements(eventId, user?.id);
 
   const { secondsAgo, isRefreshing, startRefresh, endRefresh, markUpdated } = useSyncStatus();
   useEffect(() => { if (consumption.length > 0) markUpdated(); }, [consumption, markUpdated]);
@@ -133,6 +141,10 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
     checkOut,
     isCheckedIn,
     getBarCheckins,
+    unlockedAchievements,
+    isAchievementUnlocked,
+    unlockAchievement,
+    achievementsLoading,
   }), [
     currentUser, isAdmin, language, t, participants, membersLoading,
     bars, barsLoading, appConfig, appConfigLoading, updateConfig,
@@ -143,6 +155,7 @@ export function EventBaratonaProvider({ eventId, eventType, children }: Props) {
     getProjectedTime, getCurrentBar, getNextBar, currentBarId,
     secondsAgo, isRefreshing, refreshAll, eventType,
     checkIn, checkOut, isCheckedIn, getBarCheckins,
+    unlockedAchievements, isAchievementUnlocked, unlockAchievement, achievementsLoading,
   ]);
 
   return (

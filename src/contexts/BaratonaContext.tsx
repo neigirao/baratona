@@ -4,6 +4,7 @@ import { useParticipants, useBars, useAppConfig, useVotes, useConsumption } from
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { useBaratonaComputed } from '@/hooks/useBaratonaComputed';
 import { useCheckins } from '@/hooks/useCheckins';
+import { useAchievements } from '@/hooks/useAchievements';
 import type { Database } from '@/integrations/supabase/types';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
@@ -72,6 +73,12 @@ interface BaratonaContextType {
 
   // Event type (for multi-event platform). Defaults to 'open_baratona' for legacy.
   eventType?: 'open_baratona' | 'special_circuit';
+
+  // Achievements
+  unlockedAchievements: string[];
+  isAchievementUnlocked: (key: string) => boolean;
+  unlockAchievement: (key: string, language?: 'pt' | 'en') => Promise<boolean>;
+  achievementsLoading: boolean;
 }
 
 export const BaratonaContext = createContext<BaratonaContextType | undefined>(undefined);
@@ -89,7 +96,17 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
   const { appConfig, loading: appConfigLoading, updateConfig, refetch: refetchAppConfig } = useAppConfig();
   const { votes, submitVote: submitVoteToDb, getBarVotes, refetch: refetchVotes } = useVotes();
   const { checkIn, checkOut, isCheckedIn, getBarCheckins } = useCheckins();
-  
+
+  const {
+    unlockedAchievements: rawUnlocked,
+    loading: achievementsLoading,
+    unlockAchievement,
+    isUnlocked: isAchievementUnlocked,
+  } = useAchievements(currentUser?.id);
+
+  // Map legacy UnlockedAchievement[] to string[] of keys
+  const unlockedAchievements = useMemo(() => rawUnlocked.map(a => a.achievement_key), [rawUnlocked]);
+
   // Sync status
   const { secondsAgo, isRefreshing, startRefresh, endRefresh, markUpdated } = useSyncStatus();
   
@@ -233,6 +250,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     checkOut,
     isCheckedIn,
     getBarCheckins,
+    unlockedAchievements,
+    isAchievementUnlocked,
+    unlockAchievement,
+    achievementsLoading,
   }), [
     currentUser,
     setCurrentUser,
@@ -272,6 +293,10 @@ export function BaratonaProvider({ children }: { children: ReactNode }) {
     checkOut,
     isCheckedIn,
     getBarCheckins,
+    unlockedAchievements,
+    isAchievementUnlocked,
+    unlockAchievement,
+    achievementsLoading,
   ]);
 
   return (

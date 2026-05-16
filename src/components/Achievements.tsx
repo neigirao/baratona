@@ -1,11 +1,10 @@
 import { useBaratona } from '@/contexts/BaratonaContext';
-import { useAchievements, ACHIEVEMENTS } from '@/hooks/useAchievements';
+import { ACHIEVEMENTS } from '@/hooks/useAchievements';
 import { Lock, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Achievements() {
-  const { currentUser, language } = useBaratona();
-  const { unlockedAchievements, loading, isUnlocked } = useAchievements(currentUser?.id);
+  const { currentUser, language, unlockedAchievements, isAchievementUnlocked: isUnlocked, achievementsLoading: loading } = useBaratona();
 
   if (!currentUser) return null;
 

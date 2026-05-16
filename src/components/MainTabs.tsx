@@ -37,32 +37,38 @@ export function MainTabs() {
   
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-4 h-14 bg-card border border-border">
-        <TabsTrigger 
-          value="now" 
+      <TabsList
+        aria-label={language === 'pt' ? 'Abas do evento ao vivo' : 'Live event tabs'}
+        className="grid w-full grid-cols-3 mb-4 h-14 bg-card border border-border"
+      >
+        <TabsTrigger
+          value="now"
+          aria-label={language === 'pt' ? 'Agora — situação atual do evento' : 'Now — current event status'}
           className="flex flex-col gap-0.5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4" aria-hidden="true" />
           <span className="text-xs font-semibold">
             {language === 'pt' ? 'Agora' : 'Now'}
           </span>
         </TabsTrigger>
-        
-        <TabsTrigger 
-          value="consumption" 
+
+        <TabsTrigger
+          value="consumption"
+          aria-label={language === 'pt' ? 'Meu consumo — bebidas e comidas' : 'My consumption — drinks and food'}
           className="flex flex-col gap-0.5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
         >
-          <Beer className="w-4 h-4" />
+          <Beer className="w-4 h-4" aria-hidden="true" />
           <span className="text-xs font-semibold">
             {language === 'pt' ? 'Consumo' : 'My Stats'}
           </span>
         </TabsTrigger>
-        
-        <TabsTrigger 
-          value="explore" 
+
+        <TabsTrigger
+          value="explore"
+          aria-label={language === 'pt' ? 'Explorar — mapa e roteiro' : 'Explore — map and itinerary'}
           className="flex flex-col gap-0.5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
         >
-          <Compass className="w-4 h-4" />
+          <Compass className="w-4 h-4" aria-hidden="true" />
           <span className="text-xs font-semibold">
             {language === 'pt' ? 'Explorar' : 'Explore'}
           </span>

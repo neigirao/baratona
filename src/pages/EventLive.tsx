@@ -51,6 +51,7 @@ function EventLiveInner({ event }: { event: PlatformEvent }) {
       <PullToRefresh onRefresh={refreshAll} className="min-h-screen bg-background">
         <Header onShowWrapped={() => setShowWrapped(true)} />
         <main className="container max-w-lg mx-auto px-4 py-4 pb-24">
+          <h1 className="sr-only">{event.name}</h1>
           <div className="flex justify-center mb-3">
             <SyncIndicator secondsAgo={secondsAgo} isRefreshing={isRefreshing} />
           </div>

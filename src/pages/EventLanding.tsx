@@ -7,7 +7,7 @@ import { useSeo } from '@/hooks/useSeo';
 import { usePlatformAuth } from '@/hooks/usePlatformAuth';
 import NotFound from './NotFound';
 import { findEventBySlugApi, getEventBarsApi, joinEventApi, isEventMemberApi, redeemInviteApi } from '@/lib/platformApi';
-import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, Beer, Users, Share2, ChevronLeft, Calendar, ExternalLink, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SpecialCircuitLanding } from '@/components/SpecialCircuitLanding';
 import { CircuitMap } from '@/components/CircuitMap';
@@ -267,6 +267,20 @@ export default function EventLanding() {
           <p className="text-muted-foreground leading-relaxed">{event.description}</p>
         )}
 
+        {isMember && (
+          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="text-foreground font-medium">Você está nessa baratona!</span>
+            </div>
+            <Button asChild size="sm">
+              <Link to={`/baratona/${event.slug}/live`}>
+                Fazer check-in
+              </Link>
+            </Button>
+          </div>
+        )}
+
         <div className="flex gap-2 flex-wrap">
           {!isMember && (
             <Button onClick={handleJoin} disabled={joining} className="flex-1 min-w-[140px]">
@@ -275,7 +289,7 @@ export default function EventLanding() {
             </Button>
           )}
           {isMember && (
-            <Button asChild className="flex-1 min-w-[140px]">
+            <Button asChild variant="outline" className="flex-1 min-w-[140px]">
               <Link to={`/baratona/${event.slug}/live`}>
                 {isCircuit ? 'Abrir circuito' : 'Abrir evento'}
               </Link>

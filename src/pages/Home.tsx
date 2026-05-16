@@ -188,6 +188,7 @@ function FeaturedEventBanner({ event }: { event: FeaturedEvent }) {
               src={coverSrc}
               alt={event.name}
               className="w-full h-full object-contain [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.5))]"
+              loading="lazy"
             />
           ) : (
             <Beer className="w-12 h-12 text-primary/60" />
